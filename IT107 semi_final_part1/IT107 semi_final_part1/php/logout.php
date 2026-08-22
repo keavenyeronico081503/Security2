@@ -20,7 +20,7 @@ if (ini_get("session.use_cookies")) {
 // Destroy the session
 session_destroy();
 
-// Redirect to login page
-header("Location: ../html/login.html");
+// Redirect to the public home page
+header("Location: ../html/home.html");
 exit();
 ?>

@@ -1,5 +1,6 @@
 <?php
 include 'admin_auth.php';
+require_once 'account_service.php';
 
 $action = $_GET['action'] ?? 'list';
 
@@ -157,13 +158,15 @@ if ($action === 'review-delete') {
 }
 
 if ($action === 'create') {
+    require_super_admin();
     require_permission('accounts.create');
     $role = ($data['role'] ?? '') === 'super_admin' ? 'super_admin' : 'admin';
+    $employeeId = next_employee_id();
     $password = password_hash($data['password'] ?? '', PASSWORD_DEFAULT);
     $status = 'approved';
     $stmt = $conn->prepare('INSERT INTO users (first_name, last_name, birthday, age, gender, id_number, email, username, password, street, barangay, city, province, country, zip_code, registration_status, role, account_status, privileges) VALUES (?, ?, CURDATE(), 0, "Male", ?, ?, ?, ?, "", "", "", "", "", "", "complete", ?, ?, ?)');
     $privileges = json_encode($data['privileges'] ?? []);
-    $stmt->bind_param('sssssssss', $data['first_name'], $data['last_name'], $data['id_number'], $data['email'], $data['username'], $password, $role, $status, $privileges);
+    $stmt->bind_param('sssssssss', $data['first_name'], $data['last_name'], $employeeId, $data['email'], $data['username'], $password, $role, $status, $privileges);
     if (!$stmt->execute()) {
         http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => 'Could not create account: ' . $conn->error]);

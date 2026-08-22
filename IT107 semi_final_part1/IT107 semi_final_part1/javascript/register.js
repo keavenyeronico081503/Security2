@@ -1583,6 +1583,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof validateGender === 'function') validateGender();
             if (!validateForm()) {
                 e.preventDefault();
+            } else if (!confirm('Continue to security questions?')) {
+                e.preventDefault();
             }
         });
     }

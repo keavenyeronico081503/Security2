@@ -1,6 +1,16 @@
 // Load user data when page loads
 document.addEventListener('DOMContentLoaded', function() {
     loadUserData();
+    document.querySelectorAll('.password-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const input = document.getElementById(this.dataset.passwordTarget);
+            const visible = input.type === 'password';
+            input.type = visible ? 'text' : 'password';
+            this.setAttribute('aria-pressed', String(visible));
+            this.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} password`);
+            this.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
+        });
+    });
 });
 
 // Function to fetch user data from database
@@ -155,6 +165,8 @@ document.addEventListener('DOMContentLoaded', function() {
             showMessage('Please ensure your new password meets all requirements.', 'error');
             return;
         }
+
+        if (!confirm('Change your password now?')) return;
         
         // Disable submit button to prevent multiple submissions
         submitBtn.disabled = true;

@@ -1,6 +1,17 @@
 <?php
 require_once 'auth.php';
 
+function next_employee_id(): string
+{
+    global $conn;
+    $year = date('Y');
+    $stmt = $conn->prepare('SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(id_number, "-", -1) AS UNSIGNED)), 0) AS last_number FROM users WHERE id_number LIKE CONCAT(?, "-%")');
+    $stmt->bind_param('s', $year);
+    $stmt->execute();
+    $lastNumber = (int)$stmt->get_result()->fetch_assoc()['last_number'];
+    return $year . '-' . str_pad((string)($lastNumber + 1), 4, '0', STR_PAD_LEFT);
+}
+
 function list_accounts(string $employeeId = ''): array
 {
     global $conn;

@@ -1,6 +1,33 @@
 const api = '../php/admin.php';
 const table = document.getElementById('accounts');
 const message = document.getElementById('message');
+const statCards = document.getElementById('adminStatCards');
+const actionRequired = document.getElementById('adminActionRequired');
+const charts = {};
+
+function drawAdminChart(id, type, labels, values, colors) {
+  const canvas = document.getElementById(id);
+  if (!canvas || typeof Chart === 'undefined') return;
+  charts[id]?.destroy();
+  charts[id] = new Chart(canvas, {type, data: {labels, datasets: [{data: values, backgroundColor: colors, borderColor: '#fffdf8', borderWidth: 2, borderRadius: type === 'bar' ? 4 : 0}]}, options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: type === 'doughnut' ? 'bottom' : 'top', labels: {color: '#17211b', usePointStyle: true, padding: 16}}}, scales: type === 'bar' || type === 'line' ? {x: {ticks: {color: '#68736c'}, grid: {display: false}}, y: {beginAtZero: true, ticks: {precision: 0, color: '#68736c'}, grid: {color: '#d9ded7'}}} : undefined}});
+}
+
+async function loadStatistics() {
+  try {
+    const response = await fetch('../php/admin-statistics.php');
+    const data = await response.json();
+    if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Statistics unavailable.');
+    const summary = data.summary;
+    statCards.innerHTML = [['total', 'Managed accounts'], ['approved', 'Approved'], ['pending', 'Pending'], ['blocked', 'Blocked'], ['my_requests', 'Pending deletion requests']].map(([key, label]) => `<article class="stat-card"><strong>${summary[key]}</strong><span>${label}</span></article>`).join('');
+    const required = data.action_required;
+    actionRequired.innerHTML = `<h3>Action required</h3><div class="required-items"><a href="#accounts"><strong>${required.pending_users}</strong><span>Pending registrations</span></a><a href="#accounts"><strong>${required.pending_deletions}</strong><span>Pending deletion requests</span></a><a href="#accounts"><strong>${required.failed_actions}</strong><span>Failed actions, last 30 days</span></a></div>`;
+    drawAdminChart('adminStatusChart', 'doughnut', data.status_breakdown.map(item => item.label), data.status_breakdown.map(item => item.count), ['#176b52', '#a46616', '#a63d32']);
+    drawAdminChart('adminRegistrationChart', 'line', data.registrations.map(item => item.date), data.registrations.map(item => item.count), '#176b52');
+    drawAdminChart('adminActionsChart', 'bar', data.actions.map(item => item.label), data.actions.map(item => item.count), '#176b52');
+  } catch (error) {
+    actionRequired.textContent = error.message;
+  }
+}
 
 async function request(action, body) {
   const options = body ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)} : {};
@@ -8,6 +35,33 @@ async function request(action, body) {
   const data = await response.json();
   if (!response.ok || data.status === 'error') throw new Error(data.message || 'Request failed.');
   return data;
+}
+
+async function loadAdminAccess() {
+  const createLink = document.querySelector('[data-permission="accounts.create"]');
+  const createPanel = document.getElementById('create-account');
+  try {
+    const response = await fetch('../php/user.php?action=session');
+    const data = await response.json();
+    const allowed = response.ok && data.status === 'success' && data.user.permissions.includes('accounts.create');
+    if (allowed) {
+      createLink.hidden = false;
+      createPanel.hidden = false;
+    }
+  } catch (error) {
+    return;
+  }
+}
+
+async function loadNextEmployeeId() {
+  const input = document.getElementById('createEmployeeId');
+  if (!input) return;
+  try {
+    const response = await fetch('../php/generate_id.php');
+    if (response.ok) input.value = (await response.text()).trim();
+  } catch (error) {
+    input.placeholder = 'Employee ID generated on submit';
+  }
 }
 
 function textCell(value, className = '') {
@@ -51,9 +105,28 @@ table.addEventListener('click', async event => {
   const action = button.dataset.action; const body = {user_id: Number(button.dataset.id)};
   if (action === 'request-delete') { body.reason = prompt('Why should this account be deleted?'); if (!body.reason || !body.reason.trim()) return; }
   if (action === 'update') { const user = JSON.parse(button.dataset.user); body.first_name = prompt('First name:', user.first_name); body.last_name = prompt('Last name:', user.last_name); body.id_number = prompt('Employee ID:', user.id_number); body.email = prompt('Email:', user.email); if (Object.values(body).some(value => value === null || value === '')) return; }
+  const confirmations = {approve: 'Approve this account?', block: 'Block this account?', update: 'Save these account changes?', 'request-delete': 'Send this deletion request to the Super Administrator?'};
+  if (confirmations[action] && !confirm(confirmations[action])) return;
   try { message.textContent = (await request(action, body)).message; message.style.color = '#176b52'; await load(); } catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
 });
 document.getElementById('filter').addEventListener('submit', event => { event.preventDefault(); load(); });
 document.getElementById('clear').addEventListener('click', () => { document.getElementById('employeeId').value = ''; load(); });
-document.getElementById('logout').addEventListener('click', () => { window.location.href = '../php/logout.php'; });
+document.getElementById('refreshAdminStatistics').addEventListener('click', loadStatistics);
+document.getElementById('createForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!confirm('Create this user account?')) return;
+  try {
+    const formData = Object.fromEntries(new FormData(event.target));
+    showMessage((await request('create', formData)).message);
+    event.target.reset();
+    await load();
+    await loadStatistics();
+    await loadNextEmployeeId();
+  } catch (error) {
+    showMessage(error.message, true);
+  }
+});
 load();
+loadStatistics();
+loadAdminAccess();
+loadNextEmployeeId();

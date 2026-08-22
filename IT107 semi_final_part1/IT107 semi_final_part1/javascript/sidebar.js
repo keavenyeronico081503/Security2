@@ -5,8 +5,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeButton = document.querySelector('.sidebar-close');
   if (!sidebar) return;
 
+  const loadNotifications = async () => {
+    try {
+      const response = await fetch('../php/notifications.php');
+      if (!response.ok) return;
+      const data = await response.json();
+      sidebar.querySelectorAll('[data-notification]').forEach(badge => {
+        const count = Number(data.notifications?.[badge.dataset.notification] || 0);
+        badge.textContent = count > 99 ? '99+' : String(count);
+        badge.hidden = count < 1;
+        badge.setAttribute('aria-label', `${count} pending`);
+      });
+    } catch (error) {
+      return;
+    }
+  };
+  loadNotifications();
+
   const moduleSelectors = {
-    accounts: ['.app-superadmin main > .toolbar', '.app-superadmin main > #message', '.app-superadmin main > #accounts-panel', '.app-admin main > *'],
+    overview: ['#overview'],
+    accounts: ['.app-superadmin main > .toolbar', '.app-superadmin main > #message', '.app-superadmin main > #accounts-panel', '.app-admin main > .toolbar', '.app-admin main > #message', '.app-admin main > .table-wrap'],
     'create-account': ['#create-account'],
     requests: ['#requests-panel'],
     audit: ['#audit'],
@@ -18,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const applyModuleView = () => {
-    const hash = location.hash.slice(1) || (document.body.classList.contains('app-superadmin') ? 'accounts' : document.body.classList.contains('app-pending') ? 'account-status' : 'dashboard');
+    const hash = location.hash.slice(1) || (document.body.classList.contains('app-superadmin') || document.body.classList.contains('app-admin') ? 'overview' : document.body.classList.contains('app-pending') ? 'account-status' : 'dashboard');
     const targets = moduleSelectors[hash];
     if (!targets) return;
     const main = document.querySelector('main');
@@ -50,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const current = `${location.pathname}${location.hash}`;
   sidebar.querySelectorAll('.sidebar-link').forEach(link => {
+    if (link.dataset.noActive !== undefined) return;
     if (link.href && current.endsWith(new URL(link.href).pathname + new URL(link.href).hash)) link.classList.add('active');
     link.addEventListener('click', () => setOpen(false));
   });

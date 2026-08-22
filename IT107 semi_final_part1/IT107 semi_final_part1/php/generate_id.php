@@ -15,10 +15,10 @@ if ($mysqli->connect_error) {
 }
 
 $year = date('Y');
-$result = $mysqli->query("SELECT COUNT(*) AS total FROM users");
+$result = $mysqli->query("SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(id_number, '-', -1) AS UNSIGNED)), 0) AS last_number FROM users WHERE id_number LIKE CONCAT('" . $mysqli->real_escape_string($year) . "', '-%')");
 if ($result) {
     $row = $result->fetch_assoc();
-    $count = (int)($row['total'] ?? 0) + 1;
+    $count = (int)($row['last_number'] ?? 0) + 1;
     $generatedId = $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
     echo $generatedId;
     $result->free();

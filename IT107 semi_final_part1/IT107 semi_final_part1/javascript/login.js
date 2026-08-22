@@ -433,10 +433,3 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 });
-
-  // If user is already logged in, avoid showing login and go to dashboard
-  try {
-    if (localStorage.getItem('userLoggedIn') === 'true') {
-      window.location.replace('dashboard.html');
-    }
-  } catch (e) {}

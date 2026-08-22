@@ -132,6 +132,8 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
+        if (!confirm('Complete registration and create this account?')) return;
+
         // Store selected question
         selectedQuestions.push(selectedQuestion);
         
