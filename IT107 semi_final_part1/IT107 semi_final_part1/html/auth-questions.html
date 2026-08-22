@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Questions</title>
+    <!-- <link rel="stylesheet" href="../css/forgot-password.css"> -->
+    <link rel="stylesheet" href="../css/auth-question.css">
+</head>
+<body>
+    <header>
+     <div class="container">
+        <div class="brand">
+          <img src="../images/Caraga_State.png" alt="Caraga State University" class="brand-mark" />
+          <img src="../images/Caraga.png" alt="Caraga State University" class="brand-text" />
+        </div>
+        <nav class="nav">
+          <a href="home.html">Home</a>
+          <a href="login.html">Login</a>
+          <a href="register.html">Register</a>
+        </nav>
+    </div>
+     </header>
+
+    <div class="forgot-password">
+        <h1>🔒 Security Questions</h1>
+        <p class="forgot-subtitle">Answer your security questions to verify your identity</p>
+
+        <form action="" method="" name="authForm" onsubmit="return validateAuthForm()" novalidate>
+
+            <!-- User Information Display -->
+            <div class="user-info-row">
+                <div class="info-column">
+                    <label>ID Number:</label>
+                    <div class="username-display" id="usernameDisplay">Loading...</div>
+                </div>
+                <div class="info-column">
+                    <label>Username:</label>
+                    <div class="username-display" id="usernameFieldDisplay">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Security Questions - All 3 questions side by side in columns -->
+            <div class="questions-row">
+                <div class="question-column">
+                    <label for="securityQuestion">Security Question 1:</label>
+                    <div id="question1Display" class="question-display">Loading question...</div>
+                    <input type="hidden" name="securityQuestion" id="securityQuestion">
+                    <div id="questionError" class="error-message"></div>
+                </div>
+                <div class="question-column">
+                    <label for="securityQuestion2">Security Question 2:</label>
+                    <div id="question2Display" class="question-display">Loading question...</div>
+                    <input type="hidden" name="securityQuestion2" id="securityQuestion2">
+                    <div id="questionError2" class="error-message"></div>
+                </div>
+                <div class="question-column">
+                    <label for="securityQuestion3">Security Question 3:</label>
+                    <div id="question3Display" class="question-display">Loading question...</div>
+                    <input type="hidden" name="securityQuestion3" id="securityQuestion3">
+                    <div id="questionError3" class="error-message"></div>
+                </div>
+            </div>
+
+            <!-- Answers - All 3 answers side by side in columns -->
+            <div class="answers-row">
+                <div class="answer-column">
+                    <label for="securityAnswer">Your Answer:</label>
+                    <input type="password" name="securityAnswer" id="securityAnswer" placeholder="Enter your answer">
+                    <div id="answerError" class="error-message"></div>
+                </div>
+                <div class="answer-column">
+                    <label for="securityAnswer2">Your Answer:</label>
+                    <input type="password" name="securityAnswer2" id="securityAnswer2" placeholder="Enter your answer">
+                    <div id="answerError2" class="error-message"></div>
+                </div>
+                <div class="answer-column">
+                    <label for="securityAnswer3">Your Answer:</label>
+                    <input type="password" name="securityAnswer3" id="securityAnswer3" placeholder="Enter your answer">
+                    <div id="answerError3" class="error-message"></div>
+                </div>
+            </div>
+
+            <!-- Success/Error Message -->
+            <div id="message" class="message"></div>
+
+            <div class="button-container">
+                <button type="button" id="prevBtn" class="prev-btn">Previous</button>
+                <button type="submit">Verify Identity</button>
+            </div>
+        </form>
+    </div>
+
+    <footer>&copy;Caraga State University 2025</footer>
+
+    <script src="../javascript/auth-questions.js"></script>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+    <header>
+     <div class="container">
+        <div class="brand">
+          <img src="../images/Caraga_State.png" alt="Caraga State University" class="brand-mark" />
+          <img src="../images/Caraga.png" alt="Caraga State University" class="brand-text" />
+        </div>
+        <nav class="nav">
+          <a href="home.html">Home</a>
+          <a href="login.html" class="active">Login</a>
+          <a href="register.html">Register</a>
+        </nav>
+    </div>
+     </header>
+
+    <div class="login" validatefomr()>
+        <h1>    Login</h1>
+        <form action="" method="" name="myform" onsubmit="return validateForm()" novalidate>
+            
+            <!-- Email Row -->
+            <div class="input-row">
+                <label for="email">Username</label>
+                <div class="input-container">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="type" name="Username" id="Username" placeholder="Username" maxlength="16" required>
+                </div>
+                <div id="usernameError" class="error-message"></div>
+            </div>
+
+            <!-- Password Row -->
+            <div class="input-row">
+                <label for="Password">Password</label>
+                <div class="input-container">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" name="Password" id="Password" placeholder="Password" minlength="8" maxlength="20" required>
+                    <i class="fa-solid fa-eye" id="toggleLoginPassword" style="cursor: pointer;"></i>
+                </div>
+                <div id="passwordError" class="error-message"></div>
+            </div>
+            <div class="forget" id="forgotHint" style="display:none">
+                Forgot Password? <a href="forgot-password.html"><strong>Reset Here</strong></a>
+            </div>
+
+            <!-- Error message container above login button -->
+            <div id="loginError" class="login-error-message"></div>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <!-- Modal Popup for 2nd Attempt -->
+
+    </div>
+    <footer>&copy;Caraga State University 2025</footer>
+    <script src="../javascript/login.js"></script>
+    <script src="../javascript/disable_back.js"></script>
+</body>
+</html>

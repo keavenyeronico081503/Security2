@@ -1,0 +1,181 @@
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    /* Background image with violet theme overlay */
+    background-image: url('../images/image-42-1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 100px;
+    padding-bottom: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Violet overlay on entire page background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.75) 0%, rgba(118, 75, 162, 0.8) 100%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.container {
+    margin-bottom: 20px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 16px;
+    /* Semi-transparent background for form box */
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+/* Ensure form content is above the overlay */
+.container > * {
+    position: relative;
+    z-index: 1;
+}
+
+h1, h2, h3 {
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    margin-bottom: 1rem;
+}
+
+p {
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+input[type="text"], input[type="password"], select {
+    width: 100%;
+    padding: 8px 10px;
+    margin: 8px 0 15px 0;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #333;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+input[type="text"]:focus, input[type="password"]:focus, select:focus {
+    border-color: rgba(255, 255, 255, 0.6);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 1);
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+  button:hover {
+    background: #0056b3;
+  }
+  #followUpDiv {
+    display: block;
+    margin-top: 20px;
+  }
+  #message {
+    color: red;
+    margin-bottom: 10px;
+  }
+  .question-group {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+  }
+  .question-group label {
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .button-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .prev-btn {
+    flex: 1;
+    padding: 10px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .prev-btn:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+  }
+
+  .next-btn, .complete-btn {
+    flex: 1;
+    padding: 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .next-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+  }
+
+  .complete-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .complete-btn:hover {
+    background: linear-gradient(135deg, #7A25F0 0%, #8B5CF6 100%);
+    transform: translateY(-1px);
+  }
+
+  /* Single button styling when no container */
+  .next-btn:only-child, .complete-btn:only-child {
+    width: 100%;
+    flex: none;
+  }

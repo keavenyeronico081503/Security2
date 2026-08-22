@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Registration</title>
+    <link rel="stylesheet" href="../css/question.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Complete Your Registration</h2>
+    <div id="message"></div>
+    
+    <div id="followUpDiv">
+      <p>Please answer 3 security questions:</p>
+      
+      <!-- Question 1 - Always visible -->
+      <div class="question-group" id="questionGroup1">
+        <label>Question 1:</label>
+        <select id="questionSelect1">
+          <option value="">--Select a question--</option>
+          <option value="petName">What is the name of your pet?</option>
+          <option value="hobby">What's your favorite hobby?</option>
+          <option value="travel">What's your favorite place you've visited?</option>
+          <option value="music">Who's your favorite artist or band?</option>
+          <option value="movies">Do you enjoy movies or TV shows?</option>
+        </select>
+        <input type="password" id="answerInput1" placeholder="Enter your answer">
+        <div class="button-container">
+          <button id="prevBtn1" class="prev-btn">Previous</button>
+          <button id="nextBtn1" class="next-btn">Next Question</button>
+        </div>
+      </div>
+
+      <!-- Question 2 - Hidden initially -->
+      <div class="question-group" id="questionGroup2" style="display: none;">
+        <label>Question 2:</label>
+        <select id="questionSelect2">
+          <option value="">--Select a question--</option>
+        </select>
+        <input type="password" id="answerInput2" placeholder="Enter your answer">
+        <div class="button-container">
+          <button id="prevBtn2" class="prev-btn">Previous</button>
+          <button id="nextBtn2" class="next-btn">Next Question</button>
+        </div>
+      </div>
+
+      <!-- Question 3 - Hidden initially -->
+      <div class="question-group" id="questionGroup3" style="display: none;">
+        <label>Question 3:</label>
+        <select id="questionSelect3">
+          <option value="">--Select a question--</option>
+        </select>
+        <input type="password" id="answerInput3" placeholder="Enter your answer">
+        <div class="button-container">
+          <button id="prevBtn3" class="prev-btn">Previous</button>
+          <button id="completeBtn" class="complete-btn">Complete Registration</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+<script src="../javascript/question.js"></script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="../css/register.css">
+</head>
+<body>
+    <header>
+     <div class="container">
+        <div class="brand">
+          <img src="../images/Caraga_State.png" alt="Caraga State University" class="brand-mark" />
+          <img src="../images/Caraga.png" alt="Caraga State University" class="brand-text" />
+        </div>
+        <nav class="nav">
+          <a href="home.html">Home</a>
+          <a href="login.html">Login</a>
+          <a href="register.html" class="active">Register</a>
+        </nav>
+    </div>
+     </header>
+
+     <div class="register">
+<form action="../php/register.php" name="myform" id="registerForm" method="post" onsubmit="return validateForm()" novalidate>
+        <h2>Personal Information</h2>
+        <div class="form-grid">
+            <!-- ID Number Section - First Field -->
+            <div class="form-group">
+                <label for="ID">ID Number</label>
+                <input type="text" name="ID" id="idNumber" readonly>
+            </div>
+            <!-- Name Section -->
+            <div class="form-group">
+                <label for="FirstName">First Name <span class="required">*</span></label>
+                <input type="text" name="fname" id="fname" 
+                minlength="2" maxlength="25" required oninput="validateFname()">
+                <div id="fnameError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="MiddleName">Middle Name <span class="optional">optional</span></label>
+                <input type="text" name="MiddleName" id="middleName" 
+                minlength="2" maxlength="25" oninput="validateMiddleName()">
+                <div id="middleNameError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="LastName">Last Name <span class="required">*</span></label>
+                <input type="text" name="LastName" id="LastName" 
+                minlength="2" maxlength="25" required oninput="validateLastName()">
+                    <div id="lastNameError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="suffix">Suffix <span class="optional">optional</span></label>
+                <input type="text" name="suffix" id="suffix" 
+                minlength="2" maxlength="10" oninput="validateSuffix()">
+                <div id="suffixError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="birthday">Birthday <span class="required">*</span></label>
+                <input type="date" name="birthday" id="birthday" onchange="calculateAge()" required>
+                <div id="birthdayError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="Age">Age <span class="required">*</span></label>
+                <input type="number" name="Age" id="Age" min="0" required readonly>
+                <div id="ageError" class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="gender">Sex <span class="required">*</span></label>
+                <select name="gender" id="gender" required>
+                    <option value="">Sex</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="email">Email<span class="required">*</span></label>
+                <input id="email" name="email" type="text" oninput="validateEmail(this.value, this, 'input')" onblur="validateEmail(this.value, this, 'blur')">
+                <div class="error-message" id="email-error"></div>
+            </div>
+        </div>
+
+        <!-- Account Information -->
+        <h3>Account Information</h3>
+        <div class="account-grid">
+            <div class="form-group">
+                <label for="Username">Username <span class="required">*</span></label>
+                <input type="text" name="Username" id="Username"
+                minlength="6" maxlength="25" required>
+                <div id="usernameError" class="error-message"></div>
+                <div id="UsernameHint" class="hint-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="Password">Password <span class="required">*</span></label>
+                <div class="input-container">
+                    <input type="password" name="password" id="Password" required
+                    minlength="8" maxlength="20" oninput="validatePassword()">
+                    <i class="fa-solid fa-eye" id="toggleRegPassword" style="cursor: pointer;"></i>
+                </div>
+                <div id="passwordError" class="error-message"></div>
+                <div id="passwordStrength" class="strength-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="RePassword">Confirm Password <span class="required">*</span></label>
+                <div class="input-container">
+                    <input type="password" name="repassword" id="RePassword" required oninput="validateConfirmPassword()">
+                    <i class="fa-solid fa-eye" id="toggleRegRePassword" style="cursor: pointer;"></i>
+                </div>
+                <div id="confirmPasswordError" class="error-message"></div>
+            </div>
+        </div>
+
+        <!-- Address Section -->
+        <h3>Address Information</h3>
+        <div class="address-grid">
+            <div class="form-group"><label for="Street">Street/Purok <span class="required">*</span></label>
+                <input type="text" name="Street" id="Street" minlength="2" maxlength="25" required oninput="validateStreet()">
+                 <div id="streetError" class="error-message"></div>
+            </div>
+            <div class="form-group"><label for="Barangay">Barangay <span class="required">*</span></label>
+                <input type="text" name="barangay" id="Barangay" minlength="2" maxlength="25" required oninput="validateBarangay()">
+                <div id="barangayError" class="error-message"></div>
+            </div>
+            <div class="form-group"><label for="City">City <span class="required">*</span></label>
+                <input type="text" name="City" id="City" minlength="2" maxlength="25" required oninput="validateCity()">
+                <div id="cityError" class="error-message"></div>
+            </div>
+            <div class="form-group"><label for="Province">Province <span class="required">*</span></label>
+                <input type="text" name="Province" id="Province" minlength="2" maxlength="25" required oninput="validateProvince()">
+                <div id="provinceError" class="error-message"></div>
+            </div>
+            <div class="form-group"><label for="Country">Country <span class="required">*</span></label>
+                <input type="text" name="Country" id="Country" minlength="2" maxlength="25" required oninput="validateCountry()">
+                <div id="countryError" class="error-message"></div>
+            </div>
+            <div class="form-group"><label for="ZipCode">Zip Code <span class="required">*</span></label>
+                <input type="number" name="ZipCode" id="ZipCode" min="1000" max="9999999999" minlength="4" maxlength="10" required oninput="validateZipCode()"></div>
+        </div>
+
+        <!-- Submit Button -->
+      <button type="submit" name="submit">Next</button>
+
+
+    </form>
+</div>
+<footer>&copy;Caraga State University 2025</footer>
+<script src="../javascript/register.js"></script>
+<script src="../javascript/generate_id.js"></script>
+<script src="../javascript/check_user.js"></script>
+<script src="../javascript/email-validation.js"></script>
+<script src="../javascript/username_format.js"></script>
+<!-- <script src="../javascript/disable_back.js"></script> -->
+</body>
+</html>

@@ -1,0 +1,559 @@
+*{
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0; 
+    /* Background image with violet theme overlay */
+    background-image: url('../images/image-42-1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center; /* center the login card */
+    align-items: center;
+    text-align: center;
+    min-height: 100vh; 
+    color: #222;
+    padding-top: 64px;   /* space for fixed header */
+    padding-bottom: 64px;/* space for fixed footer */
+    position: relative;
+}
+
+/* Violet overlay on entire page background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.75) 0%, rgba(118, 75, 162, 0.8) 100%);
+    z-index: -1;
+    pointer-events: none;
+}
+.login h1 {
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    font-weight: 700;
+}
+
+.login {
+    padding: 24px;
+    /* Semi-transparent background for form box */
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    width: 100%;
+    max-width: 420px;
+    margin-left: 0;
+    overflow: hidden;
+}
+
+/* Ensure form content is above the overlay */
+.login > * {
+    position: relative;
+    z-index: 1;
+}
+
+.login input {
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #333;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.login input::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+/* Keep checkboxes compact (don't inherit text input sizing) */
+.login input[type="checkbox"] {
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+}
+
+.login input:focus {
+    border-color: rgba(255, 255, 255, 0.6);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.error-message {
+    color: #d32f2f; /* Softer, less harsh red */
+    font-size: 15px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    line-height: 1.5;
+    font-weight: 500; /* Lighter weight - less harsh */
+    letter-spacing: 0.02em;
+    opacity: 0.9; /* Slightly transparent for softer appearance */
+    transition: opacity 0.2s ease;
+}
+
+/* Inline checkbox option below inputs (reused from register styles) */
+.option-below {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+}
+.option-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.login button {
+    margin: 10px auto 0 auto;
+    width: 100%;
+    height: 44px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.login button:hover {
+    background: linear-gradient(135deg, #7A25F0 0%, #8B5CF6 100%);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+}
+
+.input-row {
+    margin-bottom: 15px;
+    text-align: left; /* para left aligned ang label */
+    display: block;
+}
+
+.input-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.input-container {
+    position: relative;
+    flex: 1;
+}
+
+.input-container input {
+    padding-right: 35px; /* Space for eye icon */
+}
+
+.input-container i {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+}
+
+.input-container i:first-of-type {
+    left: 10px;
+}
+
+.input-container i:last-of-type {
+    right: 10px;
+    cursor: pointer;
+}
+
+.input-container i:last-of-type:hover {
+    color: #666;
+}
+
+/* Header styling - minimalist (match home.css) */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 1000;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.container {
+    display: flex;
+    justify-content: space-between; /* brand left, nav right */
+    align-items: center;
+    gap: 10px;
+    padding: 0 24px;
+}
+
+/* Header brand and nav */
+.brand { display: flex; align-items: center; gap: 6px; }
+.brand-mark { height: 60px; width: auto; }
+.brand-text { height: 60px; margin-left: -40px; width: 100%; }
+.brand img { display: block; }
+.nav { display: flex; gap: 10px; }
+
+.container a {
+    display: inline;
+    margin: 0 15px;
+    padding: 0;
+    text-decoration: underline;
+    color: white;
+    background: none;
+    border: none;
+    border-radius: 0;
+    font-weight: normal;
+    transition: color 0.3s ease;
+    box-shadow: none;
+}
+.container a[href="login.html"] { display: none; }
+.container a:hover {
+    background: none;
+    color: #ccc;
+    transform: none;
+    border: none;
+    box-shadow: none;
+    text-decoration: underline;
+}
+.container a.active {
+    background: none;
+    color: white;
+    border: none;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Disabled navigation button styles */
+.container a.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+    color: #999;
+    border-color: #ddd;
+}
+
+.container a.disabled:hover {
+    background: #f5f5f5;
+    color: #999;
+    transform: none;
+    border-color: #ddd;
+}
+
+/* Disabled forgot password link styles */
+.forget a.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: #999 !important;
+    text-decoration: none;
+}
+
+.forget a.disabled:hover {
+    color: #999 !important;
+    text-decoration: none;
+}
+.container a.active {
+    background: var(--primary-bg);
+    color: var(--primary-ink);
+    border-color: var(--primary);
+}
+.header a:hover {
+    background: #f2f2f2;
+    color: #111;
+    transform: translateY(-1px);
+    box-shadow: none;
+}
+
+/* Active page styling - optional */
+.header a.active {
+    background: var(--primary-bg);
+    color: var(--primary-ink);
+}
+.forget a {
+    color: #667eea;
+    text-shadow: none;
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 20px;
+    transition: color 0.2s ease;
+}
+
+.forget a:hover {
+    color: #c85a5a;
+    text-decoration: underline;
+}
+
+footer {
+    position: fixed;
+    font-style: italic;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    padding: 10px; /* Consistent padding with header */
+    z-index: 999;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
+}
+
+footer h3 {
+    margin: 0; /* Remove default margin */
+    font-size: 16px;
+    color: white;
+}
+
+/* ==========================
+   Responsive Adjustments
+   ========================== */
+
+/* Large tablets / small desktops */
+@media (max-width: 1024px) {
+  body {
+    padding-top: 64px; /* space for fixed header */
+    padding-bottom: 64px; /* space for fixed footer */
+    justify-content: center; /* center on medium screens */
+    align-items: center;
+  }
+  .login {
+    width: 92%;
+    max-width: 460px;
+    margin-left: 0;
+    background: #ffffff;
+  }
+}
+
+/* Tablets */
+@media (max-width: 768px) {
+  body { justify-content: center; align-items: center; }
+  .container {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 16px;
+  }
+  .container a {
+    margin: 6px 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  .login {
+    width: 92%;
+    padding: 24px;
+    margin-left: 0;
+  }
+  .login button {
+    width: 100%;
+    font-size: 18px;
+  }
+}
+
+/* Phones */
+@media (max-width: 480px) {
+  header {
+    padding: 6px 0;
+  }
+  .container a {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  .login {
+    width: 94%;
+    padding: 18px;
+  }
+  .login input {
+    height: 38px;
+    font-size: 14px;
+  }
+  .login button {
+    font-size: 16px;
+    height: 42px;
+  }
+  footer h3 {
+    font-size: 14px;
+  }
+}
+
+/* ==========================
+   Modal Popup Styles
+   ========================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #fff;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+.modal-content h2 {
+    color: #fff;
+    margin: 0 0 15px 0;
+    font-size: 24px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content p {
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 25px 0;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.modal-button {
+    display: inline-block;
+    width: 100%;
+    padding: 12px 24px;
+    background-color: #fff;
+    color: #667eea;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal-button:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-button-secondary {
+    display: inline-block;
+    width: 100%;
+    padding: 12px 24px;
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.modal-button-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+/* Responsive modal */
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 24px;
+        max-width: 90%;
+    }
+    
+    .modal-content h2 {
+        font-size: 20px;
+    }
+    
+    .modal-content p {
+        font-size: 14px;
+    }
+    
+    .modal-button,
+    .modal-button-secondary {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+}
+
+
+

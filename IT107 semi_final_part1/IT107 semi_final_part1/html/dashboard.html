@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volleyball Dashboard</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+    <!-- Header with logout button -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <img src="../images/Caraga_State.png" alt="Caraga State University" class="header-logo">
+                <h1 class="header-title">Volleyball Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <span class="welcome-text">Welcome, <strong id="username">Coach John</strong>!</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-main">
+        <div class="dashboard-container">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h2 class="hero-title">🏐 Team Overview</h2>
+                    <p class="hero-subtitle">Monitor your volleyball team's performance and statistics</p>
+                </div>
+            </section>
+
+            <!-- Stats Grid -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card total-players">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="total-players">12</h3>
+                            <p class="stat-label">Total Players</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card active-players">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="active-players">10</h3>
+                            <p class="stat-label">Active Players</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card injured-players">
+                        <div class="stat-icon">🏥</div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="injured-players">2</h3>
+                            <p class="stat-label">Injured Players</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card team-ranking">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="team-ranking">#3</h3>
+                            <p class="stat-label">Team Ranking</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card win-rate">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <h3 class="stat-number" id="win-rate">75.5%</h3>
+                            <p class="stat-label">Win Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="actions-section">
+                <h3 class="section-title">Quick Actions</h3>
+                <div class="actions-grid">
+                    <button class="action-btn" onclick="viewPlayers()">
+                        <span class="action-icon">👥</span>
+                        <span class="action-text">View Players</span>
+                    </button>
+                    <button class="action-btn" onclick="viewSchedule()">
+                        <span class="action-icon">📅</span>
+                        <span class="action-text">View Schedule</span>
+                    </button>
+                    <button class="action-btn" onclick="viewStats()">
+                        <span class="action-icon">📊</span>
+                        <span class="action-text">View Statistics</span>
+                    </button>
+                    <button class="action-btn" onclick="viewSettings()">
+                        <span class="action-icon">⚙️</span>
+                        <span class="action-text">Settings</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <p>&copy; Caraga State University 2025 - Volleyball Management System</p>
+    </footer>
+
+    <script src="../javascript/dashboard.js"></script>
+    <script src="../javascript/disable_back.js"></script>
+</body>
+</html>

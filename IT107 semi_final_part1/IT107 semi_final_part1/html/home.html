@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+    <header>
+      <div class="container">
+        <div class="brand">
+          <img src="../images/Caraga_State.png" alt="Caraga State University" class="brand-mark" />
+          <img src="../images/Caraga.png" alt="Caraga State University" class="brand-text" />
+        </div>
+        <nav class="nav">
+          <a href="home.html" class="active">Home</a>
+          <a href="login.html">Login</a>
+          <a href="register.html">Register</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="content">
+        <h1>Welcome to Volleyball Club</h1>
+      </section>
+          <!-- Background slideshow layer -->
+    <div id="bg-slideshow" aria-hidden="true"></div>
+    
+    <!-- Fullscreen overlay -->
+    <div id="fullscreen-overlay" class="fullscreen-overlay">
+        <button id="close-fullscreen" class="close-fullscreen" aria-label="Close">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="fullscreen-content">
+            <div class="fullscreen-media"></div>
+            <div class="fullscreen-body">
+                <h2></h2>
+                <div class="fullscreen-description"></div>
+            </div>
+        </div>
+    </div>
+      <!-- Positions section -->
+      <section class="positions-section">
+        <h2>Volleyball Positions</h2>
+        <div class="positions-grid">
+          <div class="position-card" data-position="setter" data-description="The playmaker of the team who sets up the ball for attackers. The setter coordinates the team's offensive players and decides which teammate will get the ball for the attack. They need excellent ball-handling skills, quick decision-making abilities, and strong communication skills.">
+            <div class="card-media" style="background-image:url('../images/setter.jpg')">
+              <span class="bubble bubble-1"></span>
+              <span class="bubble bubble-2"></span>
+              <span class="bubble bubble-3"></span>
+            </div>
+            <div class="card-body">
+              <h3>Setter</h3>
+              <p>Team playmaker who sets up attackers.</p>
+            </div>
+          </div>
+
+          <div class="position-card" data-position="libero" data-description="A defensive specialist known for exceptional passing and digging skills. The libero wears a different colored jersey and can substitute for any back-row player without counting as a regular substitution. They specialize in defensive skills like passing and digging, and are often the team's best serve receiver.">
+            <div class="card-media" style="background-image:url('../images/libero.jpg')">
+              <span class="bubble bubble-4"></span>
+              <span class="bubble bubble-5"></span>
+              <span class="bubble bubble-6"></span>
+            </div>
+            <div class="card-body">
+              <h3>Libero</h3>
+              <p>Defensive specialist for receptions and digs.</p>
+            </div>
+          </div>
+
+          <div class="position-card" data-position="outside-hitter" data-description="Also known as the left-side hitter, this player attacks from the front left position. The outside hitter is typically the primary offensive option and plays both front and back row. They need to be strong hitters, good passers, and capable blockers. Their role is crucial in both offensive and defensive plays, often receiving serves and making key attacks.">
+            <div class="card-media" style="background-image:url('../images/outside-hitter.jpg')">
+              <span class="bubble bubble-7"></span>
+              <span class="bubble bubble-8"></span>
+              <span class="bubble bubble-9"></span>
+            </div>
+            <div class="card-body">
+              <h3>Outside Hitter</h3>
+              <p>Primary attacker from the left side.</p>
+            </div>
+          </div>
+
+          <div class="position-card" data-position="middle-blocker" data-description="Plays at the net in the middle of the court and specializes in blocking opponent attacks. Middle blockers are typically the tallest players on the team and are responsible for blocking the opponent's hits. They also execute quick attacks in the middle of the net and must be able to transition quickly between offense and defense. Their ability to read the opponent's attack and react quickly is crucial for the team's defensive strategy.">
+            <div class="card-media" style="background-image:url('../images/middle-blocker.jpg')">
+              <span class="bubble bubble-11"></span>
+              <span class="bubble bubble-12"></span>
+            </div>
+            <div class="card-body">
+              <h3>Middle Blocker</h3>
+              <p>Blocks and quick attacks in the middle.</p>
+            </div>
+          </div>
+
+          <div class="position-card" data-position="opposite-hitter" data-description="Also called the right-side hitter, this player attacks from the front right position. The opposite hitter plays opposite the setter in the rotation and is often the team's second-highest scorer. They need to be strong blockers to defend against the opponent's outside hitters and must be able to hit from the back row. Their versatility in both attacking and blocking makes them a key player in the team's strategy.">
+            <div class="card-media" style="background-image:url('../images/opposite-hitter.jpg')">
+              <span class="bubble bubble-13"></span>
+              <span class="bubble bubble-14"></span>
+              <span class="bubble bubble-15"></span>
+            </div>
+            <div class="card-body">
+              <h3>Opposite Hitter</h3>
+              <p>Right-side attacker and secondary blocker.</p>
+            </div>
+          </div>
+
+          <div class="position-card" data-position="defensive-specialist" data-description="A back-row specialist who excels in passing and digging. The defensive specialist often substitutes for front-row players to improve the team's defense and serve receive. While they don't typically attack at the net, they are crucial for keeping the ball in play and making accurate passes to the setter. Their defensive skills and ability to read the game are essential for the team's success in long rallies.">
+            <div class="card-media" style="background-image:url('../images/Defensive.jpg')">
+              <span class="bubble bubble-16"></span>
+              <span class="bubble bubble-17"></span>
+              <span class="bubble bubble-18"></span>
+            </div>
+            <div class="card-body">
+              <h3>Defensive Specialist</h3>
+              <p>Back-row specialist for passing and defense.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer>&copy;Caraga State University 2025</footer>
+    <script src="../javascript/home.js"></script>
+    <script src="../javascript/card-interactions.js"></script>
+    <script src="../javascript/disable_back.js"></script>
+</body>
+</html>

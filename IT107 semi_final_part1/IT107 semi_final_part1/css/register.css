@@ -1,0 +1,598 @@
+*{
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+body {
+    margin: 0;
+    padding: 0;
+    /* Background image with violet theme overlay */
+    background-image: url('../images/image-42-1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 100px;      /* More space from header */
+    padding-bottom: 100px;   /* More space from footer */
+    overflow: hidden;
+    position: relative;
+}
+
+/* Violet overlay on entire page background */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.75) 0%, rgba(118, 75, 162, 0.8) 100%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.register {
+    /* Balanced top margin */
+    /* margin-left: -500px; */
+    margin-bottom: 45%;   /* Reduced bottom margin */
+    padding: 0.8rem;       /* Smaller padding to make box more compact */
+    width: 75%;            /* Reduced width from 90% to 75% */
+    max-width: 850px;      /* Reduced max-width from 750px to 600px */
+    border-radius: 16px;
+    /* Semi-transparent background for form box */
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+/* Ensure form content is above the overlay */
+.register > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Add hover effect for the form
+.register:hover {
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+} */
+
+/* Add a subtle border highlight on focus-within */
+/* .register:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+} */
+/* Grids */
+.form-grid,
+.account-grid,
+.address-grid {
+    display: grid;
+    gap: 3px; /* very tight spacing */
+}
+
+/* Personal Info Grid */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns on desktop */
+}
+
+/* Account Info Grid */
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Address Info Grid */
+.address-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+/* Form group */
+.form-group label {
+    font-weight: bold;
+    font-size: 13px;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.register input,
+.register select {
+    padding: 8px 10px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    width: 100%;
+    font-size: 13px;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #333;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.register input::placeholder {
+    color: #999;
+    opacity: 1;
+}
+
+/* Input container for password fields with eye icon */
+.input-container {
+    position: relative;
+    width: 100%;
+}
+
+.input-container input {
+    padding-right: 35px; /* Space for eye icon */
+}
+
+.input-container i {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    cursor: pointer;
+    right: 30px;
+}
+
+.input-container i:hover {
+    color: #666;
+}
+
+/* Inline checkbox option beside inputs */
+.with-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+.with-option .option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;
+    color: #333;
+}
+
+/* Checkbox row placed under input */
+.option-below {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.option-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.register input:focus,
+.register select:focus {
+    border-color: rgba(255, 255, 255, 0.6);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 1);
+}
+
+/* Keep error/success colors even when focused */
+.register input.input-error,
+.register select.input-error {
+    border-color: #dc3545 !important;
+    background-color: #fff5f5;
+}
+.register input.input-error:focus,
+.register select.input-error:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+}
+
+.register input.input-success,
+.register select.input-success {
+    border-color: #28a745 !important;
+    background-color: #f5fff5;
+}
+.register input.input-success:focus,
+.register select.input-success:focus {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+}
+
+/* Button */
+.register button {
+    width: 26%;
+    min-width: 140px;
+    margin-right: -600px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 5px;
+    color: white;
+    text-shadow: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.register button:hover {
+    background: linear-gradient(135deg, #7A25F0 0%, #8B5CF6 100%);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+}
+/* Header styling - IMPROVED */
+/*diri naay na change*/
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 1000;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.container {
+    display: flex;
+    justify-content: space-between; /* brand left, nav right */
+    align-items: center;
+    gap: 10px;
+    padding: 0 24px;
+}
+
+/* Header brand and nav */
+.brand { display: flex; align-items: center; gap: 6px; }
+.brand-mark { height: 60px; width: auto; }
+.brand-text { height: 60px; margin-left: -40px; width: 100%; }
+.brand img { display: block; }
+.nav { display: flex; gap: 10px; }
+
+.container a {
+    display: inline;
+    margin: 0 15px;
+    padding: 0;
+    text-decoration: underline;
+    color: white;
+    background: none;
+    border: none;
+    border-radius: 0;
+    font-weight: normal;
+    transition: color 0.3s ease;
+    box-shadow: none;
+}
+.container a[href="register.html"] { display: none; }
+.container a:hover {
+    background: none;
+    color: #ccc;
+    transform: none;
+    border: none;
+    box-shadow: none;
+    text-decoration: underline;
+}
+.container a.active {
+    background: none;
+    color: white;
+    border: none;
+    font-weight: bold;
+    text-decoration: underline;
+}
+.header a:hover {
+    background: #f2f2f2;     /* subtle hover */
+    color: #111;
+    transform: translateY(-1px);
+    box-shadow: none;
+}
+
+/* Active page styling - optional */
+.header a.active {
+    background: var(--primary-bg);     /* subtle active */
+    color: var(--primary-ink);
+}
+
+.link-register a {
+    display: inline-block;
+    width: 30%;
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: #4caf50;     /* green color */
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.link-register a:hover {
+    background: #388e3c;     /* darker green on hover */
+    text-decoration: none;   /* remove underline */
+}
+
+.forget {
+    text-align: right;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+/* Heading sizes and spacing */
+.register h2 {
+    font-size: 16px;
+    margin: 1px 0 3px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.register h3 {
+    font-size: 16px;
+    margin: 1px 0 3px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.forget a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 20px;
+}
+
+.forget a:hover {
+    text-decoration: underline;
+}
+
+footer {
+    position: fixed;
+    font-style: italic;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    padding: 10px; /* Consistent padding with header */
+    z-index: 999;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
+}
+
+footer h3 {
+    margin: 0; /* Remove default margin */
+    font-size: 16px;
+    color: white;
+}
+
+/* ==========================
+   Responsive Adjustments
+   ========================== */
+
+/* Large tablets / small desktops */
+@media (max-width: 1024px) {
+  body {
+    padding-top: 70px; /* space for fixed header */
+    padding-bottom: 60px; /* space for fixed footer */
+    align-items: flex-start;
+    justify-content: center; /* center content on medium screens */
+  }
+  .register {
+    max-width: 700px;
+    padding: 30px;
+    margin-left: 0;
+    background: #ffffff;
+  }
+  .form-grid,
+  .account-grid,
+  .address-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablets */
+@media (max-width: 768px) {
+  body {
+    padding-top: 70px;
+    padding-bottom: 70px;
+    justify-content: center; /* center on small screens */
+  }
+  .container {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 12px;
+  }
+  .container a {
+    margin: 0 10px;
+    padding: 0;
+    font-size: 14px;
+  }
+  .register {
+    max-width: 550px;
+    width: 92%;
+    padding: 24px;
+    margin-left: 0;
+  }
+  .form-grid,
+  .account-grid,
+  .address-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .register input,
+  .register select {
+    width: 100%;
+  }
+  .register button {
+    width: 100%;
+    font-size: 16px;
+  }
+  .link-register a {
+    width: 100%;
+    text-align: center;
+  }
+  .forget {
+    text-align: center;
+    font-size: 16px;
+  }
+}
+
+/* Phones */
+@media (max-width: 480px) {
+  header {
+    padding: 6px 0;
+  }
+  .container a {
+    padding: 0;
+    font-size: 13px;
+    margin: 0 8px;
+  }
+  .register {
+    width: 94%;
+    padding: 18px;
+  }
+  .form-group label {
+    font-size: 14px;
+  }
+  .register input,
+  .register select {
+    padding: 10px;
+    font-size: 14px;
+  }
+  footer h3 {
+    font-size: 14px;
+  }
+}
+/* input text sa ubos sa input*/
+        .input-error {
+            border: 2px solid #dc3545;
+            background-color: #fff5f5;
+            color: #333;
+        }
+
+        .input-success {
+            border: 2px solid #28a745;
+            background-color: #f5fff5;
+            color: #333;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 2px;
+            line-height: 1.4;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        label .required {
+            color: #dc3545; /* Red color for required asterisk */
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        label .optional {
+            color: #dc3545; /* Red color for optional text */
+            font-size: 12px;
+            margin-left: 5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        input {
+            padding: 6px;
+            margin-bottom: 5px;
+            width: 250px;
+            display: block;
+        }
+
+.error {
+    border: 2px solid red;
+    
+}
+.input-error {
+    border: 2px solid red;
+}
+.message-error {
+    color: red;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.hint-message {
+    color: red;
+    font-size: 13px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.strength-message {
+    font-size: 13px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    /* Remove blurry text-shadow, use crisp rendering */
+    text-shadow: none;
+    /* Improve font rendering for crisp, sharp text */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Ensure high contrast and clarity */
+    opacity: 1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Ensure text is always sharp and clear */
+    will-change: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Colors are now set directly via JavaScript with high-contrast hex values */
+
+.error-message {
+    color: #dc3545; /* Bright, high-contrast red */
+    font-size: 13px; /* Slightly larger for better readability */
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.5;
+    font-weight: 700; /* Bolder for better visibility */
+    letter-spacing: 0.02em;
+    /* Remove any blurry effects, use crisp rendering */
+    text-shadow: none;
+    /* Improve font rendering for crisp, sharp text */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Ensure high contrast and clarity */
+    opacity: 1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Ensure text is always sharp and clear */
+    will-change: auto;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.message-error {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}

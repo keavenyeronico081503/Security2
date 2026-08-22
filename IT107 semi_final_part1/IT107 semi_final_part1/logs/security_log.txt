@@ -1,0 +1,14 @@
+2025-10-17 07:13:21 - SUSPICIOUS LOGIN ATTEMPT
+Username: asdasdasd
+Failed Attempts: 5
+IP Address: ::1
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0
+----------------------------------------
+
+2025-10-17 07:13:23 - SUSPICIOUS LOGIN ATTEMPT
+Username: asdasdasd
+Failed Attempts: 6
+IP Address: ::1
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0
+----------------------------------------
+
