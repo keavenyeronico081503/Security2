@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Check if user exists and get their info
-    $sql = "SELECT id, username, password, registration_status FROM users WHERE username = ?";
+    $sql = "SELECT id, username, password, role, account_status, privileges, registration_status FROM users WHERE username = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -24,6 +24,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $user = $result->fetch_assoc();
+
+    if ($user['account_status'] === 'blocked') {
+        echo json_encode(["status" => "error", "message" => "This account is blocked."]);
+        exit();
+    }
+
+    if ($user['role'] !== 'user' && $user['account_status'] !== 'approved') {
+        echo json_encode(["status" => "error", "message" => "This administrator account is awaiting approval."]);
+        exit();
+    }
 
     // Check if registration is incomplete
     if ($user['registration_status'] === 'incomplete') {
@@ -37,14 +47,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Verify password
     if (password_verify($password, $user['password'])) {
+        session_regenerate_id(true);
         // Set session variables
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['privileges'] = json_decode($user['privileges'] ?: '{}', true) ?: [];
+
+        $redirect = $user['role'] === 'user' && $user['account_status'] === 'pending'
+            ? "../html/pending.html"
+            : match ($user['role']) {
+            'super_admin' => "../html/super-admin.html",
+            'admin' => "../html/admin.html",
+            default => "../html/dashboard.html"
+        };
         
         echo json_encode([
             "status" => "success", 
             "message" => "Login successful!",
-            "redirect" => "../html/dashboard.html"
+            "redirect" => $redirect
         ]);
     } else {
         echo json_encode(["status" => "error", "message" => "Invalid password or username."]);

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrator</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+</head>
+<body class="has-sidebar app-admin">
+  <button class="sidebar-menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button><div class="sidebar-scrim"></div>
+  <aside class="app-sidebar" aria-label="Administrator navigation"><div class="sidebar-brand"><strong>Security2</strong><span>Administrator</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" href="#accounts">Overview</a><button class="sidebar-toggle" aria-expanded="true" aria-controls="admin-account-menu">Account Management <span class="chevron">&#9662;</span></button><div id="admin-account-menu" class="sidebar-submenu"><a class="sidebar-link" href="#accounts">Accounts</a><a class="sidebar-link" href="#accounts">Approvals</a><a class="sidebar-link" href="#accounts">Deletion requests</a></div><button class="sidebar-toggle" aria-expanded="false" aria-controls="admin-profile-menu">My Account <span class="chevron">&#9662;</span></button><div id="admin-profile-menu" class="sidebar-submenu" hidden><a class="sidebar-link" href="dashboard.html">Dashboard</a><a class="sidebar-link" href="change-password.html">Change password</a></div></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
+  <header><div><p class="eyebrow">Operations</p><h1>Administrator</h1></div><button id="logout">Log out</button></header>
+  <main>
+    <section class="toolbar"><div><h2>Account registrations</h2><p>Review and maintain user accounts.</p></div><form id="filter"><label for="employeeId">Employee ID</label><div class="filter-row"><input id="employeeId" placeholder="Search Employee ID"><button>Filter</button><button type="button" id="clear" class="outline">Clear</button></div></form></section>
+    <p id="message" role="status"></p>
+    <section class="table-wrap"><table><thead><tr><th>Name</th><th>Employee ID</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="accounts"></tbody></table></section>
+  </main>
+  <script src="../javascript/admin.js"></script>
+  <script src="../javascript/sidebar.js"></script>
+</body>
+</html>

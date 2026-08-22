@@ -6,8 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Volleyball Dashboard</title>
     <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
 </head>
-<body>
+<body class="has-sidebar app-user">
+    <button class="sidebar-menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button><div class="sidebar-scrim"></div>
+    <aside class="app-sidebar" aria-label="User navigation"><div class="sidebar-brand"><strong>Security2</strong><span>User account</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" href="#dashboard">Dashboard</a><button class="sidebar-toggle" aria-expanded="true" aria-controls="user-team-menu">Team <span class="chevron">&#9662;</span></button><div id="user-team-menu" class="sidebar-submenu"><a class="sidebar-link" href="#players">Players</a><a class="sidebar-link" href="#schedule">Schedule</a><a class="sidebar-link" href="#statistics">Statistics</a></div><button class="sidebar-toggle" aria-expanded="false" aria-controls="user-account-menu">My Account <span class="chevron">&#9662;</span></button><div id="user-account-menu" class="sidebar-submenu" hidden><a class="sidebar-link" href="change-password.html">Change password</a></div></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
     <!-- Header with logout button -->
     <header class="dashboard-header">
         <div class="header-content">
@@ -23,7 +27,7 @@
     </header>
 
     <!-- Main Dashboard Content -->
-    <main class="dashboard-main">
+    <main id="dashboard" class="dashboard-main">
         <div class="dashboard-container">
             <!-- Hero Section -->
             <section class="hero-section">
@@ -34,7 +38,7 @@
             </section>
 
             <!-- Stats Grid -->
-            <section class="stats-section">
+            <section id="statistics" class="stats-section">
                 <div class="stats-grid">
                     <div class="stat-card total-players">
                         <div class="stat-icon">👥</div>
@@ -79,7 +83,7 @@
             </section>
 
             <!-- Quick Actions -->
-            <section class="actions-section">
+            <section id="players" class="actions-section">
                 <h3 class="section-title">Quick Actions</h3>
                 <div class="actions-grid">
                     <button class="action-btn" onclick="viewPlayers()">
@@ -109,6 +113,7 @@
     </footer>
 
     <script src="../javascript/dashboard.js"></script>
+    <script src="../javascript/sidebar.js"></script>
     <script src="../javascript/disable_back.js"></script>
 </body>
 </html>

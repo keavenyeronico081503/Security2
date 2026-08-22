@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Administrator</title>
+  <link rel="stylesheet" href="../css/super-admin.css">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/privilege.css">
+  <link rel="stylesheet" href="../css/audit.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+</head>
+<body class="has-sidebar app-superadmin">
+  <button class="sidebar-menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button>
+  <div class="sidebar-scrim"></div>
+  <aside class="app-sidebar" aria-label="Super Administrator navigation"><div class="sidebar-brand"><strong>Security2</strong><span>Super Administrator</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" data-view="accounts" href="#accounts">Overview</a><button class="sidebar-toggle" aria-expanded="true" aria-controls="super-account-menu">Account Management <span class="chevron">&#9662;</span></button><div id="super-account-menu" class="sidebar-submenu"><a class="sidebar-link" data-view="accounts" href="#accounts">All accounts</a><a class="sidebar-link" data-view="create-account" href="#create-account">Create account</a><a class="sidebar-link" data-view="requests" href="#requests-panel">Deletion requests</a></div><button class="sidebar-toggle" aria-expanded="false" aria-controls="super-security-menu">Security &amp; Access <span class="chevron">&#9662;</span></button><div id="super-security-menu" class="sidebar-submenu" hidden><a class="sidebar-link" data-view="privileges" href="#privileges">Assign privileges</a><a class="sidebar-link" data-view="audit" href="#audit">Audit log</a></div></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
+  <main>
+    <section class="toolbar" data-module-view="accounts">
+      <div><h2>Accounts</h2><p>Review registrations and manage account access.</p></div>
+      <form id="filterForm"><label for="employeeId">Employee ID</label><div class="filter-row"><input id="employeeId" placeholder="Search employee ID"><button>Filter</button><button type="button" id="clearFilter" class="secondary">Clear</button></div></form>
+    </section>
+    <p id="message" class="message" role="status" data-module-view="accounts"></p>
+    <section id="accounts-panel" class="table-wrap"><table><thead><tr><th>Name</th><th>Employee ID</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="accounts"></tbody></table></section>
+    <section id="requests-panel" class="create-panel"><div class="section-heading"><h2>Deletion requests</h2><button type="button" id="refreshRequests" class="secondary">Refresh</button></div><div class="table-wrap"><table><thead><tr><th>Account</th><th>Employee ID</th><th>Requested by</th><th>Reason</th><th>Status</th><th>Review</th></tr></thead><tbody id="requests"></tbody></table></div></section>
+    <section id="audit" class="create-panel"><div class="section-heading"><h2>Audit log</h2><button type="button" id="refreshAudit" class="secondary">Refresh</button></div><div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Result</th><th>Details</th></tr></thead><tbody id="auditLogs"></tbody></table></div><div class="audit-pagination"><button type="button" id="previousAudit" class="secondary">Previous</button><span id="auditPage">Page 1 of 1</span><button type="button" id="nextAudit" class="secondary">Next</button></div></section>
+    <section id="create-account" class="create-panel"><h2>Create account</h2><form id="createForm" class="create-form"><input name="first_name" placeholder="First name" required><input name="last_name" placeholder="Last name" required><input name="id_number" placeholder="Employee ID" required><input type="email" name="email" placeholder="Email" required><input name="username" placeholder="Username" required><input type="password" name="password" placeholder="Temporary password" minlength="8" required><select name="role"><option value="admin">Administrator</option><option value="super_admin">Super Administrator</option></select><button>Create account</button></form></section>
+    <section id="privileges" class="create-panel"><div class="section-heading"><h2>Assign privileges</h2><p>Select an account to manage its module access.</p></div><div class="table-wrap"><table><thead><tr><th>Account</th><th>Employee ID</th><th>Role</th><th>Action</th></tr></thead><tbody id="privilegeAccounts"></tbody></table></div></section>
+  </main>
+  <dialog id="privilegeDialog" class="privilege-dialog">
+    <form method="dialog" id="privilegeForm">
+      <div class="section-heading"><div><p class="eyebrow">Access control</p><h2>Assign privileges</h2><p id="privilegeAccount"></p></div><button type="button" id="closePrivileges" class="secondary">Close</button></div>
+      <div id="privilegeModules" class="privilege-modules"></div>
+      <div class="dialog-actions"><button type="button" id="cancelPrivileges" class="secondary">Cancel</button><button type="submit">Save privileges</button></div>
+    </form>
+  </dialog>
+  <script src="../javascript/super-admin.js"></script>
+  <script src="../javascript/sidebar.js"></script>
+</body>
+</html>

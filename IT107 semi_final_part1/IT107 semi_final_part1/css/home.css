@@ -20,7 +20,7 @@ body{
 #bg-slideshow {
   position: fixed;
   inset: 0;
-  z-index: 0; /* behind everything */
+    z-index: 0;
   overflow: hidden;
 }
 #bg-slideshow .track {
@@ -70,6 +70,9 @@ body{
     border: 1px solid #e0e0e0; /* Add border for better visibility */
 }
 
+h1{
+    color:black;
+}
 .position-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
@@ -316,6 +319,7 @@ header {
 .header a.active {
     background: #efefef;     /* subtle active state */
     color: #111;
+    color: black;
 }
 
 .logo {
@@ -573,6 +577,22 @@ footer h3 {
   text-shadow: none;
 }
 
+/* Keep the Home page section headings readable on the white background. */
+.page .content h1,
+.page .positions-section h2 {
+    color: #000000 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
+.positions-section h2,
+.positions-section .position-card h3,
+.positions-section .position-card p {
+    color: #000000 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
 .positions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -583,7 +603,7 @@ footer h3 {
 }
 
 /* Main page wrapper */
-.page { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+.page { position: relative; z-index: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
 
 .position-card {
   background: #ffffff;
@@ -619,14 +639,14 @@ footer h3 {
   overflow: hidden;
 }
 
-/* hide the thumbnail area to keep focus on background slideshow */
-.position-card .card-media { display: none; }
+/* Keep the content image visible on each position card. */
+.position-card .card-media { display: block; min-height: 180px; }
 
 /* glossy overlay */
 /* Disable glossy overlay for minimalism */
 .position-card .card-media::after { display: none; }
 
-.position-card .card-body { padding: 6px 4px; }
+.position-card .card-body { padding: 12px 4px; }
 
 /* Futuristic droplet accents using pseudo-elements */
 /* Disable decorative droplets */

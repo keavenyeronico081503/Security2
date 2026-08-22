@@ -131,6 +131,14 @@ try {
 
         if ($stmt->execute()) {
             $user_id = $conn->insert_id;
+
+            $roleStmt = $conn->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE code = "user"');
+            $roleStmt->bind_param('i', $user_id);
+            if (!$roleStmt->execute() || $roleStmt->affected_rows < 1) {
+                $conn->query("DELETE FROM users WHERE id = " . (int)$user_id);
+                echo json_encode(["status" => "error", "message" => "Could not initialize user permissions."]);
+                exit();
+            }
             
             // ✅ FIXED: Use correct table name 'security_questions'
                 $questionSql = "INSERT INTO security_questions 

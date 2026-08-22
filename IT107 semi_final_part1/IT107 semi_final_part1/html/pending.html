@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Pending</title>
+  <link rel="stylesheet" href="../css/pending.css">
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+</head>
+<body class="has-sidebar app-pending">
+  <button class="sidebar-menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button><div class="sidebar-scrim"></div>
+  <aside class="app-sidebar" aria-label="Pending account navigation"><div class="sidebar-brand"><strong>Security2</strong><span>Pending account</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" href="#account-status">Account status</a></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
+  <main id="account-status" class="status-panel" aria-live="polite">
+    <p class="eyebrow">Account review</p>
+    <h1>Registration pending</h1>
+    <p id="statusMessage">Your account is waiting for administrator approval.</p>
+    <p class="account-line">Username: <strong id="username">Loading...</strong></p>
+    <button id="logout">Log out</button>
+  </main>
+  <script src="../javascript/pending.js"></script>
+  <script src="../javascript/sidebar.js"></script>
+</body>
+</html>

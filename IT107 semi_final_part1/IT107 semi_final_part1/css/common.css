@@ -1,0 +1,332 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+:root {
+    --ui-ink: #101820;
+    --ui-teal: #31F7E9;
+    --ui-teal-dark: #1dc9be;
+    --ui-amber: #31F7E9;
+    --ui-paper: #f5f5f0;
+    --ui-surface: #ffffff;
+    --ui-text: #000000;
+    --ui-muted: #000000;
+    --ui-line: #c9d4d5;
+    --ui-error: #b42318;
+    --ui-success: #16704a;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    color: #000000;
+    background-color: var(--ui-paper) !important;
+    background-image: none !important;
+}
+
+[data-module-view], #accounts-panel, #requests, #audit, #create-account, #privileges {
+    scroll-margin-top: 24px;
+}
+
+body::before {
+    background: transparent !important;
+}
+
+h1, h2, h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    color: #ffffff !important;
+}
+
+.login h1 {
+    color: #000000 !important;
+}
+
+body:has(.login) {
+    background-color: #ffffff !important;
+}
+
+.login {
+    background: #f5f5f0 !important;
+}
+
+.login input {
+    background: #4f514f !important;
+    color: #ffffff !important;
+}
+
+.login input::placeholder {
+    color: #ffffff !important;
+    opacity: .9;
+}
+
+body:has(.register) {
+    background-color: #ffffff !important;
+}
+
+.register {
+    background: #f5f5f0 !important;
+}
+
+.register input,
+.register select {
+    background: #4f514f !important;
+    color: #ffffff !important;
+}
+
+.register input::placeholder {
+    color: #ffffff !important;
+    opacity: .9;
+}
+
+.register label,
+.register .option,
+.register .optional,
+.register .required {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.register h2,
+.register h3 {
+    color: #000000 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+
+button, input, select, textarea {
+    font: inherit;
+}
+
+button {
+    min-height: 44px;
+    border-radius: 5px;
+    background: #ffffff;
+    border: 1px solid var(--ui-teal);
+    color: #000000;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+body button {
+    background: #ffffff !important;
+    border-color: var(--ui-teal) !important;
+    box-shadow: 0 2px 5px rgba(22, 50, 79, .16) !important;
+    color: #000000 !important;
+}
+
+body button:hover {
+    background: #e8fffd !important;
+    border-color: var(--ui-teal-dark) !important;
+}
+
+body button.secondary, body button.outline {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #31F7E9 !important;
+    box-shadow: 0 2px 5px rgba(22, 50, 79, .10) !important;
+}
+
+body .close-fullscreen {
+    background: transparent !important;
+    color: #fff !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+button:hover {
+    background: var(--ui-teal-dark);
+    border-color: var(--ui-teal-dark);
+    transform: none;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--ui-amber);
+    outline-offset: 2px;
+}
+
+input, select, textarea {
+    border: 1px solid var(--ui-line);
+    color: var(--ui-text);
+    background: var(--ui-surface);
+}
+
+input::placeholder, textarea::placeholder {
+    color: #687782;
+    opacity: 1;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--ui-teal);
+    box-shadow: 0 0 0 3px rgba(15, 107, 120, .16);
+    outline: none;
+}
+
+header {
+    background: #4f514f !important;
+    border-bottom: 3px solid #31F7E9 !important;
+    box-shadow: 0 2px 10px rgba(22, 50, 79, .18) !important;
+}
+
+nav a, header a {
+    color: #ffffff !important;
+}
+
+.error-message, .login-error-message {
+    color: var(--ui-error);
+}
+
+/* Normalize older page modules that still define their own visual theme. */
+.login, .register, .forgot-password, .change-password-box, .question-section, .question-group {
+    background: var(--ui-surface) !important;
+    color: var(--ui-text) !important;
+    border: 1px solid var(--ui-line) !important;
+    box-shadow: 0 8px 24px rgba(22, 50, 79, .12) !important;
+    backdrop-filter: none !important;
+}
+
+.login label, .register label, .forgot-password label, .change-password-box label, .question-section label, .question-group label {
+    color: var(--ui-text) !important;
+    text-shadow: none !important;
+}
+
+.login button, .register button, .forgot-password button, .change-password-box button, .question-section button, .question-group button {
+    background: #ffffff !important;
+    border-color: var(--ui-teal) !important;
+    color: #000000 !important;
+}
+
+.dashboard-header, .dashboard-footer {
+    background: #4f514f !important;
+    border-color: #31F7E9 !important;
+}
+
+.dashboard-header .header-title, .dashboard-header .welcome-text, .dashboard-header .welcome-text strong, .dashboard-footer p {
+    color: #000000 !important;
+}
+
+footer, .dashboard-footer {
+    background: #4f514f !important;
+    color: #ffffff !important;
+}
+
+footer p, .dashboard-footer p {
+    color: #ffffff !important;
+}
+
+.dashboard-header .logout-btn {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-radius: 5px !important;
+}
+
+.dashboard .hero-content, .hero-content {
+    background: var(--ui-surface) !important;
+    border: 1px solid var(--ui-line) !important;
+    box-shadow: 0 8px 24px rgba(22, 50, 79, .10) !important;
+    backdrop-filter: none !important;
+}
+
+.hero-title, .section-title {
+    color: #31F7E9 !important;
+    text-shadow: none !important;
+}
+
+.hero-subtitle {
+    color: var(--ui-muted) !important;
+}
+
+.stat-card, .action-btn {
+    background: var(--ui-surface) !important;
+    border: 1px solid var(--ui-line) !important;
+    box-shadow: 0 4px 14px rgba(22, 50, 79, .10) !important;
+    backdrop-filter: none !important;
+}
+
+.stat-card::before {
+    background: var(--ui-teal) !important;
+}
+
+.stat-icon {
+    background: var(--ui-teal) !important;
+    box-shadow: none !important;
+}
+
+.stat-number, .action-text {
+    color: #000000 !important;
+}
+
+.stat-label {
+    color: #000000 !important;
+}
+
+.action-btn:hover {
+    background: #eaf3f3 !important;
+}
+
+.home-button, .read-more {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: var(--ui-teal) !important;
+}
+
+.privilege-dialog h2 {
+    color: #17211b !important;
+}
+
+body:has(.positions-section) .content,
+body:has(.positions-section) .positions-section {
+    color: #000000 !important;
+}
+
+body:has(.positions-section) .content h1,
+body:has(.positions-section) .positions-section > h2 {
+    color: #000000 !important;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, .85) !important;
+}
+
+body:has(.positions-section) .content h1,
+body:has(.positions-section) .positions-section h2 {
+    color: #000000 !important;
+}
+
+body .page .content h1,
+body .page .positions-section > h2,
+body .page .position-card h3,
+body .page .position-card p {
+    color: #000000 !important;
+    opacity: 1 !important;
+}
+
+body:has(.positions-section) .position-card {
+    background: #ffffff !important;
+    border: 1px solid #c9d4d5 !important;
+}
+
+body:has(.positions-section) .position-card .card-media {
+    background-color: #dce8e8 !important;
+}
+
+body:has(.positions-section) .position-card .card-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .32));
+    pointer-events: none;
+}
+
+body:has(.positions-section) .position-card .card-body h3,
+body:has(.positions-section) .position-card .card-body p {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

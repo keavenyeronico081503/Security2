@@ -1,0 +1,48 @@
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ""
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+      MARIADB_DATABASE: registration_db
+    volumes:
+      - database_data:/var/lib/mysql
+      - ./registration_db.sql:/docker-entrypoint-initdb.d/registration_db.sql:ro
+      - ./database/001_super_admin_roles.sql:/docker-entrypoint-initdb.d/zz_super_admin_roles.sql:ro
+      - ./database/002_seed_super_admin.sql:/docker-entrypoint-initdb.d/zzz_seed_super_admin.sql:ro
+      - ./database/003_authorization_foundation.sql:/docker-entrypoint-initdb.d/zzzz_authorization_foundation.sql:ro
+      - ./database/004_deletion_workflow.sql:/docker-entrypoint-initdb.d/zzzzz_deletion_workflow.sql:ro
+      - ./database/005_deletion_review_fk.sql:/docker-entrypoint-initdb.d/zzzzzz_deletion_review_fk.sql:ro
+      - ./database/006_deletion_requester_fk.sql:/docker-entrypoint-initdb.d/zzzzzzz_deletion_requester_fk.sql:ro
+      - ./database/007_audit_snapshots.sql:/docker-entrypoint-initdb.d/zzzzzzzz_audit_snapshots.sql:ro
+      - ./database/008_backfill_audit_snapshots.sql:/docker-entrypoint-initdb.d/zzzzzzzzz_backfill_audit_snapshots.sql:ro
+      - ./database/009_pending_user_status.sql:/docker-entrypoint-initdb.d/zzzzzzzzzz_pending_user_status.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: ""
+      DB_NAME: registration_db
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./IT107 semi_final_part1/IT107 semi_final_part1:/var/www/html"
+    command: php -S 0.0.0.0:8000 -t /var/www/html
+
+volumes:
+  database_data:

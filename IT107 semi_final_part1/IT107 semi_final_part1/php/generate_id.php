@@ -2,10 +2,10 @@
 // Return a generated ID like YYYY-0001 as plain text so JS can set the input value.
 header('Content-Type: text/plain; charset=utf-8');
 
-$host = 'localhost';
-$user = 'root';
-$pass = '';
-$db   = 'registration_db';
+$host = getenv('DB_HOST') ?: 'localhost';
+$user = getenv('DB_USERNAME') ?: 'root';
+$pass = getenv('DB_PASSWORD') ?: '';
+$db   = getenv('DB_NAME') ?: 'registration_db';
 
 $mysqli = new mysqli($host, $user, $pass, $db);
 if ($mysqli->connect_error) {

@@ -1,12 +1,18 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 header('Content-Type: application/json');
 
 // Include database connection
-require_once 'db.php';
+require_once 'auth.php';
 
 // Get user ID from session (either from login or from forgot password flow)
 $userId = $_SESSION['user_id'] ?? $_SESSION['reset_user_id'] ?? null;
+
+if (isset($_SESSION['user_id'])) {
+    require_permission('password.change');
+}
 
 if (!$userId) {
     echo json_encode([
@@ -103,6 +109,7 @@ try {
     $updateStmt->bind_param("si", $hashedPassword, $userId);
     
     if ($updateStmt->execute()) {
+        audit('password.change', (int)$userId);
         // Clear reset session if it exists
         if (isset($_SESSION['reset_user_id'])) {
             unset($_SESSION['reset_user_id']);

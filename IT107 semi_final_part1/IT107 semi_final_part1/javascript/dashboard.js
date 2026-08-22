@@ -10,9 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
     addActionButtonEffects();
 });
 
-function initializeDashboard() {
+async function initializeDashboard() {
+    const access = await loadUserAccess();
+    if (!access) return;
+
     // Load user data if available
-    loadUserData();
+    loadUserData(access.user.username);
     
     // Load team statistics
     loadTeamStats();
@@ -21,7 +24,26 @@ function initializeDashboard() {
     addLoadingStates();
 }
 
-function loadUserData() {
+async function loadUserAccess() {
+    try {
+        const response = await fetch('../php/user.php?action=session');
+        const data = await response.json();
+        if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Access denied.');
+        return data;
+    } catch (error) {
+        localStorage.removeItem('userLoggedIn');
+        window.location.replace('login.html');
+        return null;
+    }
+}
+
+function loadUserData(serverUsername) {
+    const usernameElement = document.getElementById('username');
+    if (usernameElement && serverUsername) {
+        usernameElement.textContent = serverUsername;
+        return;
+    }
+
     // Get username from session or localStorage
     const username = getUsername();
     if (username) {

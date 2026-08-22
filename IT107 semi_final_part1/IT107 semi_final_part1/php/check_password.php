@@ -3,10 +3,10 @@ session_start();
 header('Content-Type: application/json');
 
 // Database connection
-$servername = "localhost";
-$username = "root";         // Default XAMPP username
-$password = "";             // Default XAMPP password (empty)
-$dbname = "it107_db";       // Replace with your database name
+$servername = getenv('DB_HOST') ?: "localhost";
+$username = getenv('DB_USERNAME') ?: "root";
+$password = getenv('DB_PASSWORD') ?: "";
+$dbname = getenv('DB_NAME') ?: "registration_db";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
