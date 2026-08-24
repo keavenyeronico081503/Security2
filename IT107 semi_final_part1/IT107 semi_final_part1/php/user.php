@@ -4,6 +4,16 @@ header('Content-Type: application/json; charset=utf-8');
 
 $action = $_GET['action'] ?? 'session';
 
+if ($action === 'profile') {
+    $user = require_permission('profile.view');
+    $stmt = $conn->prepare('SELECT first_name, middle_name, last_name, suffix, id_number, email, username, account_status FROM users WHERE id = ?');
+    $stmt->bind_param('i', $user['id']);
+    $stmt->execute();
+    $profile = $stmt->get_result()->fetch_assoc();
+    echo json_encode(['status' => 'success', 'profile' => $profile]);
+    exit;
+}
+
 if ($action === 'status') {
     $user = require_identity();
     if ($user['role_code'] !== 'user' || $user['account_status'] !== 'pending' || !can('account.status.view', (int)$user['id'])) {

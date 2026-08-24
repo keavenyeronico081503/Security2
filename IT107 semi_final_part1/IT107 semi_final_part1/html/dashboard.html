@@ -22,6 +22,15 @@
       <a class="sidebar-link active" data-view="dashboard" href="#dashboard"><i class="fas fa-home" aria-hidden="true"></i> Dashboard</a>
       <a class="sidebar-link" href="change-password.html"><i class="fas fa-key" aria-hidden="true"></i> Change password</a>
     </nav>
+    <button class="sidebar-toggle" aria-expanded="false" aria-controls="user-account-menu">Manage Account <span class="chevron">&#9662;</span></button>
+    <div id="user-account-menu" class="sidebar-submenu" hidden>
+      <a class="sidebar-link" data-view="profile" href="#profile"><i class="fas fa-id-card" aria-hidden="true"></i> My Profile</a>
+      <a class="sidebar-link" href="change-password.html"><i class="fas fa-key" aria-hidden="true"></i> Change Password</a>
+      <a class="sidebar-link" data-view="account-status" href="#account-status"><i class="fas fa-shield-alt" aria-hidden="true"></i> Account Status</a>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" data-view="calendar" href="#calendar"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar &amp; Events</a>
+    </nav>
     <div class="sidebar-footer">
       <a class="sidebar-link" href="../php/logout.php"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log out</a>
     </div>
@@ -64,6 +73,21 @@
           <p class="small-empty"><i class="far fa-calendar" aria-hidden="true"></i> No events have been posted yet.</p>
         </section>
       </aside>
+    </section>
+
+    <section id="calendar" class="dashboard-section" data-module-view="calendar" hidden aria-labelledby="calendarTitle">
+      <div class="section-heading"><div><p class="eyebrow">Club schedule</p><h1 id="calendarTitle">Calendar &amp; Events</h1><p class="section-intro">Find practices, tryouts, tournaments, and other coach announcements.</p></div><div class="calendar-controls"><button type="button" id="previousMonth" class="calendar-button" aria-label="Previous month"><i class="fas fa-chevron-left" aria-hidden="true"></i></button><strong id="calendarMonth"></strong><button type="button" id="nextMonth" class="calendar-button" aria-label="Next month"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div></div>
+      <div class="calendar-panel"><div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div id="calendarDays" class="calendar-days"></div></div>
+      <div class="calendar-empty"><i class="far fa-calendar-check" aria-hidden="true"></i><div><h2>No events posted yet</h2><p>Events will appear here when a Coach or Instructor publishes them.</p></div></div>
+    </section>
+
+    <section id="profile" class="dashboard-section profile-section" data-module-view="profile" hidden aria-labelledby="profilePageTitle">
+      <p class="eyebrow">Manage Account</p><h1 id="profilePageTitle">My Profile</h1><p class="section-intro">Your player information from registration.</p>
+      <div class="profile-grid"><div><span>Username</span><strong id="profilePageUsername">Loading...</strong></div><div><span>Role</span><strong id="profileRole">Player</strong></div><div><span>Email</span><strong id="profileEmail">Loading...</strong></div><div><span>Employee ID</span><strong id="profileId">Loading...</strong></div><div><span>Account status</span><strong id="profileStatus">Loading...</strong></div></div>
+    </section>
+
+    <section id="account-status" class="dashboard-section status-section" data-module-view="account-status" hidden aria-labelledby="accountStatusTitle">
+      <p class="eyebrow">Account security</p><h1 id="accountStatusTitle">Account Status</h1><div class="status-message"><i class="fas fa-check-circle" aria-hidden="true"></i><div><h2 id="accountStatusHeading">Active account</h2><p>Your account is approved and ready for club participation.</p></div></div>
     </section>
   </main>
 

@@ -29,10 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
     requests: ['#requests-panel'],
     audit: ['#audit'],
     privileges: ['#privileges'],
-    dashboard: ['.app-user main > *'],
+    dashboard: ['.app-user main > .dashboard-hero', '.app-user main > .dashboard-grid'],
     statistics: ['#statistics'],
     players: ['#players'],
-    'account-status': ['#account-status']
+    'account-status': ['#account-status'],
+    calendar: ['#calendar'],
+    profile: ['#profile']
   };
 
   const applyModuleView = () => {
