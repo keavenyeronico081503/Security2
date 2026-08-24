@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await response.json();
     if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Authentication required.');
     const username = data.user.username || 'Player';
-    document.querySelectorAll('#username, #profileUsername').forEach(element => {
+    document.querySelectorAll('#username').forEach(element => {
       element.textContent = username;
     });
     const profileResponse = await fetch('../php/user.php?action=profile');
