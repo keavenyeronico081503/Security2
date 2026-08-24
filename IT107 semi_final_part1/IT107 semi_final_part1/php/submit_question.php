@@ -121,7 +121,7 @@ try {
         }
 
         $registrationStatus = 'complete';
-        $stmt->bind_param("sssssiisssssssssss",
+        $stmt->bind_param("sssssi" . str_repeat('s', 12),
             $userData['fname'], 
             $middleName, 
             $userData['lastName'], 
