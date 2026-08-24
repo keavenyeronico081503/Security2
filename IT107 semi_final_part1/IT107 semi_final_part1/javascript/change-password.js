@@ -38,23 +38,24 @@ function loadUserData() {
     
     const idDisplay = document.getElementById('idDisplay');
     const usernameDisplay = document.getElementById('usernameDisplay');
+
+    if (!idDisplay && !usernameDisplay) return;
     
     if (!id) {
-        // If no ID found, show placeholder
-        idDisplay.textContent = 'Not available';
-        usernameDisplay.textContent = 'Not available';
+        if (idDisplay) idDisplay.textContent = 'Not available';
+        if (usernameDisplay) usernameDisplay.textContent = 'Not available';
         return;
     }
     
     // Display the ID
-    idDisplay.textContent = id;
+    if (idDisplay) idDisplay.textContent = id;
     
     // Fetch and display user data
     fetchUserData(id).then(userData => {
         if (userData) {
-            usernameDisplay.textContent = userData.username || 'Not available';
+            if (usernameDisplay) usernameDisplay.textContent = userData.username || 'Not available';
         } else {
-            usernameDisplay.textContent = 'Not available';
+            if (usernameDisplay) usernameDisplay.textContent = 'Not available';
         }
     });
 }
@@ -137,6 +138,7 @@ function validateConfirmPassword() {
 // Form submission handler
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('changePasswordForm');
+    if (!form) return;
     const messageDiv = document.getElementById('message');
     const submitBtn = form.querySelector('button[type="submit"]');
 

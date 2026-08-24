@@ -34,7 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     players: ['#players'],
     'account-status': ['#account-status'],
     calendar: ['#calendar'],
-    profile: ['#profile']
+    profile: ['#profile'],
+    'change-password': ['#change-password']
   };
 
   const applyModuleView = () => {

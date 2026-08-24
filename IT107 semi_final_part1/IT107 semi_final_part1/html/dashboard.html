@@ -24,7 +24,7 @@
     <button class="sidebar-toggle" aria-expanded="false" aria-controls="user-account-menu">Manage Account <span class="chevron">&#9662;</span></button>
     <div id="user-account-menu" class="sidebar-submenu" hidden>
       <a class="sidebar-link" data-view="profile" href="#profile"><i class="fas fa-id-card" aria-hidden="true"></i> My Profile</a>
-      <a class="sidebar-link" href="change-password.html"><i class="fas fa-key" aria-hidden="true"></i> Change Password</a>
+      <a class="sidebar-link" data-view="change-password" href="#change-password"><i class="fas fa-key" aria-hidden="true"></i> Change Password</a>
       <a class="sidebar-link" data-view="account-status" href="#account-status"><i class="fas fa-shield-alt" aria-hidden="true"></i> Account Status</a>
     </div>
     <nav class="sidebar-nav">
@@ -71,12 +71,18 @@
       <div class="profile-grid"><div><span>Username</span><strong id="profilePageUsername">Loading...</strong></div><div><span>Role</span><strong id="profileRole">Player</strong></div><div><span>Email</span><strong id="profileEmail">Loading...</strong></div><div><span>Employee ID</span><strong id="profileId">Loading...</strong></div><div><span>Account status</span><strong id="profileStatus">Loading...</strong></div></div>
     </section>
 
+    <section id="change-password" class="dashboard-section password-section" data-module-view="change-password" hidden aria-labelledby="changePasswordTitle">
+      <p class="eyebrow">Manage Account</p><h1 id="changePasswordTitle">Change Password</h1><p class="section-intro">Use a strong password to keep your player account secure.</p>
+      <div class="password-panel"><div class="password-account"><span>Account</span><strong id="usernameDisplay">Loading...</strong></div><form id="changePasswordForm" action="../php/change-password.php" method="POST" novalidate><div class="password-form-grid"><div class="form-group"><label for="new_password">New Password</label><div class="password-input"><input type="password" id="new_password" name="new_password" required><button type="button" class="password-toggle" data-password-target="new_password" aria-label="Show new password" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button></div><div id="passwordError" class="error-message"></div></div><div class="form-group"><label for="confirm_password">Confirm New Password</label><div class="password-input"><input type="password" id="confirm_password" name="confirm_password" required><button type="button" class="password-toggle" data-password-target="confirm_password" aria-label="Show confirmed password" aria-pressed="false"><i class="fas fa-eye" aria-hidden="true"></i></button></div><div id="confirmPasswordError" class="error-message"></div></div></div><div id="message" class="message"></div><button type="submit">Change Password</button></form></div>
+    </section>
+
     <section id="account-status" class="dashboard-section status-section" data-module-view="account-status" hidden aria-labelledby="accountStatusTitle">
       <p class="eyebrow">Account security</p><h1 id="accountStatusTitle">Account Status</h1><div class="status-message"><i class="fas fa-check-circle" aria-hidden="true"></i><div><h2 id="accountStatusHeading">Active account</h2><p>Your account is approved and ready for club participation.</p></div></div>
     </section>
   </main>
 
   <script src="../javascript/user-dashboard.js"></script>
+  <script src="../javascript/change-password.js"></script>
   <script src="../javascript/sidebar.js"></script>
 </body>
 </html>
