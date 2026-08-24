@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             : match ($user['role']) {
             'super_admin' => "../html/super-admin.html",
             'admin' => "../html/admin.html",
-            default => "../html/home.html"
+            default => "../html/dashboard.html"
         };
         
         echo json_encode([
