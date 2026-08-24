@@ -70,6 +70,19 @@ try {
         // Get user data from session
         $userData = $_SESSION['temp_user_data'];
 
+        $genderValue = strtolower(trim((string) ($userData['gender'] ?? '')));
+        if ($genderValue === 'male') {
+            $userData['gender'] = 'Male';
+        } elseif ($genderValue === 'female') {
+            $userData['gender'] = 'Female';
+        } else {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Please return to registration and select a valid sex."
+            ]);
+            exit();
+        }
+
         // ✅ Validate userData structure
         $requiredFields = ['fname', 'lastName', 'birthday', 'age', 'gender', 'idNumber', 'email', 'username', 'password', 'street', 'barangay', 'city', 'province', 'country', 'zipCode'];
         foreach ($requiredFields as $field) {

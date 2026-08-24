@@ -23,6 +23,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $country    = $_POST['Country'] ?? '';
     $zipCode    = $_POST['ZipCode'] ?? '';
 
+    $genderValue = strtolower(trim($gender));
+    if ($genderValue === 'male') {
+        $gender = 'Male';
+    } elseif ($genderValue === 'female') {
+        $gender = 'Female';
+    } else {
+        die('Please select a valid sex.');
+    }
+
     // Validate passwords
     if (empty($password) || empty($repassword)) {
         die("Password fields cannot be empty!");
