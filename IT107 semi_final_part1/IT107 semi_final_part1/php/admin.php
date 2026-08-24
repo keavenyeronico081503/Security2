@@ -20,11 +20,11 @@ try {
         exit;
     }
 
-    if (in_array($action, ['approve', 'block'], true)) {
-        $user = require_permission("accounts.$action");
+    if (in_array($action, ['approve', 'block', 'unblock'], true)) {
+        $user = require_permission($action === 'unblock' ? 'accounts.block' : "accounts.$action");
         $targetId = (int)($data['user_id'] ?? 0);
         $oldValues = account_snapshot($targetId);
-        $status = $action === 'approve' ? 'approved' : 'blocked';
+        $status = $action === 'approve' ? 'approved' : ($action === 'unblock' ? 'approved' : 'blocked');
         $stmt = $conn->prepare('UPDATE users SET account_status = ? WHERE id = ? AND role <> "super_admin"');
         $stmt->bind_param('si', $status, $targetId);
         if (!$stmt->execute() || $stmt->affected_rows < 1) {

@@ -5,6 +5,22 @@ const statCards = document.getElementById('adminStatCards');
 const actionRequired = document.getElementById('adminActionRequired');
 const charts = {};
 
+function confirmAction(title, messageText) {
+  return new Promise(resolve => {
+    let dialog = document.getElementById('actionConfirmDialog');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'actionConfirmDialog';
+      dialog.innerHTML = '<form method="dialog" class="action-confirm-form"><h2></h2><p></p><div><button value="cancel" class="confirm-cancel">Cancel</button><button value="confirm" class="confirm-accept">Confirm</button></div></form>';
+      document.body.appendChild(dialog);
+    }
+    dialog.onclose = () => resolve(dialog.returnValue === 'confirm');
+    dialog.querySelector('h2').textContent = title;
+    dialog.querySelector('p').textContent = messageText;
+    dialog.showModal();
+  });
+}
+
 function drawAdminChart(id, type, labels, values, colors) {
   const canvas = document.getElementById(id);
   if (!canvas || typeof Chart === 'undefined') return;
@@ -80,7 +96,7 @@ function render(users) {
     const actions = document.createElement('td'); actions.className = 'actions';
     if (user.role !== 'super_admin') {
       if (user.account_status !== 'approved') actions.appendChild(actionButton('Approve', 'approve', user.id));
-      if (user.account_status !== 'blocked') actions.appendChild(actionButton('Block', 'block', user.id));
+      actions.appendChild(actionButton(user.account_status === 'blocked' ? 'Unblock' : 'Block', user.account_status === 'blocked' ? 'unblock' : 'block', user.id));
       actions.appendChild(actionButton('Edit', 'update', user.id, user));
       actions.appendChild(actionButton('Request delete', 'request-delete', user.id));
     } else actions.textContent = 'Protected';
@@ -105,8 +121,9 @@ table.addEventListener('click', async event => {
   const action = button.dataset.action; const body = {user_id: Number(button.dataset.id)};
   if (action === 'request-delete') { body.reason = prompt('Why should this account be deleted?'); if (!body.reason || !body.reason.trim()) return; }
   if (action === 'update') { const user = JSON.parse(button.dataset.user); body.first_name = prompt('First name:', user.first_name); body.last_name = prompt('Last name:', user.last_name); body.id_number = prompt('Employee ID:', user.id_number); body.email = prompt('Email:', user.email); if (Object.values(body).some(value => value === null || value === '')) return; }
-  const confirmations = {approve: 'Approve this account?', block: 'Block this account?', update: 'Save these account changes?', 'request-delete': 'Send this deletion request to the Super Administrator?'};
-  if (confirmations[action] && !confirm(confirmations[action])) return;
+  const username = button.dataset.user ? JSON.parse(button.dataset.user).username : button.closest('tr')?.children[2]?.textContent || 'this account';
+  const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', update: 'Save changes to', 'request-delete': 'Send deletion request for'};
+  if (confirmationLabels[action] && !await confirmAction(`${confirmationLabels[action]} account`, `${confirmationLabels[action]} account "${username}"?`)) return;
   try { message.textContent = (await request(action, body)).message; message.style.color = '#176b52'; await load(); } catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
 });
 document.getElementById('filter').addEventListener('submit', event => { event.preventDefault(); load(); });
@@ -114,7 +131,7 @@ document.getElementById('clear').addEventListener('click', () => { document.getE
 document.getElementById('refreshAdminStatistics').addEventListener('click', loadStatistics);
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();
-  if (!confirm('Create this user account?')) return;
+  if (!await confirmAction('Create user account', 'Create this user account now?')) return;
   try {
     const formData = Object.fromEntries(new FormData(event.target));
     showMessage((await request('create', formData)).message);

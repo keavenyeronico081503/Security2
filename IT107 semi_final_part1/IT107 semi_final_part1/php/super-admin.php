@@ -42,9 +42,9 @@ if ($action === 'delete-requests') {
 $data = request_json();
 $userId = (int)($data['user_id'] ?? 0);
 
-if (in_array($action, ['approve', 'block'], true)) {
-    require_permission("accounts.$action");
-    $status = $action === 'approve' ? 'approved' : 'blocked';
+    if (in_array($action, ['approve', 'block', 'unblock'], true)) {
+        require_permission($action === 'unblock' ? 'accounts.block' : "accounts.$action");
+    $status = $action === 'approve' ? 'approved' : ($action === 'unblock' ? 'approved' : 'blocked');
     $stmt = $conn->prepare('UPDATE users SET account_status = ? WHERE id = ? AND role <> "super_admin"');
     $stmt->bind_param('si', $status, $userId);
     $stmt->execute();

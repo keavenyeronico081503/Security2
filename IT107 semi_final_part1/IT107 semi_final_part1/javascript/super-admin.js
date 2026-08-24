@@ -14,6 +14,21 @@ const api = '../php/super-admin.php';
 const statCards = document.getElementById('statCards');
 const actionRequired = document.getElementById('actionRequired');
 const charts = {};
+function confirmAction(title, messageText) {
+  return new Promise(resolve => {
+    let dialog = document.getElementById('actionConfirmDialog');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'actionConfirmDialog';
+      dialog.innerHTML = '<form method="dialog" class="action-confirm-form"><h2></h2><p></p><div><button value="cancel" class="confirm-cancel">Cancel</button><button value="confirm" class="confirm-accept">Confirm</button></div></form>';
+      document.body.appendChild(dialog);
+    }
+    dialog.onclose = () => resolve(dialog.returnValue === 'confirm');
+    dialog.querySelector('h2').textContent = title;
+    dialog.querySelector('p').textContent = messageText;
+    dialog.showModal();
+  });
+}
 async function loadNextEmployeeId() {
   const input = document.getElementById('createEmployeeId');
   if (!input) return;
@@ -100,7 +115,7 @@ function renderUsers(users) {
     const status = user.account_status;
     const controls = user.role === 'super_admin' ? '<span>Protected</span>' : `
       ${status !== 'approved' ? `<button data-action="approve" data-id="${user.id}">Approve</button>` : ''}
-      ${status !== 'blocked' ? `<button data-action="block" data-id="${user.id}">Block</button>` : ''}
+      <button data-action="${status === 'blocked' ? 'unblock' : 'block'}" data-id="${user.id}">${status === 'blocked' ? 'Unblock' : 'Block'}</button>
       <button data-action="update" data-id="${user.id}" data-first="${user.first_name}" data-last="${user.last_name}" data-employee="${user.id_number}" data-email="${user.email}">Edit</button>
       <button data-action="privileges" data-id="${user.id}" data-user="${encodeURIComponent(JSON.stringify(user))}">Privileges</button>
       <button class="danger" data-action="delete" data-id="${user.id}">Delete</button>`;
@@ -199,8 +214,9 @@ async function handleAccountAction(event) {
     body.email = prompt('Email:', button.dataset.email);
     if ([body.first_name, body.last_name, body.id_number, body.email].some(value => value === null || !value.trim())) return;
   }
-  const confirmations = {approve: 'Approve this account?', block: 'Block this account?', update: 'Save these account changes?', delete: 'Delete this account permanently?'};
-  if (confirmations[action] && !confirm(confirmations[action])) return;
+  const username = button.dataset.user ? JSON.parse(decodeURIComponent(button.dataset.user)).username : button.closest('tr')?.children[2]?.textContent || 'this account';
+  const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', update: 'Save changes to', delete: 'Delete'};
+  if (confirmationLabels[action] && !await confirmAction(`${confirmationLabels[action]} account`, `${confirmationLabels[action]} account "${username}"?`)) return;
   try { showMessage((await request(action, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })).message); loadUsers(document.getElementById('employeeId').value); }
   catch (error) { showMessage(error.message, true); }
 }
@@ -221,7 +237,7 @@ privilegeModules.addEventListener('change', event => {
 
 privilegeForm.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!confirm('Save these privilege changes?')) return;
+  if (!await confirmAction('Save privileges', 'Save these privilege changes now?')) return;
   const privileges = {};
   privilegeModules.querySelectorAll('input[type="checkbox"][value]:checked').forEach(input => { privileges[input.value] = true; });
   try { showMessage((await request('privileges', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({user_id: privilegeTargetId, privileges})})).message); privilegeDialog.close(); await loadUsers(); await loadAuditLogs(); }
@@ -234,7 +250,8 @@ document.getElementById('cancelPrivileges').addEventListener('click', () => priv
 requests.addEventListener('click', async event => {
   const button = event.target.closest('button[data-request]'); if (!button) return;
   const reason = prompt(`Reason for ${button.dataset.decision}:`); if (!reason || !reason.trim()) return;
-  if (!confirm(`${button.dataset.decision === 'approve' ? 'Approve' : 'Reject'} this deletion request?`)) return;
+  const decisionLabel = button.dataset.decision === 'approve' ? 'Approve' : 'Reject';
+  if (!await confirmAction(`${decisionLabel} deletion request`, `${decisionLabel} this deletion request?`)) return;
   try { showMessage((await request('review-delete', {request_id: Number(button.dataset.request), decision: button.dataset.decision, reason})).message); await loadRequests(); await loadUsers(); }
   catch (error) { showMessage(error.message, true); }
 });
@@ -244,7 +261,7 @@ document.getElementById('clearFilter').addEventListener('click', () => { documen
 document.getElementById('refreshStatistics').addEventListener('click', loadStatistics);
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();
-  if (!confirm('Create this account?')) return;
+  if (!await confirmAction('Create account', 'Create this account now?')) return;
   try { showMessage((await request('create', { method: 'POST', body: new FormData(event.target) })).message); event.target.reset(); loadUsers(); await loadNextEmployeeId(); }
   catch (error) { showMessage(error.message, true); }
 });
