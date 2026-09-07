@@ -17,7 +17,7 @@ if ($action === 'list') {
     require_permission('accounts.view');
     $search = trim($_GET['employee_id'] ?? '');
     $like = "%$search%";
-    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, privileges, created_at FROM users WHERE id_number LIKE ? ORDER BY created_at DESC');
+    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Emergencyadmin1" ORDER BY created_at DESC');
     $stmt->bind_param('s', $like);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -32,7 +32,7 @@ if ($action === 'list') {
 
 if ($action === 'delete-requests') {
     require_permission('accounts.delete.approve');
-    $result = $conn->query('SELECT r.id, r.reason, r.status, r.decision_reason, r.created_at, r.reviewed_at, requester.username AS requested_by, target.id AS target_id, target.first_name, target.last_name, target.id_number, target.email, target.username FROM admin_delete_requests r LEFT JOIN users requester ON requester.id = r.requested_by LEFT JOIN users target ON target.id = r.target_user_id ORDER BY r.created_at DESC');
+    $result = $conn->query('SELECT r.id, r.reason, r.status, r.decision_reason, r.created_at, r.reviewed_at, requester.username AS requested_by, target.id AS target_id, target.first_name, target.last_name, target.id_number, target.email, target.username FROM admin_delete_requests r LEFT JOIN users requester ON requester.id = r.requested_by LEFT JOIN users target ON target.id = r.target_user_id WHERE requester.username <> "Emergencyadmin1" AND target.username <> "Emergencyadmin1" ORDER BY r.created_at DESC');
     $requests = [];
     while ($request = $result->fetch_assoc()) $requests[] = $request;
     echo json_encode(['status' => 'success', 'requests' => $requests]);
@@ -160,13 +160,24 @@ if ($action === 'review-delete') {
 if ($action === 'create') {
     require_super_admin();
     require_permission('accounts.create');
-    $role = ($data['role'] ?? '') === 'super_admin' ? 'super_admin' : 'admin';
+    $allowedRoles = ['admin', 'data_administrator', 'super_admin'];
+    $role = in_array($data['role'] ?? '', $allowedRoles, true) ? $data['role'] : 'admin';
     $employeeId = next_employee_id();
-    $password = password_hash($data['password'] ?? '', PASSWORD_DEFAULT);
+    $username = trim((string)($data['username'] ?? ''));
+    $temporaryPassword = (string)($data['password'] ?? '');
+    if ($username === '' || $temporaryPassword === '') {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Username and temporary password are required.']);
+        exit;
+    }
+    $password = password_hash($temporaryPassword, PASSWORD_DEFAULT);
     $status = 'approved';
-    $stmt = $conn->prepare('INSERT INTO users (first_name, last_name, birthday, age, gender, id_number, email, username, password, street, barangay, city, province, country, zip_code, registration_status, role, account_status, privileges) VALUES (?, ?, CURDATE(), 0, "Male", ?, ?, ?, ?, "", "", "", "", "", "", "complete", ?, ?, ?)');
+    $firstName = 'Pending';
+    $lastName = 'Account';
+    $email = $employeeId . '@pending.local';
+    $stmt = $conn->prepare('INSERT INTO users (first_name, last_name, birthday, age, gender, id_number, email, username, password, street, barangay, city, province, country, zip_code, registration_status, role, account_status, privileges) VALUES (?, ?, CURDATE(), 0, "Male", ?, ?, ?, ?, "", "", "", "", "", "", "incomplete", ?, ?, ?)');
     $privileges = json_encode($data['privileges'] ?? []);
-    $stmt->bind_param('sssssssss', $data['first_name'], $data['last_name'], $employeeId, $data['email'], $data['username'], $password, $role, $status, $privileges);
+    $stmt->bind_param('sssssssss', $firstName, $lastName, $employeeId, $email, $username, $password, $role, $status, $privileges);
     if (!$stmt->execute()) {
         http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => 'Could not create account: ' . $conn->error]);
@@ -180,7 +191,11 @@ if ($action === 'create') {
         throw new RuntimeException('Account role could not be assigned.');
     }
     audit('accounts.create', null, ['role' => $role, 'username' => $data['username']]);
-    echo json_encode(['status' => 'success', 'message' => ucfirst(str_replace('_', ' ', $role)) . ' account created.']);
+    echo json_encode([
+        'status' => 'success',
+        'message' => ucfirst(str_replace('_', ' ', $role)) . ' account created. Give the account holder these credentials.',
+        'credentials' => ['employee_id' => $employeeId, 'username' => $username]
+    ]);
     exit;
 }
 

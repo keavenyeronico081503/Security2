@@ -21,7 +21,7 @@ if (empty($id)) {
 
 try {
     // Fetch user data from database using the correct column names
-    $stmt = $conn->prepare("SELECT email, username FROM users WHERE id_number = ?");
+    $stmt = $conn->prepare("SELECT email, username FROM users WHERE id_number = ? AND username <> 'Emergencyadmin1'");
     $stmt->bind_param("s", $id);
     $stmt->execute();
     $result = $stmt->get_result();

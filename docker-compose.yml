@@ -18,6 +18,8 @@ services:
       - ./database/007_audit_snapshots.sql:/docker-entrypoint-initdb.d/zzzzzzzz_audit_snapshots.sql:ro
       - ./database/008_backfill_audit_snapshots.sql:/docker-entrypoint-initdb.d/zzzzzzzzz_backfill_audit_snapshots.sql:ro
       - ./database/009_pending_user_status.sql:/docker-entrypoint-initdb.d/zzzzzzzzzz_pending_user_status.sql:ro
+      - ./database/010_data_administrator_role.sql:/docker-entrypoint-initdb.d/zzzzzzzzzz_data_administrator_role.sql:ro
+      - ./database/011_profile_contact.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzz_profile_contact.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s

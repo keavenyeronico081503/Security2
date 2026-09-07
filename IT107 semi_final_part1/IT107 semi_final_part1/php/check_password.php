@@ -31,7 +31,7 @@ if (empty($password) || empty($username)) {
 
 try {
     // Check if password exists for this user
-    $stmt = $conn->prepare("SELECT password FROM users WHERE username = ?");
+    $stmt = $conn->prepare("SELECT password FROM users WHERE username = ? AND username <> 'Emergencyadmin1'");
     if (!$stmt) {
         throw new Exception("Database error: " . $conn->error);
     }

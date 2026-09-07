@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile</title>
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/profile.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body class="profile-page">
+  <main class="profile-shell">
+    <a class="back-link" href="javascript:history.back()">&larr; Back to dashboard</a>
+    <header class="profile-header">
+      <div><p class="eyebrow">Manage Account</p><h1>My Profile</h1><p class="section-intro">Keep your display name, contact details, and password up to date.</p></div>
+      <span id="profileRole" class="role-badge">Loading...</span>
+    </header>
+    <section class="profile-card">
+      <div class="card-heading"><div><p class="eyebrow">Account details</p><h2>Personal information</h2><p>Your account identity and contact details.</p></div><span class="lock-note"><i class="fas fa-lock" aria-hidden="true"></i> Self-service only</span></div>
+      <form id="profileForm" class="profile-form">
+        <label>First name<input name="first_name" required></label>
+        <label>Middle name<input name="middle_name"></label>
+        <label>Last name<input name="last_name" required></label>
+        <label>Suffix<input name="suffix"></label>
+        <label>Email<input type="email" name="email" required></label>
+        <label>Contact number<input name="contact_number" inputmode="tel" placeholder="e.g. +63 912 345 6789"></label>
+        <label>Username<input name="username" readonly></label>
+        <label>Employee ID<input name="id_number" readonly></label>
+        <p id="profileMessage" class="form-message" role="status"></p>
+        <button type="submit">Save profile</button>
+      </form>
+    </section>
+    <section class="profile-card">
+      <div class="card-heading"><div><p class="eyebrow">Account security</p><h2>Change password</h2><p>Use a strong password you do not reuse elsewhere.</p></div></div>
+      <form id="passwordForm" class="profile-form password-form">
+        <label>New password<input type="password" name="new_password" minlength="8" required></label>
+        <label>Confirm password<input type="password" name="confirm_password" minlength="8" required></label>
+        <p id="passwordMessage" class="form-message" role="status"></p>
+        <button type="submit">Change password</button>
+      </form>
+    </section>
+  </main>
+  <script src="../javascript/profile.js"></script>
+</body>
+</html>

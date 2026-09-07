@@ -2,6 +2,11 @@
 // Start the session
 session_start();
 include 'db.php';
+require_once 'audit_service.php';
+
+if (!empty($_SESSION['user_id'])) {
+    audit('auth.logout', (int)$_SESSION['user_id']);
+}
 
 // Unset all session variables
 $_SESSION = array();

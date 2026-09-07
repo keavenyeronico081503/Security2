@@ -5,6 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeButton = document.querySelector('.sidebar-close');
   if (!sidebar) return;
 
+  const profileLink = sidebar.querySelector('[data-view="profile"]');
+  if (profileLink && !document.body.classList.contains('app-user')) {
+    profileLink.href = '#profile';
+  } else if (profileLink) {
+    profileLink.href = 'profile.html';
+    profileLink.removeAttribute('data-view');
+  } else if (document.body.classList.contains('app-admin') || document.body.classList.contains('app-superadmin')) {
+    const link = document.createElement('a');
+    link.className = 'sidebar-link';
+    link.href = '#profile';
+    link.dataset.view = 'profile';
+    link.textContent = 'My Profile';
+    sidebar.querySelector('.sidebar-nav')?.appendChild(link);
+  }
+
   const loadNotifications = async () => {
     try {
       const response = await fetch('../php/notifications.php');

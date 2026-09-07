@@ -6,9 +6,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = trim($_POST['id'] ?? '');
     $question = trim($_POST['question'] ?? '');
     $answer = trim($_POST['answer'] ?? '');
+    $position = (int)($_POST['position'] ?? 0);
     
     // Validate input
-    if (empty($id) || empty($question) || empty($answer)) {
+    if (empty($id) || empty($question) || empty($answer) || $position < 1 || $position > 3) {
         echo json_encode([
             "status" => "error", 
             "message" => "All fields are required."
@@ -52,35 +53,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         $questionData = $questionResult->fetch_assoc();
         
-        // Find which question matches and verify its answer
-        $isValid = false;
-        $found = false;
-        
-        // Check question 1
-        if ($questionData['authQuestion1'] === $question) {
-            $found = true;
-            // Answers are hashed, so use password_verify
-            $isValid = password_verify($answer, $questionData['authAnswer1']);
-        }
-        // Check question 2
-        elseif ($questionData['authQuestion2'] === $question) {
-            $found = true;
-            $isValid = password_verify($answer, $questionData['authAnswer2']);
-        }
-        // Check question 3
-        elseif ($questionData['authQuestion3'] === $question) {
-            $found = true;
-            $isValid = password_verify($answer, $questionData['authAnswer3']);
-        }
-        
-        if (!$found) {
-            echo json_encode([
-                "status" => "error", 
-                "message" => "Security question not found for this user."
-            ]);
-            exit();
-        }
-        
+        $storedQuestion = $questionData['authQuestion' . $position];
+        $storedAnswer = $questionData['authAnswer' . $position];
+        $isValid = hash_equals($storedQuestion, $question)
+            && password_verify($answer, $storedAnswer);
+
         if ($isValid) {
             echo json_encode([
                 "status" => "success", 
@@ -89,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             echo json_encode([
                 "status" => "error", 
-                "message" => "The answer provided is incorrect. Please try again."
+                "message" => "The question order or answer is incorrect. Please try again."
             ]);
         }
         

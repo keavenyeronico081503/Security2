@@ -2,7 +2,7 @@
 function account_snapshot(int $userId): ?array
 {
     global $conn;
-    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status FROM users WHERE id = ?');
+    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, contact_number, username, role, account_status FROM users WHERE id = ?');
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc() ?: null;

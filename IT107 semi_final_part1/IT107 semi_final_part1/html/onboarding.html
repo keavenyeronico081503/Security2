@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Account Setup</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/onboarding.css">
+</head>
+<body>
+    <main class="onboarding-card">
+        <h1>Complete your account</h1>
+        <p class="intro">Enter your information, choose a new password, and set three recovery questions.</p>
+        <form id="onboardingForm">
+            <fieldset>
+                <legend>Personal information</legend>
+                <div class="field-grid">
+                    <label>First name<input name="first_name" required></label>
+                    <label>Middle name<input name="middle_name"></label>
+                    <label>Last name<input name="last_name" required></label>
+                    <label>Suffix<input name="suffix"></label>
+                    <label>Birthday<input type="date" name="birthday" required></label>
+                    <label>Sex<select name="gender" required><option value="">Select sex</option><option>Male</option><option>Female</option></select></label>
+                    <label class="wide">Email<input type="email" name="email" required></label>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Address</legend>
+                <div class="field-grid">
+                    <label>Street<input name="street" required></label>
+                    <label>Barangay<input name="barangay" required></label>
+                    <label>City<input name="city" required></label>
+                    <label>Province<input name="province" required></label>
+                    <label>Country<input name="country" required></label>
+                    <label>ZIP code<input name="zip_code" required></label>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Change password</legend>
+                <div class="field-grid">
+                    <label>New password<input type="password" name="new_password" minlength="8" maxlength="20" required></label>
+                    <label>Confirm password<input type="password" name="confirm_password" minlength="8" maxlength="20" required></label>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Recovery questions</legend>
+                <p class="hint">Choose three different questions and provide an answer for each.</p>
+                <div class="question-grid">
+                    <label>Question 1<select name="question1" required></select><input name="answer1" placeholder="Your answer" required></label>
+                    <label>Question 2<select name="question2" required></select><input name="answer2" placeholder="Your answer" required></label>
+                    <label>Question 3<select name="question3" required></select><input name="answer3" placeholder="Your answer" required></label>
+                </div>
+            </fieldset>
+            <p id="formMessage" role="alert"></p>
+            <button type="submit">Finish account setup</button>
+        </form>
+    </main>
+    <script src="../javascript/onboarding.js"></script>
+</body>
+</html>

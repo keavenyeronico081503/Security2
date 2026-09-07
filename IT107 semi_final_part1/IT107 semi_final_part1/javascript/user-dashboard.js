@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  fetch('../php/activity.php', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'module=dashboard'}).catch(() => {});
   renderCalendar(new Date());
   document.getElementById('previousMonth')?.addEventListener('click', () => moveCalendar(-1));
   document.getElementById('nextMonth')?.addEventListener('click', () => moveCalendar(1));

@@ -31,7 +31,7 @@ try {
             throw new RuntimeException('Account status was not changed.');
         }
         $newValues = account_snapshot($targetId);
-        audit("accounts.$action", $targetId, [], $oldValues, $newValues);
+        audit("accounts.$action", $targetId, ['reason' => trim((string)($data['reason'] ?? ''))], $oldValues, $newValues);
         echo json_encode(['status' => 'success', 'message' => "Account $status."]);
         exit;
     }

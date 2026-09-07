@@ -16,7 +16,7 @@ function list_accounts(string $employeeId = ''): array
 {
     global $conn;
     $like = "%$employeeId%";
-    $stmt = $conn->prepare('SELECT id, first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, role, account_status, privileges, created_at FROM users WHERE id_number LIKE ? ORDER BY created_at DESC');
+    $stmt = $conn->prepare('SELECT id, first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, role, account_status, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Emergencyadmin1" ORDER BY created_at DESC');
     $stmt->bind_param('s', $like);
     $stmt->execute();
     $users = [];

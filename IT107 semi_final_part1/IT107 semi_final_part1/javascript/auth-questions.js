@@ -34,14 +34,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let loadedQuestion3Value = '';
 
     // Function to verify answer with real database
-    async function verifyAnswer(id, question, answer) {
+    async function verifyAnswer(id, question, answer, position) {
         try {
             const response = await fetch('../php/verify_security_question.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `id=${encodeURIComponent(id)}&question=${encodeURIComponent(question)}&answer=${encodeURIComponent(answer)}`
+                body: `id=${encodeURIComponent(id)}&question=${encodeURIComponent(question)}&answer=${encodeURIComponent(answer)}&position=${position}`
             });
             
             const data = await response.json();
@@ -267,21 +267,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentId = usernameDisplay.textContent;
         console.log('Verifying:', { id: currentId, question, answer, question2, answer2, question3, answer3 }); // Debug info
         
-        const isValid1 = await verifyAnswer(currentId, question, answer);
-        const isValid2 = await verifyAnswer(currentId, question2, answer2);
-        const isValid3 = await verifyAnswer(currentId, question3, answer3);
+        const isValid1 = await verifyAnswer(currentId, question, answer, 1);
+        const isValid2 = await verifyAnswer(currentId, question2, answer2, 2);
+        const isValid3 = await verifyAnswer(currentId, question3, answer3, 3);
         
         // Count how many answers are correct
         const correctCount = [isValid1, isValid2, isValid3].filter(Boolean).length;
         
-        // Require at least 2 correct answers out of 3
-        if (correctCount < 2) {
+        // Require all three questions and answers in their stored order.
+        if (correctCount < 3) {
             messageDiv.className = 'message error';
-            if (correctCount === 1) {
-                messageDiv.textContent = 'Only 1 answer is correct. You need at least 2 correct answers to proceed.';
-            } else {
-                messageDiv.textContent = 'All answers are incorrect. Please try again.';
-            }
+            messageDiv.textContent = 'All three questions and answers must match in the original order.';
             messageDiv.style.fontSize = '18px'; // Bigger text
             messageDiv.style.fontWeight = '600'; // Bold text
             messageDiv.style.textShadow = '0 2px 4px rgba(0, 0, 0, 0.3)'; // Text shadow for visibility

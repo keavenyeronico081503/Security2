@@ -1,9 +1,120 @@
+let lastTrackedModule = '';
+function trackModuleOpen() {
+  const module = location.hash.slice(1) || 'overview';
+  if (module === lastTrackedModule) return;
+  lastTrackedModule = module;
+  fetch('../php/activity.php', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: `module=${encodeURIComponent(module)}` }).catch(() => {});
+}
+window.addEventListener('hashchange', trackModuleOpen);
+trackModuleOpen();
+
 const api = '../php/admin.php';
 const table = document.getElementById('accounts');
 const message = document.getElementById('message');
 const statCards = document.getElementById('adminStatCards');
 const actionRequired = document.getElementById('adminActionRequired');
 const charts = {};
+
+function setInlineError(input, message, errorId) {
+  const field = input;
+  const error = document.getElementById(errorId);
+  if (!field) return false;
+  field.classList.toggle('input-error', Boolean(message));
+  field.classList.toggle('input-success', !message);
+  if (error) error.textContent = message || '';
+  return !message;
+}
+
+function validateNameField(input, errorId, label) {
+  const value = (input?.value ?? '').trim();
+  if (!value) return setInlineError(input, `${label} is required.`, errorId);
+  if (value.length < 2) return setInlineError(input, `${label} must be at least 2 characters.`, errorId);
+  if (!/^[A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*$/.test(value)) {
+    return setInlineError(input, `${label} must use letters and spaces only, starting with a capital letter.`, errorId);
+  }
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardEmail(input, errorId) {
+  const value = (input?.value ?? '').trim();
+  if (!value) return setInlineError(input, 'Email is required.', errorId);
+  if (value.includes(' ') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return setInlineError(input, 'Please enter a valid email address.', errorId);
+  }
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardUsername(input, errorId, hintId) {
+  const value = (input?.value ?? '').trim();
+  const hint = document.getElementById(hintId);
+  if (!value) {
+    if (hint) hint.textContent = '';
+    return setInlineError(input, 'Username is required.', errorId);
+  }
+  if (value.length < 6 || value.length > 25) {
+    if (hint) hint.textContent = 'Username must be 6-25 characters long.';
+    return setInlineError(input, 'Username must be 6-25 characters long.', errorId);
+  }
+  if (/\s/.test(value)) {
+    if (hint) hint.textContent = 'Username cannot contain spaces.';
+    return setInlineError(input, 'Username cannot contain spaces.', errorId);
+  }
+  if (!/^[A-Z][a-zA-Z0-9]*$/.test(value)) {
+    if (hint) hint.textContent = 'Username must start with a capital letter and contain only letters and numbers.';
+    return setInlineError(input, 'Username must start with a capital letter and contain only letters and numbers.', errorId);
+  }
+  if (!/[0-9]$/.test(value)) {
+    if (hint) hint.textContent = 'Username must end with a number (example: Sachin123).';
+    return setInlineError(input, 'Username must end with a number (example: Sachin123).', errorId);
+  }
+  if ((value.match(/[A-Z]/g) || []).length > 1) {
+    if (hint) hint.textContent = 'Use lowercase letters after the first character.';
+    return setInlineError(input, 'Use lowercase letters after the first character.', errorId);
+  }
+  if (hint) hint.textContent = 'Valid username format.';
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardPassword(input, errorId, strengthId) {
+  const value = input?.value ?? '';
+  const strength = document.getElementById(strengthId);
+  if (!value) {
+    if (strength) strength.textContent = '';
+    return setInlineError(input, 'Password is required.', errorId);
+  }
+  if (value.length < 8) {
+    if (strength) strength.textContent = 'Minimum 8 characters required.';
+    return setInlineError(input, 'Minimum 8 characters required.', errorId);
+  }
+  const checks = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/];
+  const score = checks.filter(regex => regex.test(value)).length;
+  if (score < 3) {
+    if (strength) strength.textContent = 'Use a stronger password: uppercase, lowercase, number, and symbol.';
+    return setInlineError(input, 'Password must include uppercase, lowercase, number, and symbol.', errorId);
+  }
+  if (strength) {
+    strength.textContent = 'Strong password.';
+    strength.style.color = '#176b52';
+  }
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardCreateForm(form) {
+  if (!form) return false;
+  const firstName = form.querySelector('[name="first_name"]');
+  const lastName = form.querySelector('[name="last_name"]');
+  const email = form.querySelector('[name="email"]');
+  const username = form.querySelector('[name="username"]');
+  const password = form.querySelector('[name="password"]');
+
+  const firstValid = validateNameField(firstName, 'adminCreateFirstNameError', 'First name');
+  const lastValid = validateNameField(lastName, 'adminCreateLastNameError', 'Last name');
+  const emailValid = validateDashboardEmail(email, 'adminCreateEmailError');
+  const usernameValid = validateDashboardUsername(username, 'adminCreateUsernameError', 'adminCreateUsernameHint');
+  const passwordValid = validateDashboardPassword(password, 'adminCreatePasswordError', 'adminCreatePasswordStrength');
+
+  return firstValid && lastValid && emailValid && usernameValid && passwordValid;
+}
 
 function confirmAction(title, messageText) {
   return new Promise(resolve => {
@@ -119,7 +230,7 @@ async function load() {
 table.addEventListener('click', async event => {
   const button = event.target.closest('button[data-action]'); if (!button) return;
   const action = button.dataset.action; const body = {user_id: Number(button.dataset.id)};
-  if (action === 'request-delete') { body.reason = prompt('Why should this account be deleted?'); if (!body.reason || !body.reason.trim()) return; }
+  if (['request-delete', 'block', 'unblock'].includes(action)) { body.reason = prompt(`Why should this account be ${action === 'request-delete' ? 'deleted' : action + 'ed'}?`); if (!body.reason || !body.reason.trim()) return; }
   if (action === 'update') { const user = JSON.parse(button.dataset.user); body.first_name = prompt('First name:', user.first_name); body.last_name = prompt('Last name:', user.last_name); body.id_number = prompt('Employee ID:', user.id_number); body.email = prompt('Email:', user.email); if (Object.values(body).some(value => value === null || value === '')) return; }
   const username = button.dataset.user ? JSON.parse(button.dataset.user).username : button.closest('tr')?.children[2]?.textContent || 'this account';
   const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', update: 'Save changes to', 'request-delete': 'Send deletion request for'};
@@ -131,6 +242,13 @@ document.getElementById('clear').addEventListener('click', () => { document.getE
 document.getElementById('refreshAdminStatistics').addEventListener('click', loadStatistics);
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();
+  const form = event.target;
+  const isValid = validateDashboardCreateForm(form);
+  if (!isValid) {
+    message.textContent = 'Please correct the highlighted fields before creating the account.';
+    message.style.color = '#a63d32';
+    return;
+  }
   if (!await confirmAction('Create user account', 'Create this user account now?')) return;
   try {
     const formData = Object.fromEntries(new FormData(event.target));
@@ -142,6 +260,18 @@ document.getElementById('createForm').addEventListener('submit', async event => 
   } catch (error) {
     showMessage(error.message, true);
   }
+});
+
+['first_name', 'last_name', 'email', 'username', 'password'].forEach(fieldName => {
+  const selector = document.querySelector(`#createForm [name="${fieldName}"]`);
+  if (!selector) return;
+  selector.addEventListener('input', () => {
+    if (fieldName === 'first_name') validateNameField(selector, 'adminCreateFirstNameError', 'First name');
+    if (fieldName === 'last_name') validateNameField(selector, 'adminCreateLastNameError', 'Last name');
+    if (fieldName === 'email') validateDashboardEmail(selector, 'adminCreateEmailError');
+    if (fieldName === 'username') validateDashboardUsername(selector, 'adminCreateUsernameError', 'adminCreateUsernameHint');
+    if (fieldName === 'password') validateDashboardPassword(selector, 'adminCreatePasswordError', 'adminCreatePasswordStrength');
+  });
 });
 load();
 loadStatistics();

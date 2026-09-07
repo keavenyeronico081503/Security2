@@ -6,6 +6,7 @@
     <title>Login</title>
     <link rel="stylesheet" href="../css/login.css">
     <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <header>
@@ -42,7 +43,7 @@
                 <div class="input-container">
                     <i class="fa-solid fa-lock"></i>
                     <input type="password" name="Password" id="Password" placeholder="Password" minlength="8" maxlength="20" required>
-                    <i class="fa-solid fa-eye" id="toggleLoginPassword" style="cursor: pointer;"></i>
+                    <i class="fa-solid fa-eye" id="toggleLoginPassword" role="button" tabindex="0" aria-label="Show password" title="Show password"></i>
                 </div>
                 <div id="passwordError" class="error-message"></div>
             </div>

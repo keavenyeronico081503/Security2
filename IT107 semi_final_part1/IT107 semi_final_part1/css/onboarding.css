@@ -1,0 +1,112 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 32px 16px;
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+}
+
+.onboarding-card {
+    width: min(900px, 100%);
+    margin: 0 auto;
+    padding: 32px;
+    background: #ffffff;
+    border: 1px solid #dbe3ef;
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(30, 41, 59, 0.12);
+}
+
+h1 {
+    margin: 0 0 8px;
+    color: #273c75;
+}
+
+.intro, .hint {
+    color: #64748b;
+}
+
+fieldset {
+    margin: 24px 0 0;
+    padding: 20px;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+}
+
+legend {
+    padding: 0 8px;
+    color: #273c75;
+    font-weight: 700;
+}
+
+.field-grid, .question-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+label {
+    display: grid;
+    gap: 6px;
+    font-weight: 700;
+    color: #334155;
+}
+
+.wide, .question-grid label {
+    grid-column: 1 / -1;
+}
+
+input, select {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f2937;
+    font: inherit;
+}
+
+input:focus, select:focus {
+    outline: 3px solid rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+}
+
+button {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 24px;
+    border: 0;
+    border-radius: 6px;
+    background: #273c75;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1e2f5d;
+}
+
+#formMessage {
+    margin: 20px 0 0;
+    font-weight: 700;
+}
+
+.success { color: #15803d; }
+.error { color: #b91c1c; }
+
+@media (max-width: 640px) {
+    .onboarding-card {
+        padding: 20px 16px;
+    }
+
+    .field-grid {
+        grid-template-columns: 1fr;
+    }
+}

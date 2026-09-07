@@ -104,15 +104,27 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Toggle password visibility with eye icon
     if (toggleLoginPassword){
-        toggleLoginPassword.addEventListener("click", function(){
+        function togglePasswordVisibility(){
             if (passwordInput.type === "password") {
                 passwordInput.type = "text";
                 toggleLoginPassword.classList.remove("fa-eye");
                 toggleLoginPassword.classList.add("fa-eye-slash");
+                toggleLoginPassword.setAttribute("aria-label", "Hide password");
+                toggleLoginPassword.setAttribute("title", "Hide password");
             } else {
                 passwordInput.type = "password";
                 toggleLoginPassword.classList.remove("fa-eye-slash");
                 toggleLoginPassword.classList.add("fa-eye");
+                toggleLoginPassword.setAttribute("aria-label", "Show password");
+                toggleLoginPassword.setAttribute("title", "Show password");
+            }
+        }
+
+        toggleLoginPassword.addEventListener("click", togglePasswordVisibility);
+        toggleLoginPassword.addEventListener("keydown", function(event){
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                togglePasswordVisibility();
             }
         });
     }

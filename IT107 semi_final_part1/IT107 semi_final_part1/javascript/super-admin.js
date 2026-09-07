@@ -14,6 +14,15 @@ const api = '../php/super-admin.php';
 const statCards = document.getElementById('statCards');
 const actionRequired = document.getElementById('actionRequired');
 const charts = {};
+let lastTrackedModule = '';
+function trackModuleOpen() {
+  const module = location.hash.slice(1) || 'overview';
+  if (module === lastTrackedModule) return;
+  lastTrackedModule = module;
+  fetch('../php/activity.php', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: `module=${encodeURIComponent(module)}` }).catch(() => {});
+}
+window.addEventListener('hashchange', trackModuleOpen);
+trackModuleOpen();
 function confirmAction(title, messageText) {
   return new Promise(resolve => {
     let dialog = document.getElementById('actionConfirmDialog');
@@ -41,12 +50,13 @@ async function loadNextEmployeeId() {
 }
 document.querySelectorAll('.password-toggle').forEach(toggle => {
   toggle.addEventListener('click', function() {
-    const input = document.querySelector(`[name="${this.dataset.passwordTarget}"]`);
+    const input = document.getElementById(toggle.dataset.passwordTarget);
+    if (!input) return;
     const visible = input.type === 'password';
     input.type = visible ? 'text' : 'password';
-    this.setAttribute('aria-pressed', String(visible));
-    this.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} temporary password`);
-    this.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
+    toggle.setAttribute('aria-pressed', String(visible));
+    toggle.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} temporary password`);
+    toggle.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
   });
 });
 let auditCurrentPage = 1;
@@ -63,6 +73,103 @@ const moduleNames = {
   audit: 'Audit log'
 };
 
+function setInlineError(input, message, errorId) {
+  const field = input;
+  const error = document.getElementById(errorId);
+  if (!field) return false;
+  field.classList.toggle('input-error', Boolean(message));
+  field.classList.toggle('input-success', !message);
+  if (error) error.textContent = message || '';
+  return !message;
+}
+
+function validateNameField(input, errorId, label) {
+  const value = (input?.value ?? '').trim();
+  if (!value) return setInlineError(input, `${label} is required.`, errorId);
+  if (value.length < 2) return setInlineError(input, `${label} must be at least 2 characters.`, errorId);
+  if (!/^[A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*$/.test(value)) {
+    return setInlineError(input, `${label} must use letters and spaces only, starting with a capital letter.`, errorId);
+  }
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardEmail(input, errorId) {
+  const value = (input?.value ?? '').trim();
+  if (!value) return setInlineError(input, 'Email is required.', errorId);
+  if (value.includes(' ') || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    return setInlineError(input, 'Please enter a valid email address.', errorId);
+  }
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardUsername(input, errorId, hintId) {
+  const value = (input?.value ?? '').trim();
+  const error = document.getElementById(errorId);
+  const hint = document.getElementById(hintId);
+  if (!value) {
+    if (hint) hint.textContent = '';
+    return setInlineError(input, 'Username is required.', errorId);
+  }
+  if (value.length < 6 || value.length > 25) {
+    if (hint) hint.textContent = 'Username must be 6-25 characters long.';
+    return setInlineError(input, 'Username must be 6-25 characters long.', errorId);
+  }
+  if (/\s/.test(value)) {
+    if (hint) hint.textContent = 'Username cannot contain spaces.';
+    return setInlineError(input, 'Username cannot contain spaces.', errorId);
+  }
+  if (!/^[A-Z][a-zA-Z0-9]*$/.test(value)) {
+    if (hint) hint.textContent = 'Username must start with a capital letter and contain only letters and numbers.';
+    return setInlineError(input, 'Username must start with a capital letter and contain only letters and numbers.', errorId);
+  }
+  if (!/[0-9]$/.test(value)) {
+    if (hint) hint.textContent = 'Username must end with a number (example: Sachin123).';
+    return setInlineError(input, 'Username must end with a number (example: Sachin123).', errorId);
+  }
+  if ((value.match(/[A-Z]/g) || []).length > 1) {
+    if (hint) hint.textContent = 'Use lowercase letters after the first character.';
+    return setInlineError(input, 'Use lowercase letters after the first character.', errorId);
+  }
+  if (hint) hint.textContent = 'Valid username format.';
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardPassword(input, errorId, strengthId) {
+  const value = input?.value ?? '';
+  const error = document.getElementById(errorId);
+  const strength = document.getElementById(strengthId);
+  if (!value) {
+    if (strength) strength.textContent = '';
+    return setInlineError(input, 'Password is required.', errorId);
+  }
+  if (value.length < 8) {
+    if (strength) strength.textContent = 'Minimum 8 characters required.';
+    return setInlineError(input, 'Minimum 8 characters required.', errorId);
+  }
+  const checks = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/];
+  const score = checks.filter(regex => regex.test(value)).length;
+  if (score < 3) {
+    if (strength) strength.textContent = 'Use a stronger password: uppercase, lowercase, number, and symbol.';
+    return setInlineError(input, 'Password must include uppercase, lowercase, number, and symbol.', errorId);
+  }
+  if (strength) {
+    strength.textContent = 'Strong password.';
+    strength.style.color = '#176b52';
+  }
+  return setInlineError(input, '', errorId);
+}
+
+function validateDashboardCreateForm(form) {
+  if (!form) return false;
+  const username = form.querySelector('[name="username"]');
+  const password = form.querySelector('[name="password"]');
+
+  const usernameValid = validateDashboardUsername(username, 'superCreateUsernameError', 'superCreateUsernameHint');
+  const passwordValid = validateDashboardPassword(password, 'superCreatePasswordError', 'superCreatePasswordStrength');
+
+  return usernameValid && passwordValid;
+}
+
 function chartConfig(type, labels, values, colors) {
   return { type, data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#fffdf8', borderWidth: 2, borderRadius: type === 'bar' ? 4 : 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: type === 'doughnut' ? 'bottom' : 'top', labels: { color: '#17211b', usePointStyle: true, padding: 16 } } }, scales: type === 'bar' || type === 'line' ? { x: { ticks: { color: '#68736c' }, grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0, color: '#68736c' }, grid: { color: '#d9ded7' } } } : undefined } };
 }
@@ -76,7 +183,7 @@ function drawChart(id, config) {
 
 function renderStatistics(data) {
   const summary = data.summary;
-  statCards.innerHTML = [['total', 'Total accounts'], ['approved', 'Approved'], ['pending', 'Pending registrations'], ['blocked', 'Blocked'], ['admins', 'Administrators'], ['super_admins', 'Super administrators']].map(([key, label]) => `<article class="stat-card"><strong>${summary[key]}</strong><span>${label}</span></article>`).join('');
+  statCards.innerHTML = [['total', 'Total accounts'], ['approved', 'Approved'], ['pending', 'Pending registrations'], ['blocked', 'Blocked'], ['admins', 'Administrators'], ['data_administrators', 'Data administrators'], ['super_admins', 'Super administrators']].map(([key, label]) => `<article class="stat-card"><strong>${summary[key]}</strong><span>${label}</span></article>`).join('');
   const required = data.action_required;
   actionRequired.innerHTML = `<h3>Action required</h3><div class="required-items"><a href="#accounts" data-view="accounts"><strong>${required.pending_users}</strong><span>Pending registrations</span></a><a href="#requests-panel" data-view="requests"><strong>${required.pending_deletions}</strong><span>Deletion requests</span></a><a href="#audit" data-view="audit"><strong>${required.failed_actions}</strong><span>Failed actions, last 30 days</span></a></div>`;
   actionRequired.querySelectorAll('[data-view]').forEach(link => link.addEventListener('click', () => window.dispatchEvent(new HashChangeEvent('hashchange'))));
@@ -185,7 +292,16 @@ async function loadRequests() {
 }
 
 async function loadAuditLogs() {
-  const data = await fetch(`../php/audit.php?page=${auditCurrentPage}`).then(async response => { const result = await response.json(); if (!response.ok) throw new Error(result.message || 'Audit log unavailable.'); return result; });
+  const params = new URLSearchParams({page: auditCurrentPage});
+  const search = document.getElementById('auditSearch')?.value.trim();
+  const action = document.getElementById('auditAction')?.value;
+  const dateFrom = document.getElementById('auditDateFrom')?.value;
+  const dateTo = document.getElementById('auditDateTo')?.value;
+  if (search) params.set('search', search);
+  if (action) params.set('action', action);
+  if (dateFrom) params.set('date_from', dateFrom);
+  if (dateTo) params.set('date_to', dateTo);
+  const data = await fetch(`../php/audit.php?${params}`).then(async response => { const result = await response.json(); if (!response.ok) throw new Error(result.message || 'Audit log unavailable.'); return result; });
   auditTotalPages = data.pagination.total_pages;
   auditPage.textContent = `Page ${data.pagination.page} of ${auditTotalPages}`;
   previousAudit.disabled = auditCurrentPage <= 1;
@@ -193,9 +309,52 @@ async function loadAuditLogs() {
   auditLogs.replaceChildren();
   data.logs.forEach(log => {
     const row = document.createElement('tr');
-    [`${log.created_at}`, `${log.actor_username || 'Deleted account'} (${log.actor_employee_id || '-'})`, log.action_code, `${log.target_username || 'Deleted account'} (${log.target_employee_id || '-'})`, log.success ? 'Success' : 'Failed', JSON.stringify(log.details)].forEach(value => { const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell); });
+    [
+      `${log.created_at}`,
+      log.actor_employee_id || '-',
+      formatAuditAction(log.action_code),
+      `${log.target_username || 'Deleted account'} (${log.target_employee_id || '-'})`,
+      log.success ? 'Success' : 'Failed',
+      formatAuditDetails(log)
+    ].forEach(value => { const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell); });
     auditLogs.appendChild(row);
   });
+}
+
+function formatAuditAction(action) {
+  const labels = {
+    'auth.login.success': 'Login',
+    'auth.login.failed': 'Failed login',
+    'auth.logout': 'Logout',
+    'module.open': 'Module opened',
+    'accounts.create': 'Account created',
+    'accounts.update': 'Account edited',
+    'accounts.approve': 'Account approved',
+    'accounts.block': 'Account blocked',
+    'accounts.unblock': 'Account unblocked',
+    'accounts.delete.request': 'Deletion request',
+    'accounts.delete.approve': 'Deletion decision',
+    'permissions.assign': 'Privileges changed'
+  };
+  return labels[action] || action.replaceAll('.', ' ');
+}
+
+function formatAuditDetails(log) {
+  const details = log.details || {};
+  if (log.action_code === 'module.open') return `View only: ${String(details.module || 'module').replaceAll('-', ' ')}`;
+  if (log.action_code === 'accounts.update') {
+    const oldValues = log.old_values || {};
+    const newValues = log.new_values || {};
+    const fields = ['first_name', 'last_name', 'id_number', 'email', 'role', 'account_status']
+      .filter(field => oldValues[field] !== newValues[field]);
+    return fields.length ? `Edited: ${fields.map(field => field.replaceAll('_', ' ')).join(', ')}` : 'Edited account details';
+  }
+  if (details.reason) return `Reason: ${details.reason}`;
+  if (log.action_code === 'accounts.create') return 'Created account credentials';
+  if (log.action_code === 'auth.login.failed') return log.failure_reason || 'Login was not accepted';
+  if (log.action_code === 'auth.login.success' || log.action_code === 'auth.logout') return 'View only';
+  if (log.action_code === 'permissions.assign') return 'Updated account privileges';
+  return 'View only';
 }
 
 async function handleAccountAction(event) {
@@ -213,6 +372,10 @@ async function handleAccountAction(event) {
     body.id_number = prompt('Employee ID:', button.dataset.employee);
     body.email = prompt('Email:', button.dataset.email);
     if ([body.first_name, body.last_name, body.id_number, body.email].some(value => value === null || !value.trim())) return;
+  }
+  if (['block', 'unblock'].includes(action)) {
+    body.reason = prompt(`Why should this account be ${action === 'block' ? 'blocked' : 'unblocked'}?`);
+    if (!body.reason || !body.reason.trim()) return;
   }
   const username = button.dataset.user ? JSON.parse(decodeURIComponent(button.dataset.user)).username : button.closest('tr')?.children[2]?.textContent || 'this account';
   const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', update: 'Save changes to', delete: 'Delete'};
@@ -261,13 +424,37 @@ document.getElementById('clearFilter').addEventListener('click', () => { documen
 document.getElementById('refreshStatistics').addEventListener('click', loadStatistics);
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();
+  const form = event.target;
+  const isValid = validateDashboardCreateForm(form);
+  if (!isValid) {
+    showMessage('Please correct the highlighted fields before creating the account.', true);
+    return;
+  }
   if (!await confirmAction('Create account', 'Create this account now?')) return;
-  try { showMessage((await request('create', { method: 'POST', body: new FormData(event.target) })).message); event.target.reset(); loadUsers(); await loadNextEmployeeId(); }
+  try {
+    const result = await request('create', { method: 'POST', body: new FormData(event.target) });
+    const credentials = result.credentials || {};
+    showMessage(`${result.message} Employee ID: ${credentials.employee_id || 'not available'}, Username: ${credentials.username || 'not available'}`);
+    event.target.reset();
+    loadUsers();
+    await loadNextEmployeeId();
+  }
   catch (error) { showMessage(error.message, true); }
+});
+
+['username', 'password'].forEach(fieldName => {
+  const selector = document.querySelector(`#createForm [name="${fieldName}"]`);
+  if (!selector) return;
+  selector.addEventListener('input', () => {
+    if (fieldName === 'username') validateDashboardUsername(selector, 'superCreateUsernameError', 'superCreateUsernameHint');
+    if (fieldName === 'password') validateDashboardPassword(selector, 'superCreatePasswordError', 'superCreatePasswordStrength');
+  });
 });
 document.getElementById('logoutButton')?.addEventListener('click', () => { window.location.href = '../php/logout.php'; });
 document.getElementById('refreshRequests').addEventListener('click', () => loadRequests().catch(error => showMessage(error.message, true)));
 document.getElementById('refreshAudit').addEventListener('click', () => loadAuditLogs().catch(error => showMessage(error.message, true)));
+document.getElementById('auditFilterForm')?.addEventListener('submit', event => { event.preventDefault(); auditCurrentPage = 1; loadAuditLogs().catch(error => showMessage(error.message, true)); });
+document.getElementById('clearAuditFilters')?.addEventListener('click', () => { document.getElementById('auditFilterForm').reset(); auditCurrentPage = 1; loadAuditLogs().catch(error => showMessage(error.message, true)); });
 previousAudit.addEventListener('click', () => { if (auditCurrentPage > 1) { auditCurrentPage -= 1; loadAuditLogs().catch(error => showMessage(error.message, true)); } });
 nextAudit.addEventListener('click', () => { if (auditCurrentPage < auditTotalPages) { auditCurrentPage += 1; loadAuditLogs().catch(error => showMessage(error.message, true)); } });
 loadUsers();
