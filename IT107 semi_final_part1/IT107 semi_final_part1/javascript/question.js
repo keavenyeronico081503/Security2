@@ -14,6 +14,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const questionSelect3 = document.getElementById("questionSelect3");
     const answerInput3 = document.getElementById("answerInput3");
     const completeBtn = document.getElementById("completeBtn");
+
+    [answerInput1, answerInput2, answerInput3].forEach(input => {
+        if (input) input.value = '';
+    });
     
     // Previous buttons
     const prevBtn1 = document.getElementById("prevBtn1");
