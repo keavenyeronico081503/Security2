@@ -59,6 +59,15 @@ document.querySelectorAll('.password-toggle').forEach(toggle => {
     toggle.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
   });
 });
+const toggleSuperAdminCurrentPassword = document.getElementById('toggleSuperAdminCurrentPassword');
+toggleSuperAdminCurrentPassword?.addEventListener('click', () => {
+  const input = document.getElementById('superAdminCurrentPassword');
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  toggleSuperAdminCurrentPassword.setAttribute('aria-pressed', String(visible));
+  toggleSuperAdminCurrentPassword.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} current password`);
+  toggleSuperAdminCurrentPassword.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
+});
 let auditCurrentPage = 1;
 let auditTotalPages = 1;
 let privilegeTargetId = 0;
