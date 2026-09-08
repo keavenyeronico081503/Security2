@@ -2,12 +2,22 @@ const profileForm = document.getElementById('profileForm');
 const passwordForm = document.getElementById('passwordForm');
 const profileMessage = document.getElementById('profileMessage');
 const passwordMessage = document.getElementById('passwordMessage');
+const toggleCurrentPassword = document.getElementById('toggleCurrentPassword');
 
 if (!profileForm || !passwordForm) {
   throw new Error('Profile module is unavailable.');
 }
 
 fetch('../php/activity.php', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'module=profile'}).catch(() => {});
+
+toggleCurrentPassword?.addEventListener('click', () => {
+  const input = document.getElementById('currentPassword');
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  toggleCurrentPassword.setAttribute('aria-pressed', String(visible));
+  toggleCurrentPassword.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} current password`);
+  toggleCurrentPassword.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
+});
 
 function showMessage(element, text, success = false) {
   element.textContent = text;
