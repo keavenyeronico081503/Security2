@@ -6,41 +6,43 @@ body {
     margin: 0;
     min-height: 100vh;
     padding: 32px 16px;
-    background: linear-gradient(135deg, #eef2ff, #f8fafc);
-    color: #1f2937;
-    font-family: Arial, sans-serif;
+    background: var(--paper, #f5f3ed);
+    color: var(--ink, #17211b);
+    font-family: 'DM Sans', sans-serif;
 }
 
 .onboarding-card {
     width: min(900px, 100%);
     margin: 0 auto;
     padding: 32px;
-    background: #ffffff;
-    border: 1px solid #dbe3ef;
+    background: var(--panel, #fffdf8);
+    border: 1px solid var(--line, #d9ded7);
     border-radius: 10px;
-    box-shadow: 0 12px 32px rgba(30, 41, 59, 0.12);
+    box-shadow: 0 10px 28px rgba(23, 33, 27, .08);
 }
 
 h1 {
     margin: 0 0 8px;
-    color: #273c75;
+    color: var(--ink, #17211b);
+    font-family: 'Space Grotesk', sans-serif;
 }
 
 .intro, .hint {
-    color: #64748b;
+    color: var(--muted, #68736c);
 }
 
 fieldset {
     margin: 24px 0 0;
     padding: 20px;
-    border: 1px solid #dbe3ef;
+    border: 1px solid var(--line, #d9ded7);
     border-radius: 8px;
 }
 
 legend {
     padding: 0 8px;
-    color: #273c75;
+    color: var(--ink, #17211b);
     font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
 }
 
 .field-grid, .question-grid {
@@ -53,7 +55,7 @@ label {
     display: grid;
     gap: 6px;
     font-weight: 700;
-    color: #334155;
+    color: var(--ink, #17211b);
 }
 
 .wide, .question-grid label {
@@ -64,25 +66,26 @@ input, select {
     width: 100%;
     min-height: 42px;
     padding: 9px 11px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 7px;
     background: #fff;
-    color: #1f2937;
+    color: var(--ink, #17211b);
     font: inherit;
 }
 
 input:focus, select:focus {
-    outline: 3px solid rgba(59, 130, 246, 0.2);
-    border-color: #3b82f6;
+    outline: none;
+    border-color: var(--accent, #176b52);
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
 }
 
 button {
     width: 100%;
     min-height: 46px;
     margin-top: 24px;
-    border: 0;
-    border-radius: 6px;
-    background: #273c75;
+    border: 1px solid var(--accent, #176b52);
+    border-radius: 7px;
+    background: var(--accent, #176b52);
     color: #fff;
     font-size: 16px;
     font-weight: 700;
@@ -90,7 +93,8 @@ button {
 }
 
 button:hover {
-    background: #1e2f5d;
+    background: var(--accent-dark, #0f5849);
+    border-color: var(--accent-dark, #0f5849);
 }
 
 #formMessage {
@@ -98,8 +102,8 @@ button:hover {
     font-weight: 700;
 }
 
-.success { color: #15803d; }
-.error { color: #b91c1c; }
+.success { color: var(--accent, #176b52); }
+.error { color: var(--danger, #a63d32); }
 
 @media (max-width: 640px) {
     .onboarding-card {

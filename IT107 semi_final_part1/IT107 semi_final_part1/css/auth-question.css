@@ -1,58 +1,31 @@
-/* forgot-password.css - Match login.css design */
+/* auth-question.css - unified with the green/cream system in common.css */
 *{
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-:root{
-  /* Minimalist accent colors */
-  --primary: #2e7d32;   /* deep green */
-  --accent:  #6c757d;   /* soft slate */
-  --primary-ink: #1f5a22;
-  --primary-bg: #f1f7f2;
+    font-family: 'DM Sans', sans-serif;
 }
 
 body {
     margin: 0;
-    padding: 0; 
-    /* Background image with violet theme overlay */
-    background-image: url('../images/image-42-1.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    padding: 0;
+    background: var(--paper, #f5f3ed);
     display: flex;
-    justify-content: center; /* center the forgot-password card */
+    justify-content: center;
     align-items: center;
     text-align: center;
-    min-height: 100vh; 
-    color: #222;
+    min-height: 100vh;
+    color: var(--ink, #17211b);
     padding-top: 80px;   /* More space for fixed header */
     padding-bottom: 50px;/* More space for fixed footer */
     overflow: hidden; /* Prevent scrolling */
     position: relative;
 }
 
-/* Violet overlay on entire page background */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.75) 0%, rgba(118, 75, 162, 0.8) 100%);
-    z-index: -1;
-    pointer-events: none;
-}
-
 .forgot-password {
     padding: 0.8rem;       /* Match register form padding */
-    /* Semi-transparent background for form box */
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;   /* Match register form border-radius */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background-color: var(--panel, #fffdf8);
+    border: 1px solid var(--line, #d9ded7);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(23, 33, 27, .08);
     text-align: center;
     width: 65%;            /* Reduced from 75% to make it smaller */
     max-width: 650px;      /* Reduced from 750px to make it smaller */
@@ -62,7 +35,6 @@ body::before {
     overflow: hidden;
 }
 
-/* Ensure form content is above the overlay */
 .forgot-password > * {
     position: relative;
     z-index: 1;
@@ -70,8 +42,8 @@ body::before {
 
 /* Title styling */
 .forgot-password h1 {
-    color: #fff;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    color: var(--ink, #17211b);
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 10px;
@@ -127,8 +99,7 @@ body::before {
 .info-column label {
     font-weight: 600;
     font-size: 16px;
-    color: #fff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: var(--ink, #17211b);
     text-align: center;
     margin-bottom: 5px;
     width: 100%;
@@ -137,15 +108,13 @@ body::before {
 /* Username display styling */
 .username-display {
     padding: 6px 8px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    background: #ffffff;
+    border: 1.5px solid var(--line, #d9ded7);
     border-radius: 8px;
-    color: #333;
+    color: var(--ink, #17211b);
     font-weight: bold;
     font-size: 11px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(4px);
     width: 100%;
     min-width: 200px;
     max-width: 250px;
@@ -192,10 +161,10 @@ body::before {
 /* Question sections - absolutely minimal */
 .question-section {
     grid-column: span 1;
-    background: transparent; /* No background */
-    border: none; /* No border */
-    padding: 0px; /* No padding */
-    margin: 0px; /* No margin */
+    background: transparent;
+    border: none;
+    padding: 0px;
+    margin: 0px;
     box-shadow: none;
     transition: none;
 }
@@ -209,17 +178,16 @@ body::before {
 .question-display {
     width: 100%;
     padding: 8px 10px;     /* Match register form padding */
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border: 1.5px solid var(--line, #d9ded7);
     border-radius: 8px;    /* Match register form border-radius */
-    background: rgba(255, 255, 255, 0.95);
-    font-size: 13px;       /* Original size */
-    color: #333;
+    background: #ffffff;
+    font-size: 13px;
+    color: var(--ink, #17211b);
     text-align: left;
     word-wrap: break-word;
     margin-bottom: 8px;
     display: flex;
     align-items: center;
-    backdrop-filter: blur(4px);
 }
 
 /* Full-width elements */
@@ -232,25 +200,22 @@ body::before {
 .forgot-password input {
     width: 100%;
     padding: 8px 10px;     /* Match register form padding */
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border: 1.5px solid var(--line, #d9ded7);
     border-radius: 8px;    /* Match register form border-radius */
-    background: rgba(255, 255, 255, 0.95);
-    color: #333;
-    font-size: 13px;       /* Original size */
-    transition: all 0.2s ease;
-    backdrop-filter: blur(4px);
+    background: #ffffff;
+    color: var(--ink, #17211b);
+    font-size: 13px;
+    transition: border-color .2s ease, box-shadow .2s ease;
 }
 
 .forgot-password input:focus {
-    border-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
+    border-color: var(--accent, #176b52);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
 }
 
 .forgot-password input:hover {
-    border-color: #d4a5a5;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-color: #b7c6bd;
 }
 
 /* Enhanced select styling */
@@ -258,70 +223,46 @@ body::before {
     width: 100%;
     height: 36px;
     padding: 8px 10px;
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border: 1.5px solid var(--line, #d9ded7);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.95);
-    color: #333;
+    background: #ffffff;
+    color: var(--ink, #17211b);
     font-size: 13px;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(4px);
+    transition: border-color .2s ease, box-shadow .2s ease;
     cursor: pointer;
 }
 
 .forgot-password select:focus {
-    border-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
+    border-color: var(--accent, #176b52);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
 }
 
 .forgot-password select:hover {
-    border-color: #d4a5a5;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-color: #b7c6bd;
 }
 
-/* Enhanced button styling - matching original pink theme */
+/* Button styling */
 .forgot-password button {
     grid-column: 2;
     margin: 15px auto 0;
     width: 80%;
     height: 42px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--accent, #176b52);
     color: #fff;
-    border: none;
-    border-radius: 25px;
+    border: 1px solid var(--accent, #176b52);
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    transition: all 0.3s ease;
+    transition: background-color .2s ease;
     position: relative;
     overflow: hidden;
 }
 
-.forgot-password button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s;
-}
-
-.forgot-password button:hover::before {
-    left: 100%;
-}
-
 .forgot-password button:hover {
-    background: linear-gradient(135deg, #7A25F0 0%, #8B5CF6 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-.forgot-password button:active {
-    transform: translateY(0);
+    background: var(--accent-dark, #0f5849);
+    border-color: var(--accent-dark, #0f5849);
 }
 
 /* Enhanced label styling */
@@ -335,23 +276,20 @@ body::before {
     margin-bottom: 10px;
     font-weight: 600;
     font-size: 18px;
-    color: #fff;
+    color: var(--ink, #17211b);
     letter-spacing: 0.2px;
     text-align: left;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Enhanced error message styling */
 .error-message {
-    color: #d32f2f; /* Softer, less harsh red */
-    font-size: 15px;
+    color: var(--danger, #a63d32);
+    font-size: 14px;
     margin-top: 6px;
     margin-bottom: 2px;
     line-height: 1.5;
-    font-weight: 500; /* Lighter weight - less harsh */
+    font-weight: 600;
     letter-spacing: 0.02em;
-    opacity: 0.9; /* Slightly transparent for softer appearance */
-    transition: opacity 0.2s ease;
 }
 
 @keyframes shake {
@@ -366,17 +304,16 @@ body::before {
     margin-top: 20px;
     text-align: center;
 }
-/* Header styling - minimalist (match login.css) */
+/* Header styling */
 header {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--ink, #17211b);
+    border-bottom: 3px solid var(--accent, #176b52);
     z-index: 1000;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .container {
@@ -399,7 +336,7 @@ header {
     margin: 0 15px;
     padding: 0;
     text-decoration: underline;
-    color: white;
+    color: #ffffff;
     font-weight: normal;
     background: none;
     border: none;
@@ -410,31 +347,13 @@ header {
 /* On the auth-questions page, hide any specific nav link if needed */
 .container a[href="auth-questions.html"] { display: none; }
 .container a:hover {
-    background: none;
-    color: #ccc;
-    transform: none;
-    border: none;
-    box-shadow: none;
+    color: #b9dfc9;
     text-decoration: underline;
 }
 .container a.active {
-    background: none;
-    color: white;
-    border: none;
+    color: #ffffff;
     font-weight: bold;
     text-decoration: underline;
-}
-.header a:hover {
-    background: #f2f2f2;
-    color: #111;
-    transform: translateY(-1px);
-    box-shadow: none;
-}
-
-/* Active page styling - optional */
-.header a.active {
-    background: var(--primary-bg);
-    color: var(--primary-ink);
 }
 
 footer {
@@ -443,38 +362,34 @@ footer {
     bottom: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--ink, #17211b);
     color: white;
     text-align: center;
-    padding: 10px; /* Consistent padding with header */
+    padding: 10px;
     z-index: 999;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 footer h3 {
-    margin: 0; /* Remove default margin */
+    margin: 0;
     font-size: 16px;
     color: white;
 }
 
 /* Additional styles for new features */
 .forgot-subtitle {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--muted, #68736c);
     margin-bottom: 20px;
     font-size: 18px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Duplicate error-message removed - using the one at line 317 */
-
 .username-display {
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+    background: var(--paper, #f5f3ed);
+    border: 1px solid var(--line, #d9ded7);
+    border-radius: 6px;
     padding: 10px;
     font-weight: bold;
-    color: #333;
+    color: var(--ink, #17211b);
     text-align: center;
 }
 
@@ -484,14 +399,14 @@ footer h3 {
 }
 
 .back-to-login a {
-    color: #666;
+    color: var(--muted, #68736c);
     text-decoration: none;
     font-size: 14px;
     transition: color 0.2s ease;
 }
 
 .back-to-login a:hover {
-    color: #333;
+    color: var(--accent, #176b52);
     text-decoration: underline;
 }
 
@@ -500,16 +415,16 @@ footer h3 {
     width: 100%;
     height: 40px;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 8px;
     background: white;
     font-size: 14px;
 }
 
 .forgot-password select:focus {
-    border-color: #cfcfcf;
+    border-color: var(--accent, #176b52);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
 }
 
 /* Password strength indicator - more compact */
@@ -523,7 +438,7 @@ footer h3 {
 .strength-bar {
     width: 100%;
     height: 2px;
-    background: #e0e0e0;
+    background: var(--line, #d9ded7);
     border-radius: 1px;
     overflow: hidden;
     margin-bottom: 1px;
@@ -538,22 +453,22 @@ footer h3 {
 
 .strength-fill.weak {
     width: 33%;
-    background: #f44336;
+    background: var(--danger, #a63d32);
 }
 
 .strength-fill.medium {
     width: 66%;
-    background: #ff9800;
+    background: var(--amber, #a46616);
 }
 
 .strength-fill.strong {
     width: 100%;
-    background: #4caf50;
+    background: var(--accent, #176b52);
 }
 
 .strength-text {
     font-size: 10px;
-    color: #666;
+    color: var(--muted, #68736c);
     text-align: left;
     margin: 0;
     line-height: 1.1;
@@ -562,15 +477,15 @@ footer h3 {
 }
 
 .strength-text.weak {
-    color: #f44336;
+    color: var(--danger, #a63d32);
 }
 
 .strength-text.medium {
-    color: #ff9800;
+    color: var(--amber, #a46616);
 }
 
 .strength-text.strong {
-    color: #4caf50;
+    color: var(--accent, #176b52);
 }
 
 /* Toggle password button */
@@ -581,14 +496,14 @@ footer h3 {
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #888;
+    color: var(--muted, #68736c);
     cursor: pointer;
     padding: 0;
     font-size: 14px;
 }
 
 .toggle-password:hover {
-    color: #333;
+    color: var(--accent, #176b52);
 }
 
 /* Message styling */
@@ -601,16 +516,14 @@ footer h3 {
 }
 
 .message.success {
-    color: #00ff88; /* Brighter, clearer green */
-    font-weight: 700; /* Bold text */
-    font-size: 18px; /* Bigger text */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Text shadow for visibility */
+    color: var(--accent, #176b52);
+    font-weight: 700;
+    font-size: 18px;
 }
 
 .message.error {
-    color: #dc3545;
+    color: var(--danger, #a63d32);
     font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Input container with toggle button */
@@ -705,40 +618,36 @@ footer h3 {
 .prev-btn {
     flex: 1;
     padding: 12px 20px;
-    background: #6c757d;
-    color: white;
-    border: none;
+    background: transparent;
+    color: var(--ink, #17211b);
+    border: 1.5px solid var(--line, #d9ded7);
     border-radius: 25px;
     cursor: pointer;
     font-weight: 600;
     font-size: 14px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    transition: border-color 0.2s ease, color 0.2s ease;
 }
 
 .prev-btn:hover {
-    background: #5a6268;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+    border-color: var(--accent, #176b52);
+    color: var(--accent, #176b52);
 }
 
 /* Update the verify button to match */
 .button-container button[type="submit"] {
     flex: 1;
     padding: 12px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--accent, #176b52);
     color: white;
-    border: none;
+    border: 1px solid var(--accent, #176b52);
     border-radius: 25px;
     cursor: pointer;
     font-weight: 600;
     font-size: 14px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: background-color 0.2s ease;
 }
 
 .button-container button[type="submit"]:hover {
-    background: linear-gradient(135deg, #7A25F0 0%, #8B5CF6 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    background: var(--accent-dark, #0f5849);
+    border-color: var(--accent-dark, #0f5849);
 }
