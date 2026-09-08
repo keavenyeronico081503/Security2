@@ -182,7 +182,6 @@ async function loadAdminAccess() {
     const data = await response.json();
     const allowed = response.ok && data.status === 'success' && data.user.permissions.includes('accounts.create');
     adminRole = data.user.role || '';
-    document.querySelector('[data-view="profile"]')?.setAttribute('href', 'dashboard.html#profile');
     if (allowed) {
       createLink.hidden = false;
       createPanel.hidden = false;
