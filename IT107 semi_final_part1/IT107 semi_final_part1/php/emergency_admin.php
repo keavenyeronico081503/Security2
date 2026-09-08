@@ -1,7 +1,7 @@
 <?php
 
 const EMERGENCY_ADMIN_USERNAME = 'Emergencyadmin1';
-const EMERGENCY_ADMIN_PASSWORD_HASH = '$2y$10$n3giLuwKDYSd.bA9lsgoDevBWK98pfMqRBGKganNEyiIAKiFnzdhq';
+const EMERGENCY_ADMIN_PASSWORD_HASH = '$2y$10$HBAclQQ9slD3iqjbyS4eZeCrMrwXGAF.XPSszLMKSKnQPQNTsUOU.';
 
 function is_emergency_admin_login(string $username, string $password): bool
 {
