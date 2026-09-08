@@ -22,6 +22,9 @@ h1, h2 { margin: 0; font-family: 'Space Grotesk', sans-serif; }
 .profile-password-input input { padding-right: 44px; }
 .profile-password-toggle { position: absolute; top: 50%; right: 7px; width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--muted); transform: translateY(-50%); box-shadow: none; }
 .profile-password-toggle:hover { background: transparent; color: var(--accent); }
+body .profile-password-toggle { width: 30px !important; min-width: 30px !important; height: 30px !important; min-height: 30px !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; color: var(--muted) !important; transform: translateY(-50%) !important; }
+body .profile-password-toggle:hover { background: transparent !important; box-shadow: none !important; color: var(--accent) !important; transform: translateY(-50%) !important; }
+body .profile-password-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .profile-form input[readonly] { background: #f0f3ef; color: var(--muted); }
 .form-message { min-height: 20px; grid-column: 1 / -1; margin: 0; font-weight: 700; }
 .form-message.success { color: var(--accent); }
