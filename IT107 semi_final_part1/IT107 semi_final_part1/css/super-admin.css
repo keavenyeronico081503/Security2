@@ -16,6 +16,7 @@ body .profile-password-toggle{width:30px!important;min-width:30px!important;heig
 .create-form .error-message{color:var(--danger);font-weight:600}
 .create-form .hint-message{color:var(--muted)}
 .create-form .strength-message{color:var(--accent);font-weight:600}
+.create-form .password-toggle{width:30px!important;min-width:30px!important;height:30px!important;min-height:30px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:var(--muted)!important;transform:translateY(-50%)!important}.create-form .password-toggle:hover{background:transparent!important;box-shadow:none!important;color:var(--accent)!important;transform:translateY(-50%)!important}.create-form .password-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .create-form button{grid-column:3;grid-row:3;justify-self:end;min-width:160px;padding:11px 18px;height:44px;border-radius:8px;background:var(--accent);border-color:var(--accent);color:#fff}
 .create-form button:hover{background:#0f5849;border-color:#0f5849}
 .create-form .input-error{border-color:var(--danger)!important;background:#fff7f6;box-shadow:0 0 0 3px rgba(166,61,50,.09)!important}

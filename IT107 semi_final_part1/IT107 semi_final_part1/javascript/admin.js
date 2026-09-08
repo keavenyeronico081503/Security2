@@ -14,6 +14,15 @@ const message = document.getElementById('message');
 const statCards = document.getElementById('adminStatCards');
 const actionRequired = document.getElementById('adminActionRequired');
 const charts = {};
+const toggleAdminCreatePassword = document.getElementById('toggleAdminCreatePassword');
+toggleAdminCreatePassword?.addEventListener('click', () => {
+  const input = document.getElementById('adminCreatePassword');
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  toggleAdminCreatePassword.setAttribute('aria-pressed', String(visible));
+  toggleAdminCreatePassword.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} temporary password`);
+  toggleAdminCreatePassword.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
+});
 
 function setInlineError(input, message, errorId) {
   const field = input;
