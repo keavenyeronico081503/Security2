@@ -25,6 +25,19 @@ if (!$userId) {
 // Get form data
 $newPassword = $_POST['new_password'] ?? '';
 $confirmPassword = $_POST['confirm_password'] ?? '';
+$currentPassword = $_POST['current_password'] ?? '';
+
+if (isset($_SESSION['user_id'])) {
+    $currentStmt = $conn->prepare('SELECT password FROM users WHERE id = ? LIMIT 1');
+    $currentStmt->bind_param('i', $userId);
+    $currentStmt->execute();
+    $currentUser = $currentStmt->get_result()->fetch_assoc();
+    $currentStmt->close();
+    if (!$currentUser || $currentPassword === '' || !password_verify($currentPassword, $currentUser['password'])) {
+        echo json_encode(['success' => false, 'message' => 'Current password is incorrect.']);
+        exit;
+    }
+}
 
 // Validate input
 if (empty($newPassword) || empty($confirmPassword)) {

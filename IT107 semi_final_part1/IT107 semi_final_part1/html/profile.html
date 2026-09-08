@@ -33,6 +33,7 @@
     <section class="profile-card">
       <div class="card-heading"><div><p class="eyebrow">Account security</p><h2>Change password</h2><p>Use a strong password you do not reuse elsewhere.</p></div></div>
       <form id="passwordForm" class="profile-form password-form">
+        <label>Current password<input type="password" name="current_password" minlength="8" required></label>
         <label>New password<input type="password" name="new_password" minlength="8" required></label>
         <label>Confirm password<input type="password" name="confirm_password" minlength="8" required></label>
         <p id="passwordMessage" class="form-message" role="status"></p>

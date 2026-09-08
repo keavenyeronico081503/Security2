@@ -157,6 +157,15 @@ if ($action === 'review-delete') {
     exit;
 }
 
+if ($action === 'data-administrator-status') {
+    require_super_admin();
+    require_permission('accounts.create');
+    $activeDataAdminResult = $conn->query('SELECT COUNT(*) AS total FROM users WHERE role = "data_administrator" AND account_status = "approved" AND username <> "Emergencyadmin1"');
+    $activeDataAdministrators = (int)($activeDataAdminResult->fetch_assoc()['total'] ?? 0);
+    echo json_encode(['status' => 'success', 'active_data_administrators' => $activeDataAdministrators]);
+    exit;
+}
+
 if ($action === 'create') {
     require_super_admin();
     require_permission('accounts.create');

@@ -430,6 +430,15 @@ document.getElementById('createForm').addEventListener('submit', async event => 
     showMessage('Please correct the highlighted fields before creating the account.', true);
     return;
   }
+  if (form.querySelector('[name="role"]')?.value === 'data_administrator') {
+    try {
+      const status = await request('data-administrator-status');
+      if (status.active_data_administrators > 0 && !await confirmAction('Active Data Administrator already exists', 'There is already an active Data Administrator. Are you sure you want to create another one?')) return;
+    } catch (error) {
+      showMessage(error.message, true);
+      return;
+    }
+  }
   if (!await confirmAction('Create account', 'Create this account now?')) return;
   try {
     const result = await request('create', { method: 'POST', body: new FormData(event.target) });
