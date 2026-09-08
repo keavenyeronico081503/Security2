@@ -21,6 +21,7 @@ services:
       - ./database/010_data_administrator_role.sql:/docker-entrypoint-initdb.d/zzzzzzzzzz_data_administrator_role.sql:ro
       - ./database/011_profile_contact.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzz_profile_contact.sql:ro
       - ./database/012_audit_immutability.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzz_audit_immutability.sql:ro
+      - ./database/013_block_requests.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzz_block_requests.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s

@@ -50,7 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'account-status': ['#account-status'],
     calendar: ['#calendar'],
     profile: ['#profile'],
-    'change-password': ['#change-password']
+    'change-password': ['#change-password'],
+    profile: ['#profile'],
+    'block-requests': ['#block-requests']
   };
 
   const applyModuleView = () => {

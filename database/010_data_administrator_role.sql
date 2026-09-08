@@ -16,6 +16,7 @@ JOIN permissions p ON p.code IN (
   'accounts.update',
   'accounts.approve',
   'accounts.block',
+  'accounts.block.review',
   'accounts.delete.request'
 )
 WHERE r.code = 'data_administrator';

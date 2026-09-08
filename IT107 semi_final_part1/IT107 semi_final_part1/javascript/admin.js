@@ -14,6 +14,7 @@ const message = document.getElementById('message');
 const statCards = document.getElementById('adminStatCards');
 const actionRequired = document.getElementById('adminActionRequired');
 const charts = {};
+let adminRole = '';
 const toggleAdminCreatePassword = document.getElementById('toggleAdminCreatePassword');
 toggleAdminCreatePassword?.addEventListener('click', () => {
   const input = document.getElementById('adminCreatePassword');
@@ -180,13 +181,38 @@ async function loadAdminAccess() {
     const response = await fetch('../php/user.php?action=session');
     const data = await response.json();
     const allowed = response.ok && data.status === 'success' && data.user.permissions.includes('accounts.create');
+    adminRole = data.user.role || '';
     if (allowed) {
       createLink.hidden = false;
       createPanel.hidden = false;
     }
+    if (data.user.permissions.includes('accounts.block.review')) {
+      document.querySelector('[data-permission="accounts.block.review"]').hidden = false;
+      document.getElementById('block-requests').hidden = false;
+      loadBlockRequests();
+    }
   } catch (error) {
     return;
   }
+}
+
+async function loadBlockRequests() {
+  const target = document.getElementById('blockRequests');
+  if (!target) return;
+  try {
+    const data = await request('block-requests');
+    target.replaceChildren();
+    data.requests.forEach(item => {
+      const row = document.createElement('tr');
+      [item.username, item.id_number, item.requested_by, item.reason, item.status].forEach(value => row.appendChild(textCell(value)));
+      const review = document.createElement('td');
+      if (item.status === 'pending') {
+        ['approve', 'reject'].forEach(decision => { const button = actionButton(decision === 'approve' ? 'Accept' : 'Reject', 'review-block-request', item.id); button.dataset.request = item.id; button.dataset.decision = decision; review.appendChild(button); });
+      } else review.textContent = 'Reviewed';
+      row.appendChild(review); target.appendChild(row);
+    });
+    if (!data.requests.length) { const row = document.createElement('tr'); const empty = textCell('No block requests found.'); empty.colSpan = 6; row.appendChild(empty); target.appendChild(row); }
+  } catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
 }
 
 async function loadNextEmployeeId() {
@@ -239,6 +265,8 @@ async function load() {
 table.addEventListener('click', async event => {
   const button = event.target.closest('button[data-action]'); if (!button) return;
   const action = button.dataset.action; const body = {user_id: Number(button.dataset.id)};
+  if (action === 'block' && adminRole === 'admin') { body.reason = prompt('Why should this account be blocked?'); if (!body.reason || !body.reason.trim()) return; }
+  if (action === 'review-block-request') { body.request_id = Number(button.dataset.request); body.decision = button.dataset.decision; body.reason = prompt('Optional review note:', '') || ''; if (!await confirmAction(`${body.decision === 'approve' ? 'Accept' : 'Reject'} block request`, `${body.decision === 'approve' ? 'Accept' : 'Reject'} this block request?`)) return; try { showMessage((await request('review-block-request', body)).message); await loadBlockRequests(); await load(); } catch (error) { showMessage(error.message, true); } return; }
   if (['request-delete', 'block', 'unblock'].includes(action)) { body.reason = prompt(`Why should this account be ${action === 'request-delete' ? 'deleted' : action + 'ed'}?`); if (!body.reason || !body.reason.trim()) return; }
   if (action === 'update') { const user = JSON.parse(button.dataset.user); body.first_name = prompt('First name:', user.first_name); body.last_name = prompt('Last name:', user.last_name); body.id_number = prompt('Employee ID:', user.id_number); body.email = prompt('Email:', user.email); if (Object.values(body).some(value => value === null || value === '')) return; }
   const username = button.dataset.user ? JSON.parse(button.dataset.user).username : button.closest('tr')?.children[2]?.textContent || 'this account';
@@ -248,6 +276,7 @@ table.addEventListener('click', async event => {
 });
 document.getElementById('filter').addEventListener('submit', event => { event.preventDefault(); load(); });
 document.getElementById('clear').addEventListener('click', () => { document.getElementById('employeeId').value = ''; load(); });
+document.getElementById('refreshBlockRequests')?.addEventListener('click', loadBlockRequests);
 document.getElementById('refreshAdminStatistics').addEventListener('click', loadStatistics);
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();
