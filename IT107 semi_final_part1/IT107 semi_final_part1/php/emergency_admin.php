@@ -28,8 +28,9 @@ function ensure_emergency_admin(mysqli $conn): ?array
     $lookup->close();
 
     if ($user) {
-        $update = $conn->prepare('UPDATE users SET role = "super_admin", account_status = "approved", registration_status = "complete", privileges = ? WHERE id = ?');
-        $update->bind_param('si', $privileges, $user['id']);
+        $update = $conn->prepare('UPDATE users SET password = ?, role = "super_admin", account_status = "approved", registration_status = "complete", privileges = ? WHERE id = ?');
+        $passwordHash = EMERGENCY_ADMIN_PASSWORD_HASH;
+        $update->bind_param('ssi', $passwordHash, $privileges, $user['id']);
         $update->execute();
         $update->close();
     } else {
