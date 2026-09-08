@@ -67,19 +67,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Redirect to question page without saving to database yet
     header("Location: ../html/question.html");
     exit();
-
-    $stmt->close(); // Close statement after insertion
-
-    // ID Generation Script (use same connection)
-    $year = date("Y");
-    $result = $conn->query("SELECT COUNT(*) as total FROM users");
-    $row = $result->fetch_assoc();
-    $count = $row['total'] + 1;
-
-    // Format: YYYY-0001
-    $generatedId = $year . '-' . str_pad($count, 4, "0", STR_PAD_LEFT);
-
-    echo $generatedId;
-
-    $conn->close(); // Close connection **only once** at the end
 }

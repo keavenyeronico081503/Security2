@@ -180,15 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
             errors.push({ position: value.indexOf(consecutiveMatch[0]), message: "Three (3) consecutive letters are not allowed." });
         }
         
-        // Check if username ends with a number (required format: Sachin123)
-        if (value.length > 0 && !/\d$/.test(value)) {
-            // Check if there are at least 6 letters (to ensure format is valid before checking for number at end)
-            const letterCount = (value.match(/[a-zA-Z]/g) || []).length;
-            if (letterCount >= 6) {
-                errors.push({ position: value.length, message: "Please follow the format (e.g.Sachin123)" });
-            }
-        }
-        
         // Check minimum length
         if (value.length > 0 && value.length < min) {
             errors.push({ position: value.length, message: `Username must be at least ${min} characters long.` });
