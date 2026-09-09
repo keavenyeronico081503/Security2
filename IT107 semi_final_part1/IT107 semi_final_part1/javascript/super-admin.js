@@ -10,6 +10,9 @@ const privilegeDialog = document.getElementById('privilegeDialog');
 const privilegeForm = document.getElementById('privilegeForm');
 const privilegeModules = document.getElementById('privilegeModules');
 const privilegeAccount = document.getElementById('privilegeAccount');
+const editDialog = document.getElementById('editDialog');
+const editForm = document.getElementById('editForm');
+let editTargetId = null;
 const api = '../php/super-admin.php';
 const statCards = document.getElementById('statCards');
 const actionRequired = document.getElementById('actionRequired');
@@ -232,8 +235,7 @@ function renderUsers(users) {
     const controls = user.role === 'super_admin' ? '<span>Protected</span>' : `
       ${status !== 'approved' ? `<button data-action="approve" data-id="${user.id}">Approve</button>` : ''}
       <button data-action="${status === 'blocked' ? 'unblock' : 'block'}" data-id="${user.id}">${status === 'blocked' ? 'Unblock' : 'Block'}</button>
-      <button data-action="update" data-id="${user.id}" data-first="${user.first_name}" data-last="${user.last_name}" data-employee="${user.id_number}" data-email="${user.email}">Edit</button>
-      <button data-action="privileges" data-id="${user.id}" data-user="${encodeURIComponent(JSON.stringify(user))}">Privileges</button>
+      <button data-action="update" data-id="${user.id}" data-first="${user.first_name}" data-last="${user.last_name}" data-employee="${user.id_number}" data-email="${user.email}" data-username="${user.username}" data-role="${user.role}">Edit</button>
       <button class="danger" data-action="delete" data-id="${user.id}">Delete</button>`;
     return `<tr><td>${user.first_name} ${user.last_name}</td><td>${user.id_number}</td><td>${user.username}</td><td class="role">${role}</td><td class="status status-${status}">${status}</td><td class="actions">${controls}</td></tr>`;
   }).join('') || '<tr><td colspan="6">No accounts found.</td></tr>';
@@ -282,6 +284,60 @@ async function openPrivilegeDialog(user) {
   privilegeDialog.showModal();
 }
 
+function showEditMessage(text, error = false) {
+  const el = document.getElementById('editMessage');
+  el.textContent = text;
+  el.style.color = error ? '#a63d32' : '#176b52';
+}
+
+function openEditDialog(user) {
+  editTargetId = Number(user.id);
+  editForm.first_name.value = user.first_name;
+  editForm.last_name.value = user.last_name;
+  editForm.id_number.value = user.id_number;
+  editForm.email.value = user.email;
+  editForm.username.value = user.username;
+  editForm.role.value = user.role;
+  document.getElementById('editAccountLabel').textContent = `${user.first_name} ${user.last_name} (${user.username})`;
+  showEditMessage('');
+  editDialog.showModal();
+}
+
+editForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const body = {
+    user_id: editTargetId,
+    first_name: editForm.first_name.value.trim(),
+    last_name: editForm.last_name.value.trim(),
+    id_number: editForm.id_number.value.trim(),
+    email: editForm.email.value.trim(),
+    username: editForm.username.value.trim(),
+    role: editForm.role.value
+  };
+  if (Object.values(body).some(value => value === '')) { showEditMessage('All fields are required.', true); return; }
+  if (!await confirmAction('Save changes', `Save changes to account "${body.username}"?`)) return;
+  try {
+    const result = await request('update', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+    showEditMessage(result.message);
+    await loadUsers(document.getElementById('employeeId').value);
+    await loadAuditLogs();
+    setTimeout(() => editDialog.close(), 700);
+  } catch (error) { showEditMessage(error.message, true); }
+});
+
+document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
+  if (!editTargetId) return;
+  if (!await confirmAction('Reset password', "Generate a new temporary password and email it to this account's institutional address? The current password will stop working immediately.")) return;
+  try {
+    const result = await request('reset-password', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_id: editTargetId }) });
+    showEditMessage(result.message);
+    await loadAuditLogs();
+  } catch (error) { showEditMessage(error.message, true); }
+});
+
+document.getElementById('closeEdit').addEventListener('click', () => editDialog.close());
+document.getElementById('cancelEdit').addEventListener('click', () => editDialog.close());
+
 async function loadRequests() {
   const data = await request('delete-requests');
   requests.replaceChildren();
@@ -316,54 +372,68 @@ async function loadAuditLogs() {
   previousAudit.disabled = auditCurrentPage <= 1;
   nextAudit.disabled = auditCurrentPage >= auditTotalPages;
   auditLogs.replaceChildren();
-  data.logs.forEach(log => {
+
+  if (!data.buckets.length) {
     const row = document.createElement('tr');
-    [
-      `${log.created_at}`,
-      log.actor_employee_id || '-',
-      formatAuditAction(log.action_code),
-      `${log.target_username || 'Deleted account'} (${log.target_employee_id || '-'})`,
-      log.success ? 'Success' : 'Failed',
-      formatAuditDetails(log)
-    ].forEach(value => { const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell); });
-    auditLogs.appendChild(row);
-  });
-}
-
-function formatAuditAction(action) {
-  const labels = {
-    'auth.login.success': 'Login',
-    'auth.login.failed': 'Failed login',
-    'auth.logout': 'Logout',
-    'module.open': 'Module opened',
-    'accounts.create': 'Account created',
-    'accounts.update': 'Account edited',
-    'accounts.approve': 'Account approved',
-    'accounts.block': 'Account blocked',
-    'accounts.unblock': 'Account unblocked',
-    'accounts.delete.request': 'Deletion request',
-    'accounts.delete.approve': 'Deletion decision',
-    'permissions.assign': 'Privileges changed'
-  };
-  return labels[action] || action.replaceAll('.', ' ');
-}
-
-function formatAuditDetails(log) {
-  const details = log.details || {};
-  if (log.action_code === 'module.open') return `View only: ${String(details.module || 'module').replaceAll('-', ' ')}`;
-  if (log.action_code === 'accounts.update') {
-    const oldValues = log.old_values || {};
-    const newValues = log.new_values || {};
-    const fields = ['first_name', 'last_name', 'id_number', 'email', 'role', 'account_status']
-      .filter(field => oldValues[field] !== newValues[field]);
-    return fields.length ? `Edited: ${fields.map(field => field.replaceAll('_', ' ')).join(', ')}` : 'Edited account details';
+    const cell = document.createElement('td'); cell.colSpan = 6; cell.textContent = 'No activity recorded for this filter.';
+    row.appendChild(cell); auditLogs.appendChild(row);
+    return;
   }
-  if (details.reason) return `Reason: ${details.reason}`;
-  if (log.action_code === 'accounts.create') return 'Created account credentials';
-  if (log.action_code === 'auth.login.failed') return log.failure_reason || 'Login was not accepted';
-  if (log.action_code === 'auth.login.success' || log.action_code === 'auth.logout') return 'View only';
-  if (log.action_code === 'permissions.assign') return 'Updated account privileges';
-  return 'View only';
+
+  data.buckets.forEach(bucket => {
+    const summaryRow = document.createElement('tr');
+    summaryRow.append(textCell(bucket.employee_id), textCell(bucket.name), textCell(bucket.position), textCell(bucket.date_text), textCell(bucket.time_text));
+
+    const actionsCell = document.createElement('td');
+    actionsCell.className = 'audit-actions-cell';
+    const summary = document.createElement('span');
+    summary.className = 'audit-summary';
+    if (bucket.login_status === 'active') {
+      summary.innerHTML = 'Logged in — <span class="audit-status-active">Active</span>';
+    } else if (bucket.login_status === 'logged_out') {
+      summary.textContent = `Logged in — Logged out at ${bucket.logout_time_text}`;
+    } else {
+      summary.textContent = `${bucket.actions.length} action${bucket.actions.length > 1 ? 's' : ''}`;
+    }
+    const viewBtn = document.createElement('button');
+    viewBtn.type = 'button'; viewBtn.className = 'secondary audit-view-toggle'; viewBtn.textContent = 'View';
+    actionsCell.append(summary, viewBtn);
+    summaryRow.appendChild(actionsCell);
+    auditLogs.appendChild(summaryRow);
+
+    const detailRow = document.createElement('tr');
+    detailRow.className = 'audit-detail-row';
+    detailRow.hidden = true;
+    const detailCell = document.createElement('td');
+    detailCell.colSpan = 6;
+    const list = document.createElement('ul');
+    list.className = 'audit-actions-list';
+    bucket.actions.forEach(action => {
+      const item = document.createElement('li');
+      if (!action.success) item.classList.add('audit-action-failed');
+      const time = document.createElement('span'); time.className = 'audit-action-time'; time.textContent = action.time_text;
+      const label = document.createElement('span'); label.className = 'audit-action-label'; label.textContent = action.label;
+      item.append(time, label);
+      if (action.target && action.target !== '—') {
+        const target = document.createElement('span'); target.className = 'audit-action-target'; target.textContent = action.target;
+        item.appendChild(target);
+      }
+      const note = action.detail || action.failure_reason;
+      if (note) {
+        const detail = document.createElement('span'); detail.className = 'audit-action-detail'; detail.textContent = note;
+        item.appendChild(detail);
+      }
+      list.appendChild(item);
+    });
+    detailCell.appendChild(list);
+    detailRow.appendChild(detailCell);
+    auditLogs.appendChild(detailRow);
+
+    viewBtn.addEventListener('click', () => {
+      detailRow.hidden = !detailRow.hidden;
+      viewBtn.textContent = detailRow.hidden ? 'View' : 'Hide';
+    });
+  });
 }
 
 async function handleAccountAction(event) {
@@ -376,18 +446,23 @@ async function handleAccountAction(event) {
     return;
   }
   if (action === 'update') {
-    body.first_name = prompt('First name:', button.dataset.first);
-    body.last_name = prompt('Last name:', button.dataset.last);
-    body.id_number = prompt('Employee ID:', button.dataset.employee);
-    body.email = prompt('Email:', button.dataset.email);
-    if ([body.first_name, body.last_name, body.id_number, body.email].some(value => value === null || !value.trim())) return;
+    openEditDialog({
+      id: button.dataset.id,
+      first_name: button.dataset.first,
+      last_name: button.dataset.last,
+      id_number: button.dataset.employee,
+      email: button.dataset.email,
+      username: button.dataset.username,
+      role: button.dataset.role
+    });
+    return;
   }
   if (['block', 'unblock'].includes(action)) {
     body.reason = prompt(`Why should this account be ${action === 'block' ? 'blocked' : 'unblocked'}?`);
     if (!body.reason || !body.reason.trim()) return;
   }
   const username = button.dataset.user ? JSON.parse(decodeURIComponent(button.dataset.user)).username : button.closest('tr')?.children[2]?.textContent || 'this account';
-  const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', update: 'Save changes to', delete: 'Delete'};
+  const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', delete: 'Delete'};
   if (confirmationLabels[action] && !await confirmAction(`${confirmationLabels[action]} account`, `${confirmationLabels[action]} account "${username}"?`)) return;
   try { showMessage((await request(action, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })).message); loadUsers(document.getElementById('employeeId').value); }
   catch (error) { showMessage(error.message, true); }
@@ -475,8 +550,165 @@ document.getElementById('auditFilterForm')?.addEventListener('submit', event => 
 document.getElementById('clearAuditFilters')?.addEventListener('click', () => { document.getElementById('auditFilterForm').reset(); auditCurrentPage = 1; loadAuditLogs().catch(error => showMessage(error.message, true)); });
 previousAudit.addEventListener('click', () => { if (auditCurrentPage > 1) { auditCurrentPage -= 1; loadAuditLogs().catch(error => showMessage(error.message, true)); } });
 nextAudit.addEventListener('click', () => { if (auditCurrentPage < auditTotalPages) { auditCurrentPage += 1; loadAuditLogs().catch(error => showMessage(error.message, true)); } });
+const contentApi = '../php/content.php';
+async function contentRequest(action, body, method = 'POST') {
+  const options = method === 'GET' ? {} : {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})};
+  const response = await fetch(`${contentApi}?action=${action}`, options);
+  const data = await response.json();
+  if (!response.ok || data.status === 'error') throw new Error(data.message || 'Request failed.');
+  return data;
+}
+
+function textCell(value) {
+  const cell = document.createElement('td');
+  cell.textContent = value ?? '';
+  return cell;
+}
+
+async function loadPosts() {
+  const list = document.getElementById('postsList');
+  if (!list) return;
+  try {
+    const data = await contentRequest('list-posts', null, 'GET');
+    list.replaceChildren();
+    if (!data.posts.length) { const row = document.createElement('tr'); const cell = textCell('No posts yet.'); cell.colSpan = 3; row.appendChild(cell); list.appendChild(row); return; }
+    data.posts.forEach(post => {
+      const row = document.createElement('tr');
+      row.append(textCell(post.title), textCell(post.created_at));
+      const actions = document.createElement('td');
+      const editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.dataset.postId = post.id; editBtn.dataset.title = post.title; editBtn.dataset.body = post.body; editBtn.className = 'edit-post';
+      const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Delete'; deleteBtn.dataset.postId = post.id; deleteBtn.className = 'danger delete-post';
+      actions.append(editBtn, deleteBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  } catch (error) { showMessage(error.message, true); }
+}
+
+async function loadEvents() {
+  const list = document.getElementById('eventsList');
+  if (!list) return;
+  try {
+    const data = await contentRequest('list-events', null, 'GET');
+    list.replaceChildren();
+    if (!data.events.length) { const row = document.createElement('tr'); const cell = textCell('No events yet.'); cell.colSpan = 3; row.appendChild(cell); list.appendChild(row); return; }
+    data.events.forEach(eventItem => {
+      const row = document.createElement('tr');
+      row.append(textCell(eventItem.title), textCell(eventItem.event_date));
+      const actions = document.createElement('td');
+      const editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.dataset.eventId = eventItem.id; editBtn.dataset.title = eventItem.title; editBtn.dataset.description = eventItem.description || ''; editBtn.dataset.eventDate = eventItem.event_date; editBtn.className = 'edit-event';
+      const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Delete'; deleteBtn.dataset.eventId = eventItem.id; deleteBtn.className = 'danger delete-event';
+      actions.append(editBtn, deleteBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  } catch (error) { showMessage(error.message, true); }
+}
+
+document.getElementById('createPostForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const postMessage = document.getElementById('postMessage');
+  const body = Object.fromEntries(new FormData(form));
+  if (!await confirmAction('Publish post', 'Publish this post to all users now?')) return;
+  try {
+    const result = await contentRequest('create-post', body);
+    postMessage.textContent = result.message; postMessage.style.color = '#176b52';
+    form.reset();
+    await loadPosts();
+  } catch (error) { postMessage.textContent = error.message; postMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('createEventForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const eventMessage = document.getElementById('eventMessage');
+  const body = Object.fromEntries(new FormData(form));
+  if (!await confirmAction('Add event', 'Add this event to the shared calendar now?')) return;
+  try {
+    const result = await contentRequest('create-event', body);
+    eventMessage.textContent = result.message; eventMessage.style.color = '#176b52';
+    form.reset();
+    await loadEvents();
+  } catch (error) { eventMessage.textContent = error.message; eventMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('postsList')?.addEventListener('click', async event => {
+  const editBtn = event.target.closest('.edit-post');
+  const deleteBtn = event.target.closest('.delete-post');
+  if (editBtn) {
+    const dialog = document.getElementById('postEditDialog');
+    const form = document.getElementById('postEditForm');
+    form.title.value = editBtn.dataset.title;
+    form.body.value = editBtn.dataset.body;
+    form.dataset.postId = editBtn.dataset.postId;
+    document.getElementById('postEditMessage').textContent = '';
+    dialog.showModal();
+  }
+  if (deleteBtn) {
+    if (!await confirmAction('Delete post', 'Delete this post permanently?')) return;
+    try { await contentRequest('delete-post', {id: Number(deleteBtn.dataset.postId)}); await loadPosts(); }
+    catch (error) { showMessage(error.message, true); }
+  }
+});
+
+document.getElementById('eventsList')?.addEventListener('click', async event => {
+  const editBtn = event.target.closest('.edit-event');
+  const deleteBtn = event.target.closest('.delete-event');
+  if (editBtn) {
+    const dialog = document.getElementById('eventEditDialog');
+    const form = document.getElementById('eventEditForm');
+    form.title.value = editBtn.dataset.title;
+    form.description.value = editBtn.dataset.description;
+    form.event_date.value = editBtn.dataset.eventDate;
+    form.dataset.eventId = editBtn.dataset.eventId;
+    document.getElementById('eventEditMessage').textContent = '';
+    dialog.showModal();
+  }
+  if (deleteBtn) {
+    if (!await confirmAction('Delete event', 'Delete this event permanently?')) return;
+    try { await contentRequest('delete-event', {id: Number(deleteBtn.dataset.eventId)}); await loadEvents(); }
+    catch (error) { showMessage(error.message, true); }
+  }
+});
+
+document.getElementById('postEditForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const postEditMessage = document.getElementById('postEditMessage');
+  const body = {id: Number(form.dataset.postId), title: form.title.value.trim(), body: form.body.value.trim()};
+  if (!await confirmAction('Save changes', 'Save changes to this post?')) return;
+  try {
+    const result = await contentRequest('update-post', body);
+    postEditMessage.textContent = result.message; postEditMessage.style.color = '#176b52';
+    await loadPosts();
+    setTimeout(() => document.getElementById('postEditDialog').close(), 700);
+  } catch (error) { postEditMessage.textContent = error.message; postEditMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('eventEditForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const eventEditMessage = document.getElementById('eventEditMessage');
+  const body = {id: Number(form.dataset.eventId), title: form.title.value.trim(), description: form.description.value.trim(), event_date: form.event_date.value};
+  if (!await confirmAction('Save changes', 'Save changes to this event?')) return;
+  try {
+    const result = await contentRequest('update-event', body);
+    eventEditMessage.textContent = result.message; eventEditMessage.style.color = '#176b52';
+    await loadEvents();
+    setTimeout(() => document.getElementById('eventEditDialog').close(), 700);
+  } catch (error) { eventEditMessage.textContent = error.message; eventEditMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('closePostEdit')?.addEventListener('click', () => document.getElementById('postEditDialog').close());
+document.getElementById('cancelPostEdit')?.addEventListener('click', () => document.getElementById('postEditDialog').close());
+document.getElementById('closeEventEdit')?.addEventListener('click', () => document.getElementById('eventEditDialog').close());
+document.getElementById('cancelEventEdit')?.addEventListener('click', () => document.getElementById('eventEditDialog').close());
+
 loadUsers();
 loadStatistics();
 loadRequests().catch(error => showMessage(error.message, true));
 loadAuditLogs().catch(error => showMessage(error.message, true));
 loadNextEmployeeId();
+loadPosts();
+loadEvents();

@@ -191,6 +191,11 @@ async function loadAdminAccess() {
       document.getElementById('block-requests').hidden = false;
       loadBlockRequests();
     }
+    if (data.user.permissions.includes('content.manage')) {
+      document.querySelectorAll('[data-permission="content.manage"]').forEach(element => { element.hidden = false; });
+      loadPosts();
+      loadEvents();
+    }
   } catch (error) {
     return;
   }
@@ -257,6 +262,60 @@ function actionButton(label, action, id, user = null) {
   return button;
 }
 
+const editDialog = document.getElementById('editDialog');
+const editForm = document.getElementById('editForm');
+let editTargetId = null;
+
+function showEditMessage(text, error = false) {
+  const el = document.getElementById('editMessage');
+  el.textContent = text;
+  el.style.color = error ? '#a63d32' : '#176b52';
+}
+
+function openEditDialog(user) {
+  editTargetId = Number(user.id);
+  editForm.first_name.value = user.first_name;
+  editForm.last_name.value = user.last_name;
+  editForm.id_number.value = user.id_number;
+  editForm.email.value = user.email;
+  editForm.username.value = user.username;
+  document.getElementById('editAccountLabel').textContent = `${user.first_name} ${user.last_name} (${user.username})`;
+  showEditMessage('');
+  editDialog.showModal();
+}
+
+editForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const body = {
+    user_id: editTargetId,
+    first_name: editForm.first_name.value.trim(),
+    last_name: editForm.last_name.value.trim(),
+    id_number: editForm.id_number.value.trim(),
+    email: editForm.email.value.trim(),
+    username: editForm.username.value.trim()
+  };
+  if (Object.values(body).some(value => value === '')) { showEditMessage('All fields are required.', true); return; }
+  if (!await confirmAction('Save changes', `Save changes to account "${body.username}"?`)) return;
+  try {
+    const result = await request('update', body);
+    showEditMessage(result.message);
+    await load();
+    setTimeout(() => editDialog.close(), 700);
+  } catch (error) { showEditMessage(error.message, true); }
+});
+
+document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
+  if (!editTargetId) return;
+  if (!await confirmAction('Reset password', "Generate a new temporary password and email it to this account's institutional address? The current password will stop working immediately.")) return;
+  try {
+    const result = await request('reset-password', { user_id: editTargetId });
+    showEditMessage(result.message);
+  } catch (error) { showEditMessage(error.message, true); }
+});
+
+document.getElementById('closeEdit').addEventListener('click', () => editDialog.close());
+document.getElementById('cancelEdit').addEventListener('click', () => editDialog.close());
+
 async function load() {
   try { render((await request(`list&employee_id=${encodeURIComponent(document.getElementById('employeeId').value)}`)).users); }
   catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
@@ -268,7 +327,7 @@ table.addEventListener('click', async event => {
   if (action === 'block' && adminRole === 'admin') { body.reason = prompt('Why should this account be blocked?'); if (!body.reason || !body.reason.trim()) return; }
   if (action === 'review-block-request') { body.request_id = Number(button.dataset.request); body.decision = button.dataset.decision; body.reason = prompt('Optional review note:', '') || ''; if (!await confirmAction(`${body.decision === 'approve' ? 'Accept' : 'Reject'} block request`, `${body.decision === 'approve' ? 'Accept' : 'Reject'} this block request?`)) return; try { showMessage((await request('review-block-request', body)).message); await loadBlockRequests(); await load(); } catch (error) { showMessage(error.message, true); } return; }
   if (['request-delete', 'block', 'unblock'].includes(action)) { body.reason = prompt(`Why should this account be ${action === 'request-delete' ? 'deleted' : action + 'ed'}?`); if (!body.reason || !body.reason.trim()) return; }
-  if (action === 'update') { const user = JSON.parse(button.dataset.user); body.first_name = prompt('First name:', user.first_name); body.last_name = prompt('Last name:', user.last_name); body.id_number = prompt('Employee ID:', user.id_number); body.email = prompt('Email:', user.email); if (Object.values(body).some(value => value === null || value === '')) return; }
+  if (action === 'update') { openEditDialog(JSON.parse(button.dataset.user)); return; }
   const username = button.dataset.user ? JSON.parse(button.dataset.user).username : button.closest('tr')?.children[2]?.textContent || 'this account';
   const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', update: 'Save changes to', 'request-delete': 'Send deletion request for'};
   if (confirmationLabels[action] && !await confirmAction(`${confirmationLabels[action]} account`, `${confirmationLabels[action]} account "${username}"?`)) return;
@@ -311,6 +370,155 @@ document.getElementById('createForm').addEventListener('submit', async event => 
     if (fieldName === 'password') validateDashboardPassword(selector, 'adminCreatePasswordError', 'adminCreatePasswordStrength');
   });
 });
+const contentApi = '../php/content.php';
+async function contentRequest(action, body, method = 'POST') {
+  const options = method === 'GET' ? {} : {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})};
+  const response = await fetch(`${contentApi}?action=${action}`, options);
+  const data = await response.json();
+  if (!response.ok || data.status === 'error') throw new Error(data.message || 'Request failed.');
+  return data;
+}
+
+async function loadPosts() {
+  const list = document.getElementById('postsList');
+  if (!list) return;
+  try {
+    const data = await contentRequest('list-posts', null, 'GET');
+    list.replaceChildren();
+    if (!data.posts.length) { const row = document.createElement('tr'); const cell = textCell('No posts yet.'); cell.colSpan = 3; row.appendChild(cell); list.appendChild(row); return; }
+    data.posts.forEach(post => {
+      const row = document.createElement('tr');
+      row.append(textCell(post.title), textCell(post.created_at));
+      const actions = document.createElement('td');
+      const editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.dataset.postId = post.id; editBtn.dataset.title = post.title; editBtn.dataset.body = post.body; editBtn.className = 'edit-post';
+      const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Delete'; deleteBtn.dataset.postId = post.id; deleteBtn.className = 'danger delete-post';
+      actions.append(editBtn, deleteBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  } catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
+}
+
+async function loadEvents() {
+  const list = document.getElementById('eventsList');
+  if (!list) return;
+  try {
+    const data = await contentRequest('list-events', null, 'GET');
+    list.replaceChildren();
+    if (!data.events.length) { const row = document.createElement('tr'); const cell = textCell('No events yet.'); cell.colSpan = 3; row.appendChild(cell); list.appendChild(row); return; }
+    data.events.forEach(eventItem => {
+      const row = document.createElement('tr');
+      row.append(textCell(eventItem.title), textCell(eventItem.event_date));
+      const actions = document.createElement('td');
+      const editBtn = document.createElement('button'); editBtn.textContent = 'Edit'; editBtn.dataset.eventId = eventItem.id; editBtn.dataset.title = eventItem.title; editBtn.dataset.description = eventItem.description || ''; editBtn.dataset.eventDate = eventItem.event_date; editBtn.className = 'edit-event';
+      const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Delete'; deleteBtn.dataset.eventId = eventItem.id; deleteBtn.className = 'danger delete-event';
+      actions.append(editBtn, deleteBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  } catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
+}
+
+document.getElementById('createPostForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const postMessage = document.getElementById('postMessage');
+  const body = Object.fromEntries(new FormData(form));
+  if (!await confirmAction('Publish post', 'Publish this post to all users now?')) return;
+  try {
+    const result = await contentRequest('create-post', body);
+    postMessage.textContent = result.message; postMessage.style.color = '#176b52';
+    form.reset();
+    await loadPosts();
+  } catch (error) { postMessage.textContent = error.message; postMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('createEventForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const eventMessage = document.getElementById('eventMessage');
+  const body = Object.fromEntries(new FormData(form));
+  if (!await confirmAction('Add event', 'Add this event to the shared calendar now?')) return;
+  try {
+    const result = await contentRequest('create-event', body);
+    eventMessage.textContent = result.message; eventMessage.style.color = '#176b52';
+    form.reset();
+    await loadEvents();
+  } catch (error) { eventMessage.textContent = error.message; eventMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('postsList')?.addEventListener('click', async event => {
+  const editBtn = event.target.closest('.edit-post');
+  const deleteBtn = event.target.closest('.delete-post');
+  if (editBtn) {
+    const dialog = document.getElementById('postEditDialog');
+    const form = document.getElementById('postEditForm');
+    form.title.value = editBtn.dataset.title;
+    form.body.value = editBtn.dataset.body;
+    form.dataset.postId = editBtn.dataset.postId;
+    document.getElementById('postEditMessage').textContent = '';
+    dialog.showModal();
+  }
+  if (deleteBtn) {
+    if (!await confirmAction('Delete post', 'Delete this post permanently?')) return;
+    try { await contentRequest('delete-post', {id: Number(deleteBtn.dataset.postId)}); await loadPosts(); }
+    catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
+  }
+});
+
+document.getElementById('eventsList')?.addEventListener('click', async event => {
+  const editBtn = event.target.closest('.edit-event');
+  const deleteBtn = event.target.closest('.delete-event');
+  if (editBtn) {
+    const dialog = document.getElementById('eventEditDialog');
+    const form = document.getElementById('eventEditForm');
+    form.title.value = editBtn.dataset.title;
+    form.description.value = editBtn.dataset.description;
+    form.event_date.value = editBtn.dataset.eventDate;
+    form.dataset.eventId = editBtn.dataset.eventId;
+    document.getElementById('eventEditMessage').textContent = '';
+    dialog.showModal();
+  }
+  if (deleteBtn) {
+    if (!await confirmAction('Delete event', 'Delete this event permanently?')) return;
+    try { await contentRequest('delete-event', {id: Number(deleteBtn.dataset.eventId)}); await loadEvents(); }
+    catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
+  }
+});
+
+document.getElementById('postEditForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const postEditMessage = document.getElementById('postEditMessage');
+  const body = {id: Number(form.dataset.postId), title: form.title.value.trim(), body: form.body.value.trim()};
+  if (!await confirmAction('Save changes', 'Save changes to this post?')) return;
+  try {
+    const result = await contentRequest('update-post', body);
+    postEditMessage.textContent = result.message; postEditMessage.style.color = '#176b52';
+    await loadPosts();
+    setTimeout(() => document.getElementById('postEditDialog').close(), 700);
+  } catch (error) { postEditMessage.textContent = error.message; postEditMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('eventEditForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.target;
+  const eventEditMessage = document.getElementById('eventEditMessage');
+  const body = {id: Number(form.dataset.eventId), title: form.title.value.trim(), description: form.description.value.trim(), event_date: form.event_date.value};
+  if (!await confirmAction('Save changes', 'Save changes to this event?')) return;
+  try {
+    const result = await contentRequest('update-event', body);
+    eventEditMessage.textContent = result.message; eventEditMessage.style.color = '#176b52';
+    await loadEvents();
+    setTimeout(() => document.getElementById('eventEditDialog').close(), 700);
+  } catch (error) { eventEditMessage.textContent = error.message; eventEditMessage.style.color = '#a63d32'; }
+});
+
+document.getElementById('closePostEdit')?.addEventListener('click', () => document.getElementById('postEditDialog').close());
+document.getElementById('cancelPostEdit')?.addEventListener('click', () => document.getElementById('postEditDialog').close());
+document.getElementById('closeEventEdit')?.addEventListener('click', () => document.getElementById('eventEditDialog').close());
+document.getElementById('cancelEventEdit')?.addEventListener('click', () => document.getElementById('eventEditDialog').close());
+
 load();
 loadStatistics();
 loadAdminAccess();

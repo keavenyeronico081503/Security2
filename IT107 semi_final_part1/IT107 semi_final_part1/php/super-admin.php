@@ -15,9 +15,10 @@ if ($action === 'permission-catalog') {
 
 if ($action === 'list') {
     require_permission('accounts.view');
+    deactivate_inactive_accounts();
     $search = trim($_GET['employee_id'] ?? '');
     $like = "%$search%";
-    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Emergencyadmin1" ORDER BY created_at DESC');
+    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Keavenyadmin1" ORDER BY created_at DESC');
     $stmt->bind_param('s', $like);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -32,7 +33,7 @@ if ($action === 'list') {
 
 if ($action === 'delete-requests') {
     require_permission('accounts.delete.approve');
-    $result = $conn->query('SELECT r.id, r.reason, r.status, r.decision_reason, r.created_at, r.reviewed_at, requester.username AS requested_by, target.id AS target_id, target.first_name, target.last_name, target.id_number, target.email, target.username FROM admin_delete_requests r LEFT JOIN users requester ON requester.id = r.requested_by LEFT JOIN users target ON target.id = r.target_user_id WHERE requester.username <> "Emergencyadmin1" AND target.username <> "Emergencyadmin1" ORDER BY r.created_at DESC');
+    $result = $conn->query('SELECT r.id, r.reason, r.status, r.decision_reason, r.created_at, r.reviewed_at, requester.username AS requested_by, target.id AS target_id, target.first_name, target.last_name, target.id_number, target.email, target.username FROM admin_delete_requests r LEFT JOIN users requester ON requester.id = r.requested_by LEFT JOIN users target ON target.id = r.target_user_id WHERE requester.username <> "Keavenyadmin1" AND target.username <> "Keavenyadmin1" ORDER BY r.created_at DESC');
     $requests = [];
     while ($request = $result->fetch_assoc()) $requests[] = $request;
     echo json_encode(['status' => 'success', 'requests' => $requests]);
@@ -92,15 +93,29 @@ if ($action === 'privileges') {
 
 if ($action === 'update') {
     require_permission('accounts.update');
-    $stmt = $conn->prepare('UPDATE users SET first_name = ?, last_name = ?, id_number = ?, email = ? WHERE id = ? AND role <> "super_admin"');
-    $stmt->bind_param('ssssi', $data['first_name'], $data['last_name'], $data['id_number'], $data['email'], $userId);
-    if (!$stmt->execute()) {
+    try {
+        update_account($userId, $data);
+        if (array_key_exists('role', $data) && $data['role'] !== '') {
+            require_permission('roles.assign');
+            change_account_role($userId, (string)$data['role']);
+        }
+        echo json_encode(['status' => 'success', 'message' => 'Account information updated.']);
+    } catch (Throwable $error) {
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'Could not update account: ' . $conn->error]);
-        exit;
+        echo json_encode(['status' => 'error', 'message' => $error->getMessage()]);
     }
-    audit('accounts.update', $userId);
-    echo json_encode(['status' => 'success', 'message' => 'Account information updated.']);
+    exit;
+}
+
+if ($action === 'reset-password') {
+    require_permission('accounts.update');
+    try {
+        reset_account_password($userId);
+        echo json_encode(['status' => 'success', 'message' => 'Password reset. An email with the new temporary password was sent to the account holder.']);
+    } catch (Throwable $error) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $error->getMessage()]);
+    }
     exit;
 }
 
@@ -160,7 +175,7 @@ if ($action === 'review-delete') {
 if ($action === 'data-administrator-status') {
     require_super_admin();
     require_permission('accounts.create');
-    $activeDataAdminResult = $conn->query('SELECT COUNT(*) AS total FROM users WHERE role = "data_administrator" AND account_status = "approved" AND username <> "Emergencyadmin1"');
+    $activeDataAdminResult = $conn->query('SELECT COUNT(*) AS total FROM users WHERE role = "data_administrator" AND account_status = "approved" AND username <> "Keavenyadmin1"');
     $activeDataAdministrators = (int)($activeDataAdminResult->fetch_assoc()['total'] ?? 0);
     echo json_encode(['status' => 'success', 'active_data_administrators' => $activeDataAdministrators]);
     exit;
@@ -200,6 +215,23 @@ if ($action === 'create') {
         throw new RuntimeException('Account role could not be assigned.');
     }
     audit('accounts.create', null, ['role' => $role, 'username' => $data['username']]);
+
+    // Only one created (non-emergency) Super Administrator account may be active at a
+    // time. Creating a new one automatically deactivates any other, leaving the
+    // hardcoded emergency account (Keavenyadmin1) as the only always-available account.
+    if ($role === 'super_admin') {
+        $existing = $conn->prepare('SELECT id FROM users WHERE role = "super_admin" AND username <> "Keavenyadmin1" AND id <> ? AND account_status = "approved"');
+        $existing->bind_param('i', $createdUserId);
+        $existing->execute();
+        $result = $existing->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $deactivate = $conn->prepare('UPDATE users SET account_status = "blocked" WHERE id = ?');
+            $deactivate->bind_param('i', $row['id']);
+            $deactivate->execute();
+            audit('accounts.block', (int)$row['id'], ['reason' => 'Automatically deactivated: a new Super Administrator account was created']);
+        }
+    }
+
     echo json_encode([
         'status' => 'success',
         'message' => ucfirst(str_replace('_', ' ', $role)) . ' account created. Give the account holder these credentials.',

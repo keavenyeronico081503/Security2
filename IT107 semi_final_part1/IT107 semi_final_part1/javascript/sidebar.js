@@ -6,11 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!sidebar) return;
 
   const profileLink = sidebar.querySelector('[data-view="profile"]');
-  if (profileLink && !document.body.classList.contains('app-user')) {
+  if (profileLink) {
     profileLink.href = '#profile';
-  } else if (profileLink) {
-    profileLink.href = 'profile.html';
-    profileLink.removeAttribute('data-view');
   } else if (document.body.classList.contains('app-admin') || document.body.classList.contains('app-superadmin')) {
     const link = document.createElement('a');
     link.className = 'sidebar-link';
@@ -37,6 +34,39 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   loadNotifications();
 
+  const roleLabels = {
+    user: 'User',
+    admin: 'Administrator',
+    data_administrator: 'Data Administrator',
+    super_admin: 'Super Administrator'
+  };
+
+  const loadSidebarIdentity = async () => {
+    const brandName = document.getElementById('sidebarBrandName');
+    const brandRole = document.getElementById('sidebarBrandRole');
+    if (!brandName || !brandRole) return;
+    try {
+      if (document.body.classList.contains('app-pending')) {
+        const response = await fetch('../php/user.php?action=status');
+        const data = await response.json();
+        if (!response.ok || data.status !== 'success') return;
+        brandName.textContent = data.account.display_name || data.account.username;
+        brandRole.textContent = roleLabels[data.account.role] || data.account.role;
+        return;
+      }
+      const response = await fetch('../php/user.php?action=profile');
+      const data = await response.json();
+      if (!response.ok || data.status !== 'success') return;
+      const profile = data.profile;
+      const displayName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+      brandName.textContent = displayName || profile.username;
+      brandRole.textContent = roleLabels[profile.role] || profile.role;
+    } catch (error) {
+      return;
+    }
+  };
+  loadSidebarIdentity();
+
   const moduleSelectors = {
     overview: ['#overview'],
     accounts: ['.app-superadmin main > .toolbar', '.app-superadmin main > #message', '.app-superadmin main > #accounts-panel', '.app-admin main > .toolbar', '.app-admin main > #message', '.app-admin main > .table-wrap'],
@@ -47,12 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
     dashboard: ['.app-user main > .dashboard-hero', '.app-user main > .dashboard-grid'],
     statistics: ['#statistics'],
     players: ['#players'],
-    'account-status': ['#account-status'],
     calendar: ['#calendar'],
     profile: ['#profile'],
-    'change-password': ['#change-password'],
-    profile: ['#profile'],
-    'block-requests': ['#block-requests']
+    notifications: ['#notifications'],
+    'block-requests': ['#block-requests'],
+    posts: ['#posts'],
+    events: ['#events']
   };
 
   const applyModuleView = () => {

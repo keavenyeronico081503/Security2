@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'db.php';
+require_once 'email_policy.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Collect form inputs
@@ -30,6 +31,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $gender = 'Female';
     } else {
         die('Please select a valid sex.');
+    }
+
+    if (!is_institutional_email($email)) {
+        die(institutional_email_error_message());
     }
 
     // Validate passwords

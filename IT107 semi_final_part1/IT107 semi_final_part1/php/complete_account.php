@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'db.php';
+require_once 'email_policy.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -44,8 +45,8 @@ if ($firstName === '' || $lastName === '' || $birthday === '' || $gender === '' 
     echo json_encode(['status' => 'error', 'message' => 'Please complete all profile fields.']);
     exit;
 }
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(['status' => 'error', 'message' => 'Please provide a valid email address.']);
+if (!is_institutional_email($email)) {
+    echo json_encode(['status' => 'error', 'message' => institutional_email_error_message()]);
     exit;
 }
 if (!in_array($gender, ['Male', 'Female'], true)) {

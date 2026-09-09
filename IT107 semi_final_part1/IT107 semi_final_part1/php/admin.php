@@ -20,6 +20,13 @@ try {
         exit;
     }
 
+    if ($action === 'reset-password') {
+        $user = require_permission('accounts.update');
+        reset_account_password((int)($data['user_id'] ?? 0));
+        echo json_encode(['status' => 'success', 'message' => 'Password reset. An email with the new temporary password was sent to the account holder.']);
+        exit;
+    }
+
     if ($action === 'block-requests') {
         $user = require_permission('accounts.block.review');
         $result = $conn->query('SELECT r.id, r.reason, r.status, r.created_at, requester.username AS requested_by, target.id AS target_id, target.first_name, target.last_name, target.username, target.id_number FROM admin_block_requests r JOIN users requester ON requester.id = r.requested_by JOIN users target ON target.id = r.target_user_id ORDER BY r.created_at DESC');
@@ -98,6 +105,9 @@ try {
         }
         if (strlen((string)$data['password']) < 8) {
             throw new InvalidArgumentException('Password must be at least 8 characters long.');
+        }
+        if (!is_institutional_email((string)$data['email'])) {
+            throw new InvalidArgumentException(institutional_email_error_message());
         }
         $employeeId = next_employee_id();
         $password = password_hash((string)$data['password'], PASSWORD_DEFAULT);

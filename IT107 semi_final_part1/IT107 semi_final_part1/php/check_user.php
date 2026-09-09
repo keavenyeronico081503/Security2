@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     //  Check kung naa na ang Username
     if ($username !== '') {
-        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND username <> 'Emergencyadmin1'");
+        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND username <> 'Keavenyadmin1'");
         $stmt->bind_param("s", $username);
         $stmt->execute();
         $stmt->store_result();

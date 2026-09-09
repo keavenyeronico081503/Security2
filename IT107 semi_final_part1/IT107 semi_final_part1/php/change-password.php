@@ -118,7 +118,7 @@ try {
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
     
     // Update password in database
-    $updateStmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+    $updateStmt = $conn->prepare("UPDATE users SET password = ?, must_change_password = 0 WHERE id = ?");
     $updateStmt->bind_param("si", $hashedPassword, $userId);
     
     if ($updateStmt->execute()) {

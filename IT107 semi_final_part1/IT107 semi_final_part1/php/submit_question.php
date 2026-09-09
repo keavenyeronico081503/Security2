@@ -106,9 +106,9 @@ try {
         $suffix = $userData['suffix'] ?? '';
 
         // First, save user to database
-        $sql = "INSERT INTO users 
-            (first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, password, street, barangay, city, province, country, zip_code, registration_status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO users
+            (first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, password, street, barangay, city, province, country, zip_code, registration_status, account_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -121,25 +121,27 @@ try {
         }
 
         $registrationStatus = 'complete';
-        $stmt->bind_param("sssssi" . str_repeat('s', 12),
-            $userData['fname'], 
-            $middleName, 
-            $userData['lastName'], 
-            $suffix, 
-            $userData['birthday'], 
-            $userData['age'], 
-            $userData['gender'], 
-            $userData['idNumber'], 
-            $userData['email'], 
-            $userData['username'], 
-            $userData['password'], 
-            $userData['street'], 
-            $userData['barangay'], 
-            $userData['city'], 
-            $userData['province'], 
-            $userData['country'], 
-            $userData['zipCode'], 
-            $registrationStatus
+        $accountStatus = 'approved';
+        $stmt->bind_param("sssssi" . str_repeat('s', 13),
+            $userData['fname'],
+            $middleName,
+            $userData['lastName'],
+            $suffix,
+            $userData['birthday'],
+            $userData['age'],
+            $userData['gender'],
+            $userData['idNumber'],
+            $userData['email'],
+            $userData['username'],
+            $userData['password'],
+            $userData['street'],
+            $userData['barangay'],
+            $userData['city'],
+            $userData['province'],
+            $userData['country'],
+            $userData['zipCode'],
+            $registrationStatus,
+            $accountStatus
         );
 
         if ($stmt->execute()) {

@@ -22,6 +22,10 @@ services:
       - ./database/011_profile_contact.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzz_profile_contact.sql:ro
       - ./database/012_audit_immutability.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzz_audit_immutability.sql:ro
       - ./database/013_block_requests.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzz_block_requests.sql:ro
+      - ./database/014_content_module.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzz_content_module.sql:ro
+      - ./database/015_notification_read_tracking.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzzz_notification_read_tracking.sql:ro
+      - ./database/016_forced_password_reset.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzzzz_forced_password_reset.sql:ro
+      - ./database/017_inactivity_auto_deactivation.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzzzzz_inactivity_auto_deactivation.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s

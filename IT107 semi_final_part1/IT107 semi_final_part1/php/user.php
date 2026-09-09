@@ -1,5 +1,6 @@
 <?php
 require_once 'auth.php';
+require_once 'email_policy.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $action = $_GET['action'] ?? 'session';
@@ -22,9 +23,14 @@ if ($action === 'update-profile') {
     $suffix = trim((string)($_POST['suffix'] ?? ''));
     $email = trim((string)($_POST['email'] ?? ''));
     $contact = trim((string)($_POST['contact_number'] ?? ''));
-    if ($firstName === '' || $lastName === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($firstName === '' || $lastName === '') {
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'First name, last name, and a valid email are required.']);
+        echo json_encode(['status' => 'error', 'message' => 'First name and last name are required.']);
+        exit;
+    }
+    if (!is_institutional_email($email)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => institutional_email_error_message()]);
         exit;
     }
     if ($contact !== '' && !preg_match('/^[0-9+() .-]{7,30}$/', $contact)) {
@@ -60,12 +66,17 @@ if ($action === 'status') {
         echo json_encode(['status' => 'error', 'message' => 'Pending account status is unavailable.']);
         exit;
     }
+    $nameStmt = $conn->prepare('SELECT first_name, last_name FROM users WHERE id = ?');
+    $nameStmt->bind_param('i', $user['id']);
+    $nameStmt->execute();
+    $name = $nameStmt->get_result()->fetch_assoc() ?: [];
     echo json_encode([
         'status' => 'success',
         'account' => [
             'username' => $user['username'],
             'account_status' => $user['account_status'],
-            'role' => $user['role_code']
+            'role' => $user['role_code'],
+            'display_name' => trim(($name['first_name'] ?? '') . ' ' . ($name['last_name'] ?? ''))
         ]
     ]);
     exit;

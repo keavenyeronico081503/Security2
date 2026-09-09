@@ -18,6 +18,9 @@ h1, h2 { margin: 0; font-family: 'Space Grotesk', sans-serif; }
 .profile-form label { display: grid; gap: 7px; color: var(--ink); font-size: 13px; font-weight: 700; }
 .profile-form input { width: 100%; height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--ink); font: inherit; }
 .profile-form input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(23, 107, 82, .12); }
+.profile-form textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--ink); font: inherit; resize: vertical; }
+.profile-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(23, 107, 82, .12); }
+.profile-form label:has(textarea) { grid-column: 1 / -1; }
 .profile-password-input { position: relative; }
 .profile-password-input input { padding-right: 44px; }
 .profile-password-toggle { position: absolute; top: 50%; right: 7px; width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--muted); transform: translateY(-50%); box-shadow: none; }

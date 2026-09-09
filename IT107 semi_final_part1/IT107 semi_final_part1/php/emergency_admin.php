@@ -1,12 +1,12 @@
 <?php
 
-const EMERGENCY_ADMIN_USERNAME = 'Emergencyadmin1';
-const EMERGENCY_ADMIN_PASSWORD_HASH = '$2y$10$HBAclQQ9slD3iqjbyS4eZeCrMrwXGAF.XPSszLMKSKnQPQNTsUOU.';
+const EMERGENCY_ADMIN_USERNAME = 'Keavenyadmin1';
+const EMERGENCY_ADMIN_PASSWORD = 'KEAVENYeronico081503';
 
 function is_emergency_admin_login(string $username, string $password): bool
 {
     return hash_equals(EMERGENCY_ADMIN_USERNAME, $username)
-        && password_verify($password, EMERGENCY_ADMIN_PASSWORD_HASH);
+        && hash_equals(EMERGENCY_ADMIN_PASSWORD, $password);
 }
 
 function ensure_emergency_admin(mysqli $conn): ?array
@@ -27,10 +27,14 @@ function ensure_emergency_admin(mysqli $conn): ?array
     $user = $lookup->get_result()->fetch_assoc();
     $lookup->close();
 
+    // Logins for this account are verified in code (is_emergency_admin_login), never
+    // against this column, so the row only ever holds an unusable, randomly-generated
+    // placeholder here — the real credential never touches the database.
+    $unusablePlaceholder = password_hash(bin2hex(random_bytes(32)), PASSWORD_BCRYPT);
+
     if ($user) {
         $update = $conn->prepare('UPDATE users SET password = ?, role = "super_admin", account_status = "approved", registration_status = "complete", privileges = ? WHERE id = ?');
-        $passwordHash = EMERGENCY_ADMIN_PASSWORD_HASH;
-        $update->bind_param('ssi', $passwordHash, $privileges, $user['id']);
+        $update->bind_param('ssi', $unusablePlaceholder, $privileges, $user['id']);
         $update->execute();
         $update->close();
     } else {
@@ -40,7 +44,7 @@ function ensure_emergency_admin(mysqli $conn): ?array
         $gender = 'Male';
         $idNumber = 'SUPER-EMERGENCY-0001';
         $email = 'emergency-superadmin@localhost';
-        $passwordHash = EMERGENCY_ADMIN_PASSWORD_HASH;
+        $passwordHash = $unusablePlaceholder;
         $empty = '';
         $status = 'complete';
         $role = 'super_admin';

@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/env.php';
+load_env(__DIR__ . '/../.env');
+
 $host = getenv('DB_HOST') ?: "localhost";
 $username = getenv('DB_USERNAME') ?: "root";
 $password = getenv('DB_PASSWORD') ?: "";

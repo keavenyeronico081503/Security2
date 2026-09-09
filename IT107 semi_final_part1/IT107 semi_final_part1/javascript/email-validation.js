@@ -229,6 +229,13 @@ function validateEmail(rawValue, field, eventType = 'input') {
             return;
         }
 
+        // Institutional domain check (server also enforces this — this is just earlier feedback)
+        const institutionalDomains = ['csucc.edu.ph'];
+        if (!institutionalDomains.includes(domainPart.toLowerCase())) {
+            showError(field, `Please use your institutional email address (@${institutionalDomains.join(' or @')})`);
+            return;
+        }
+
         // All format validations passed - check database in real-time
         checkEmailExists(value, field);
         return;

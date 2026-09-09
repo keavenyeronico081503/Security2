@@ -10,13 +10,15 @@
 </head>
 <body class="has-sidebar app-pending">
   <button class="sidebar-menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button><div class="sidebar-scrim"></div>
-  <aside class="app-sidebar" aria-label="Pending account navigation"><div class="sidebar-brand"><strong>Security2</strong><span>Pending account</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" href="#account-status">Account status</a></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
-  <main id="account-status" class="status-panel" aria-live="polite">
-    <p class="eyebrow">Account review</p>
-    <h1>Registration pending</h1>
-    <p id="statusMessage">Your account is waiting for administrator approval.</p>
-    <p class="account-line">Username: <strong id="username">Loading...</strong></p>
-    <button id="logout">Log out</button>
+  <aside class="app-sidebar" aria-label="Pending account navigation"><div class="sidebar-brand"><strong id="sidebarBrandName">Security2</strong><span id="sidebarBrandRole">Pending account</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" href="#account-status">Account status</a></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
+  <main>
+    <section id="account-status" class="status-panel" data-module-view="account-status" aria-live="polite">
+      <p class="eyebrow">Account review</p>
+      <h1>Registration pending</h1>
+      <p id="statusMessage">Your account is waiting for administrator approval.</p>
+      <p class="account-line">Username: <strong id="username">Loading...</strong></p>
+      <button id="logout">Log out</button>
+    </section>
   </main>
   <script src="../javascript/pending.js"></script>
   <script src="../javascript/sidebar.js"></script>
