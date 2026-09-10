@@ -18,7 +18,7 @@ if ($action === 'list') {
     deactivate_inactive_accounts();
     $search = trim($_GET['employee_id'] ?? '');
     $like = "%$search%";
-    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Keavenyadmin1" ORDER BY created_at DESC');
+    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, is_online, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Keavenyadmin1" ORDER BY created_at DESC');
     $stmt->bind_param('s', $like);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -51,6 +51,42 @@ $userId = (int)($data['user_id'] ?? 0);
     $stmt->execute();
     audit("accounts.$action", $userId);
     echo json_encode(['status' => 'success', 'message' => "Account $status."]);
+    exit;
+}
+
+if ($action === 'reactivate') {
+    // The generic approve/block/unblock action above deliberately excludes
+    // role = "super_admin" (see its WHERE clause) since deactivating/reactivating a
+    // Super Administrator has handoff consequences a plain admin/data_administrator
+    // block does not. Only another Super Administrator may perform this.
+    require_super_admin();
+    require_permission('accounts.block');
+    $target = $conn->prepare('SELECT id, account_status FROM users WHERE id = ? AND role = "super_admin" AND username <> "Keavenyadmin1"');
+    $target->bind_param('i', $userId);
+    $target->execute();
+    $targetRow = $target->get_result()->fetch_assoc();
+    if (!$targetRow || $targetRow['account_status'] !== 'blocked') {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Only a deactivated Super Administrator account can be reactivated.']);
+        exit;
+    }
+
+    $reactivate = $conn->prepare('UPDATE users SET account_status = "approved", deactivate_on_logout = 0 WHERE id = ?');
+    $reactivate->bind_param('i', $userId);
+    $reactivate->execute();
+    audit('accounts.approve', $userId, ['reason' => 'Reactivated as Super Administrator']);
+
+    // As with creating a new Super Administrator, the account performing this
+    // reactivation is flagged to step down once it logs out, so both accounts can
+    // stay active during the handoff instead of one being kicked immediately.
+    $actorId = (int)($_SESSION['user_id'] ?? 0);
+    if ($actorId > 0) {
+        $flagActor = $conn->prepare('UPDATE users SET deactivate_on_logout = 1 WHERE id = ?');
+        $flagActor->bind_param('i', $actorId);
+        $flagActor->execute();
+    }
+
+    echo json_encode(['status' => 'success', 'message' => 'Super Administrator account reactivated.']);
     exit;
 }
 
@@ -216,19 +252,17 @@ if ($action === 'create') {
     }
     audit('accounts.create', null, ['role' => $role, 'username' => $data['username']]);
 
-    // Only one created (non-emergency) Super Administrator account may be active at a
-    // time. Creating a new one automatically deactivates any other, leaving the
-    // hardcoded emergency account (Keavenyadmin1) as the only always-available account.
+    // Only one created (non-emergency) Super Administrator account is meant to stay
+    // active long-term, but a brand-new one and the admin who created it may both be
+    // active at once during the handoff. The creator is flagged to step down the
+    // moment they log out (see logout.php), rather than being kicked immediately -
+    // the emergency account (Keavenyadmin1) has no row here and is never flagged.
     if ($role === 'super_admin') {
-        $existing = $conn->prepare('SELECT id FROM users WHERE role = "super_admin" AND username <> "Keavenyadmin1" AND id <> ? AND account_status = "approved"');
-        $existing->bind_param('i', $createdUserId);
-        $existing->execute();
-        $result = $existing->get_result();
-        while ($row = $result->fetch_assoc()) {
-            $deactivate = $conn->prepare('UPDATE users SET account_status = "blocked" WHERE id = ?');
-            $deactivate->bind_param('i', $row['id']);
-            $deactivate->execute();
-            audit('accounts.block', (int)$row['id'], ['reason' => 'Automatically deactivated: a new Super Administrator account was created']);
+        $creatorId = (int)($_SESSION['user_id'] ?? 0);
+        if ($creatorId > 0) {
+            $flagCreator = $conn->prepare('UPDATE users SET deactivate_on_logout = 1 WHERE id = ?');
+            $flagCreator->bind_param('i', $creatorId);
+            $flagCreator->execute();
         }
     }
 

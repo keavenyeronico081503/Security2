@@ -240,13 +240,14 @@ function textCell(value, className = '') {
 
 function render(users) {
   table.replaceChildren();
-  if (!users.length) { table.appendChild(textCell('No accounts found.')); table.firstChild.colSpan = 6; return; }
+  if (!users.length) { table.appendChild(textCell('No accounts found.')); table.firstChild.colSpan = 7; return; }
   users.forEach(user => {
     const row = document.createElement('tr');
-    row.append(textCell(`${user.first_name} ${user.last_name}`), textCell(user.id_number), textCell(user.username), textCell(user.role.replace('_', ' '), 'role'), textCell(user.account_status, `status status-${user.account_status}`));
+    const presence = user.account_status === 'approved' ? (user.is_online ? 'Online' : 'Offline') : '—';
+    row.append(textCell(`${user.first_name} ${user.last_name}`), textCell(user.id_number), textCell(user.username), textCell(user.role.replace('_', ' '), 'role'), textCell(user.account_status, `status status-${user.account_status}`), textCell(presence, `status status-${presence.toLowerCase()}`));
     const actions = document.createElement('td'); actions.className = 'actions';
     if (user.role !== 'super_admin') {
-      if (user.account_status !== 'approved') actions.appendChild(actionButton('Approve', 'approve', user.id));
+      if (user.account_status === 'pending') actions.appendChild(actionButton('Approve', 'approve', user.id));
       actions.appendChild(actionButton(user.account_status === 'blocked' ? 'Unblock' : 'Block', user.account_status === 'blocked' ? 'unblock' : 'block', user.id));
       actions.appendChild(actionButton('Edit', 'update', user.id, user));
       actions.appendChild(actionButton('Request delete', 'request-delete', user.id));

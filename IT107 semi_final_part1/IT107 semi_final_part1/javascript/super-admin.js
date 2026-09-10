@@ -232,13 +232,16 @@ function renderUsers(users) {
   accounts.innerHTML = users.map(user => {
     const role = user.role.replace('_', ' ');
     const status = user.account_status;
-    const controls = user.role === 'super_admin' ? '<span>Protected</span>' : `
-      ${status !== 'approved' ? `<button data-action="approve" data-id="${user.id}">Approve</button>` : ''}
+    const controls = user.role === 'super_admin'
+      ? (status === 'blocked' ? `<button data-action="reactivate" data-id="${user.id}">Reactivate</button>` : '<span>Protected</span>')
+      : `
+      ${status === 'pending' ? `<button data-action="approve" data-id="${user.id}">Approve</button>` : ''}
       <button data-action="${status === 'blocked' ? 'unblock' : 'block'}" data-id="${user.id}">${status === 'blocked' ? 'Unblock' : 'Block'}</button>
       <button data-action="update" data-id="${user.id}" data-first="${user.first_name}" data-last="${user.last_name}" data-employee="${user.id_number}" data-email="${user.email}" data-username="${user.username}" data-role="${user.role}">Edit</button>
       <button class="danger" data-action="delete" data-id="${user.id}">Delete</button>`;
-    return `<tr><td>${user.first_name} ${user.last_name}</td><td>${user.id_number}</td><td>${user.username}</td><td class="role">${role}</td><td class="status status-${status}">${status}</td><td class="actions">${controls}</td></tr>`;
-  }).join('') || '<tr><td colspan="6">No accounts found.</td></tr>';
+    const presence = status === 'approved' ? (user.is_online ? 'Online' : 'Offline') : '—';
+    return `<tr><td>${user.first_name} ${user.last_name}</td><td>${user.id_number}</td><td>${user.username}</td><td class="role">${role}</td><td class="status status-${status}">${status}</td><td class="status status-${presence.toLowerCase()}">${presence}</td><td class="actions">${controls}</td></tr>`;
+  }).join('') || '<tr><td colspan="7">No accounts found.</td></tr>';
   if (privilegeAccounts) {
     privilegeAccounts.replaceChildren();
     users.filter(user => user.role !== 'super_admin').forEach(user => {
@@ -462,8 +465,9 @@ async function handleAccountAction(event) {
     if (!body.reason || !body.reason.trim()) return;
   }
   const username = button.dataset.user ? JSON.parse(decodeURIComponent(button.dataset.user)).username : button.closest('tr')?.children[2]?.textContent || 'this account';
-  const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', delete: 'Delete'};
-  if (confirmationLabels[action] && !await confirmAction(`${confirmationLabels[action]} account`, `${confirmationLabels[action]} account "${username}"?`)) return;
+  const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', delete: 'Delete', reactivate: 'Reactivate'};
+  if (action === 'reactivate' && !await confirmAction('Reactivate Super Administrator', `Reactivate "${username}" as Super Administrator? Your own account will be automatically deactivated the next time you log out.`)) return;
+  if (action !== 'reactivate' && confirmationLabels[action] && !await confirmAction(`${confirmationLabels[action]} account`, `${confirmationLabels[action]} account "${username}"?`)) return;
   try { showMessage((await request(action, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })).message); loadUsers(document.getElementById('employeeId').value); }
   catch (error) { showMessage(error.message, true); }
 }

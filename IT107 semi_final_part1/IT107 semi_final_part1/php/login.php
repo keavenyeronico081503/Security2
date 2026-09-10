@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['username'] = $user['username'];
         $_SESSION['role'] = $user['role'];
         audit('auth.login.success', (int)$user['id']);
-        $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?');
+        $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW(), is_online = 1 WHERE id = ?');
         $touchStmt->bind_param('i', $user['id']);
         $touchStmt->execute();
         header('Content-Type: application/json');
@@ -90,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['is_emergency_admin'] = $isEmergencyLogin;
         audit('auth.login.success', (int)$user['id']);
         if (!$isEmergencyLogin) {
-            $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?');
+            $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW(), is_online = 1 WHERE id = ?');
             $touchStmt->bind_param('i', $user['id']);
             $touchStmt->execute();
         }

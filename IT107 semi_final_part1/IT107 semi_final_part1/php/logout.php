@@ -5,7 +5,27 @@ include 'db.php';
 require_once 'audit_service.php';
 
 if (!empty($_SESSION['user_id'])) {
-    audit('auth.logout', (int)$_SESSION['user_id']);
+    $loggingOutUserId = (int)$_SESSION['user_id'];
+    audit('auth.logout', $loggingOutUserId);
+
+    $presenceStmt = $conn->prepare('UPDATE users SET is_online = 0 WHERE id = ?');
+    $presenceStmt->bind_param('i', $loggingOutUserId);
+    $presenceStmt->execute();
+
+    // A Super Administrator who created or reactivated another Super Administrator
+    // account is flagged (see super-admin.php) to step down the moment they leave,
+    // rather than being kicked mid-session - completing the handoff only now that
+    // they are actually logging out.
+    $handoffStmt = $conn->prepare('SELECT deactivate_on_logout FROM users WHERE id = ? AND role = "super_admin"');
+    $handoffStmt->bind_param('i', $loggingOutUserId);
+    $handoffStmt->execute();
+    $handoffRow = $handoffStmt->get_result()->fetch_assoc();
+    if ($handoffRow && (int)$handoffRow['deactivate_on_logout'] === 1) {
+        $deactivate = $conn->prepare('UPDATE users SET account_status = "blocked", deactivate_on_logout = 0 WHERE id = ?');
+        $deactivate->bind_param('i', $loggingOutUserId);
+        $deactivate->execute();
+        audit('accounts.block', $loggingOutUserId, ['reason' => 'Automatically deactivated: stepped down after activating another Super Administrator account']);
+    }
 }
 
 // Unset all session variables
