@@ -178,8 +178,8 @@ foreach ($rows as $row) {
         $person = $row['actor_username'] !== null ? ($usernameLookup[$row['actor_username']] ?? null) : null;
         $name = $person ? trim($person['first_name'] . ' ' . $person['last_name']) : null;
         $buckets[$bucketKey] = [
-            'employee_id' => $row['actor_employee_id'] ?? ($isSystem ? 'System' : 'Unknown'),
-            'actor_username' => $row['actor_username'] ?? ($isSystem ? 'System (automated)' : 'Unknown'),
+            'employee_id' => $row['actor_employee_id'] ?? ($isSystem ? 'System' : 'SYSTEM'),
+            'actor_username' => $row['actor_username'] ?? ($isSystem ? 'System (automated)' : 'SYSTEM'),
             'actor_role' => $row['actor_role'],
             'name' => $name ?? ($isSystem ? 'System' : ($row['actor_username'] !== null ? 'Deleted account' : '—')),
             'position' => $isSystem ? 'Automated' : format_position($row['actor_role']),

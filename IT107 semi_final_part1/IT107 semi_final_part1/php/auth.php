@@ -4,9 +4,23 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 require_once 'db.php';
 require_once 'audit_service.php';
+require_once 'emergency_admin.php';
 
 function current_account(bool $approvedOnly = true): ?array
 {
+    // The emergency account is authorized entirely from the session flag set
+    // at login, never the database, so it keeps working even if the database
+    // is down or missing the roles/permissions tables.
+    if (!empty($_SESSION['is_emergency_admin'])) {
+        return [
+            'id' => 0,
+            'username' => EMERGENCY_ADMIN_USERNAME,
+            'legacy_role' => 'super_admin',
+            'account_status' => 'approved',
+            'role_code' => 'super_admin',
+        ];
+    }
+
     global $conn;
     $userId = (int)($_SESSION['user_id'] ?? 0);
     if ($userId < 1) {
@@ -52,6 +66,10 @@ function require_identity(): array
 
 function can(string $permission, int $userId): bool
 {
+    if ($userId === 0 && !empty($_SESSION['is_emergency_admin'])) {
+        return true;
+    }
+
     global $conn;
     $stmt = $conn->prepare('SELECT EXISTS (SELECT 1 FROM user_permission_overrides o JOIN permissions p ON p.id = o.permission_id WHERE o.user_id = ? AND p.code = ? AND o.effect = "deny") AS denied, EXISTS (SELECT 1 FROM user_permission_overrides o JOIN permissions p ON p.id = o.permission_id WHERE o.user_id = ? AND p.code = ? AND o.effect = "allow") AS allowed, EXISTS (SELECT 1 FROM user_roles ur JOIN role_permissions rp ON rp.role_id = ur.role_id JOIN permissions p ON p.id = rp.permission_id WHERE ur.user_id = ? AND p.code = ?) AS role_allowed');
     $stmt->bind_param('isisis', $userId, $permission, $userId, $permission, $userId, $permission);

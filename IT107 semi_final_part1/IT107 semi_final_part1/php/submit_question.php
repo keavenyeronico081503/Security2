@@ -121,7 +121,7 @@ try {
         }
 
         $registrationStatus = 'complete';
-        $accountStatus = 'approved';
+        $accountStatus = 'pending';
         $stmt->bind_param("sssssi" . str_repeat('s', 13),
             $userData['fname'],
             $middleName,
@@ -183,8 +183,8 @@ try {
                 unset($_SESSION['temp_user_data']);
                 
                 echo json_encode([
-                    "status" => "success", 
-                    "message" => "Registration completed successfully! You can now login.",
+                    "status" => "success",
+                    "message" => "Account Created Successfully, waiting for approval.",
                     "redirect" => "../html/login.html"
                 ]);
             } else {

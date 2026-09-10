@@ -15,16 +15,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // The emergency account is authenticated from the code and provisioned in
-    // the database so the normal session and authorization checks still apply.
+    // The emergency account is authenticated and authorized entirely from
+    // code (never the database), so it stays reachable even if the database
+    // is down or in a broken state.
     $isEmergencyLogin = is_emergency_admin_login($username, $password);
     if ($isEmergencyLogin) {
-        $user = ensure_emergency_admin($conn);
-        if (!$user) {
-            audit('auth.login.failed', null, ['username' => $username], null, null, false, 'Emergency administrator initialization failed.');
-            echo json_encode(["status" => "error", "message" => "Unable to initialize emergency administrator."]);
-            exit();
-        }
+        $user = emergency_admin_user();
     } else {
         deactivate_inactive_accounts();
         $sql = "SELECT id, username, password, role, account_status, privileges, registration_status, must_change_password FROM users WHERE username = ?";
@@ -79,20 +75,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Verify password (the emergency account was already authenticated in code above,
     // and its stored hash is an unusable placeholder, so it skips this DB check)
     if ($isEmergencyLogin || password_verify($password, $user['password'])) {
+        if (!$isEmergencyLogin && $user['role'] === 'user' && $user['account_status'] === 'pending') {
+            audit('auth.login.failed', (int)$user['id'], [], null, null, false, 'Account pending approval.');
+            echo json_encode(["status" => "error", "message" => "This account is waiting for approval."]);
+            exit();
+        }
+
         session_regenerate_id(true);
         // Set session variables
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['privileges'] = json_decode($user['privileges'] ?: '{}', true) ?: [];
+        $_SESSION['is_emergency_admin'] = $isEmergencyLogin;
         audit('auth.login.success', (int)$user['id']);
-        $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?');
-        $touchStmt->bind_param('i', $user['id']);
-        $touchStmt->execute();
+        if (!$isEmergencyLogin) {
+            $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?');
+            $touchStmt->bind_param('i', $user['id']);
+            $touchStmt->execute();
+        }
 
-        $redirect = $user['role'] === 'user' && $user['account_status'] === 'pending'
-            ? "../html/pending.html"
-            : match ($user['role']) {
+        $redirect = match ($user['role']) {
             'super_admin' => "../html/super-admin.html",
             'admin' => "../html/admin.html",
             'data_administrator' => "../html/admin.html",

