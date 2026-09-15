@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volleyball Club Dashboard</title>
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/user-dashboard.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/privilege.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body class="has-sidebar app-user">
+  <button class="sidebar-menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button>
+  <div class="sidebar-scrim"></div>
+  <aside class="app-sidebar" aria-label="Player navigation">
+    <div class="sidebar-brand">
+      <strong id="sidebarBrandName">Security2</strong>
+      <span id="sidebarBrandRole">Volleyball Club</span>
+      <button class="sidebar-close" aria-label="Close navigation">Close</button>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="sidebar-link active" data-view="dashboard" href="#dashboard"><i class="fas fa-home" aria-hidden="true"></i> Dashboard</a>
+      <a class="sidebar-link" data-view="notifications" href="#notifications"><i class="fas fa-bell" aria-hidden="true"></i> Notifications <span class="notification-badge" data-notification="today_events" hidden>0</span></a>
+      <a class="sidebar-link" data-view="calendar" href="#calendar"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar &amp; Events</a>
+      <a class="sidebar-link" data-view="profile" href="#profile"><i class="fas fa-id-card" aria-hidden="true"></i> My Profile</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a class="sidebar-link" href="../php/logout.php"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log out</a>
+    </div>
+  </aside>
+
+  <main id="dashboard" data-module-view="dashboard">
+    <section class="dashboard-hero" aria-labelledby="welcomeTitle">
+      <div>
+        <p class="eyebrow">Player community</p>
+        <h1 id="welcomeTitle">Welcome back, <span id="username">Player</span></h1>
+        <p>Stay close to the court, your teammates, and the next club moment.</p>
+      </div>
+      <div class="hero-mark" aria-hidden="true"><i class="fas fa-volleyball-ball"></i></div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Player dashboard">
+      <div id="todayBanner" class="today-banner" hidden><i class="fas fa-bell" aria-hidden="true"></i><div><strong id="todayBannerTitle"></strong><p id="todayBannerBody"></p></div></div>
+      <div class="feed-column">
+        <div class="section-heading">
+          <div><p class="eyebrow">Club updates</p><h2>Community feed</h2></div>
+          <span class="read-only-label">Coach posts</span>
+        </div>
+        <div id="feedList">
+          <article class="empty-feed" aria-live="polite">
+            <div class="empty-icon"><i class="fas fa-bullhorn" aria-hidden="true"></i></div>
+            <h3>No updates yet</h3>
+            <p>Coach and instructor announcements, photos, and event posts will appear here.</p>
+            <span class="status-note"><i class="fas fa-clock" aria-hidden="true"></i> Waiting for the first club post</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="calendar" class="dashboard-section" data-module-view="calendar" hidden aria-labelledby="calendarTitle">
+      <div class="section-heading"><div><p class="eyebrow">Club schedule</p><h1 id="calendarTitle">Calendar &amp; Events</h1><p class="section-intro">Find practices, tryouts, tournaments, and other coach announcements.</p></div><div class="calendar-controls"><button type="button" id="previousMonth" class="calendar-button" aria-label="Previous month"><i class="fas fa-chevron-left" aria-hidden="true"></i></button><strong id="calendarMonth"></strong><button type="button" id="nextMonth" class="calendar-button" aria-label="Next month"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div></div>
+      <div class="calendar-panel"><div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div id="calendarDays" class="calendar-days"></div></div>
+      <div id="calendarEventDetail" class="calendar-empty" hidden></div>
+      <div id="calendarEmptyState" class="calendar-empty"><i class="far fa-calendar-check" aria-hidden="true"></i><div><h2>No events posted yet</h2><p>Events will appear here when a Coach or Instructor publishes them.</p></div></div>
+    </section>
+
+    <section id="profile" class="dashboard-section profile-section" data-module-view="profile" hidden aria-labelledby="profilePageTitle">
+      <header class="profile-header"><div><p class="eyebrow">Manage Account</p><h1 id="profilePageTitle">My Profile</h1><p class="section-intro">Keep your display name, contact details, and password up to date.</p></div><span id="profileRole" class="role-badge">Loading...</span></header>
+      <section class="profile-card"><div class="card-heading"><div><p class="eyebrow">Account details</p><h2>Personal information</h2><p>Your account identity and contact details.</p></div><span class="lock-note"><i class="fas fa-lock" aria-hidden="true"></i> Self-service only</span></div><form id="profileForm" class="profile-form"><label>First name<input name="first_name" required></label><label>Middle name<input name="middle_name"></label><label>Last name<input name="last_name" required></label><label>Suffix<input name="suffix"></label><label>Email<input type="email" name="email" required></label><label>Contact number<input name="contact_number" inputmode="tel"></label><label>Username<input name="username" readonly></label><label>Employee ID<input name="id_number" readonly></label><p id="profileMessage" class="form-message" role="status"></p><button type="submit">Save profile</button></form></section><section class="profile-card"><div class="card-heading"><div><p class="eyebrow">Account security</p><h2>Change password</h2><p>Use a strong password you do not reuse elsewhere.</p></div></div><form id="passwordForm" class="profile-form password-form"><label>Current password<input type="password" name="current_password" minlength="8" required></label><label>New password<input type="password" name="new_password" minlength="8" required></label><label>Confirm password<input type="password" name="confirm_password" minlength="8" required></label><p id="passwordMessage" class="form-message" role="status"></p><button type="submit">Change password</button></form></section><section class="profile-card"><div class="card-heading"><div><p class="eyebrow">Access control</p><h2>My privileges</h2><p>What your account is allowed to do.</p></div></div><div id="profilePrivileges" class="privilege-modules"></div></section>
+    </section>
+
+    <section id="notifications" class="dashboard-section" data-module-view="notifications" hidden aria-labelledby="notificationsTitle">
+      <div class="section-heading"><div><p class="eyebrow">Stay in the loop</p><h1 id="notificationsTitle">Notifications</h1><p class="section-intro">Event reminders from the club calendar.</p></div></div>
+      <div id="notificationsToday"></div>
+      <div id="notificationsUpcoming" class="notifications-list"></div>
+      <div id="notificationsEmpty" class="calendar-empty" hidden><i class="far fa-bell" aria-hidden="true"></i><div><h2>No notifications right now</h2><p>You'll see a reminder here when a Coach or Instructor adds an upcoming event.</p></div></div>
+    </section>
+  </main>
+
+  <script src="../javascript/user-dashboard.js"></script>
+  <script src="../javascript/profile.js"></script>
+  <script src="../javascript/sidebar.js"></script>
+</body>
+</html>

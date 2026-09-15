@@ -1,0 +1,483 @@
+*{
+    box-sizing: border-box;
+    font-family: 'DM Sans', sans-serif;
+}
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper, #f5f3ed);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 100px;      /* More space from header */
+    padding-bottom: 100px;   /* More space from footer */
+    overflow: hidden;
+    position: relative;
+    color: var(--ink, #17211b);
+}
+
+.register {
+    margin-bottom: 45%;   /* Reduced bottom margin */
+    padding: 0.8rem;       /* Smaller padding to make box more compact */
+    width: 75%;            /* Reduced width from 90% to 75% */
+    max-width: 850px;      /* Reduced max-width from 750px to 600px */
+    border-radius: 12px;
+    background-color: var(--panel, #fffdf8);
+    position: relative;
+    border: 1px solid var(--line, #d9ded7);
+    box-shadow: 0 10px 28px rgba(23, 33, 27, .08);
+    text-align: center;
+    transition: box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.register > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Grids */
+.form-grid,
+.account-grid,
+.address-grid {
+    display: grid;
+    gap: 3px; /* very tight spacing */
+}
+
+/* Personal Info Grid */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns on desktop */
+}
+
+/* Account Info Grid */
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Address Info Grid */
+.address-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+/* Form group */
+.form-group label {
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--ink, #17211b);
+}
+
+.register input,
+.register select {
+    padding: 8px 10px;
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 8px;
+    width: 100%;
+    font-size: 13px;
+    background-color: #ffffff;
+    color: var(--ink, #17211b);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.register input::placeholder {
+    color: var(--muted, #68736c);
+    opacity: 1;
+}
+
+/* Input container for password fields with eye icon */
+.input-container {
+    position: relative;
+    width: 100%;
+}
+
+.input-container input {
+    padding-right: 35px; /* Space for eye icon */
+}
+
+.input-container i {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted, #68736c);
+    cursor: pointer;
+    right: 30px;
+}
+
+.input-container i:hover {
+    color: var(--accent, #176b52);
+}
+
+/* Inline checkbox option beside inputs */
+.with-option {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+.with-option .option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;
+    color: var(--ink, #17211b);
+}
+
+/* Checkbox row placed under input */
+.option-below {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.option-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.register input:focus,
+.register select:focus {
+    border-color: var(--accent, #176b52);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
+}
+
+/* Keep error/success colors even when focused */
+.register input.input-error,
+.register select.input-error {
+    border-color: var(--danger, #a63d32) !important;
+    background-color: #fdf3f1;
+}
+.register input.input-error:focus,
+.register select.input-error:focus {
+    border-color: var(--danger, #a63d32) !important;
+    box-shadow: 0 0 0 3px rgba(166, 61, 50, 0.18);
+}
+
+.register input.input-success,
+.register select.input-success {
+    border-color: var(--accent, #176b52) !important;
+    background-color: #f3fbf8;
+}
+.register input.input-success:focus,
+.register select.input-success:focus {
+    border-color: var(--accent, #176b52) !important;
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
+}
+
+/* Button */
+.register button {
+    width: 26%;
+    min-width: 140px;
+    margin-right: -600px;
+    padding: 10px 20px;
+    background: var(--accent, #176b52);
+    border: 1px solid var(--accent, #176b52);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 5px;
+    color: #fff;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.register button:hover {
+    background: var(--accent-dark, #0f5849);
+    border-color: var(--accent-dark, #0f5849);
+}
+/* Header styling */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--ink, #17211b);
+    border-bottom: 3px solid var(--accent, #176b52);
+    z-index: 1000;
+    padding: 8px 0;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between; /* brand left, nav right */
+    align-items: center;
+    gap: 10px;
+    padding: 0 24px;
+}
+
+/* Header brand and nav */
+.brand { display: flex; align-items: center; gap: 6px; }
+.brand-mark { height: 60px; width: auto; }
+.brand-text { height: 60px; margin-left: -40px; width: 100%; }
+.brand img { display: block; }
+.nav { display: flex; gap: 10px; }
+
+.container a {
+    display: inline;
+    margin: 0 15px;
+    padding: 0;
+    text-decoration: underline;
+    color: #ffffff;
+    background: none;
+    border: none;
+    border-radius: 0;
+    font-weight: normal;
+    transition: color 0.3s ease;
+    box-shadow: none;
+}
+.container a[href="register.html"] { display: none; }
+.container a:hover {
+    color: #b9dfc9;
+    text-decoration: underline;
+}
+.container a.active {
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.link-register a {
+    display: inline-block;
+    width: 30%;
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: var(--accent, #176b52);
+    color: #fff;
+    font-weight: bold;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.link-register a:hover {
+    background: var(--accent-dark, #0f5849);
+}
+
+.forget {
+    text-align: right;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+/* Heading sizes and spacing */
+.register h2 {
+    font-size: 16px;
+    margin: 1px 0 3px;
+    font-weight: 700;
+    color: var(--ink, #17211b);
+}
+.register h3 {
+    font-size: 16px;
+    margin: 1px 0 3px;
+    font-weight: 700;
+    color: var(--ink, #17211b);
+}
+
+.register label,
+.register .option,
+.register .optional,
+.register .required {
+    color: var(--ink, #17211b);
+}
+
+.forget a {
+    color: var(--accent, #176b52);
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 20px;
+}
+
+.forget a:hover {
+    text-decoration: underline;
+}
+
+footer {
+    position: fixed;
+    font-style: italic;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--ink, #17211b);
+    color: #ffffff;
+    text-align: center;
+    padding: 10px;
+    z-index: 999;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+footer h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #ffffff;
+}
+
+/* ==========================
+   Responsive Adjustments
+   ========================== */
+
+@media (max-width: 1024px) {
+  body {
+    padding-top: 70px;
+    padding-bottom: 60px;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .register {
+    max-width: 700px;
+    padding: 30px;
+    margin-left: 0;
+  }
+  .form-grid,
+  .account-grid,
+  .address-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-top: 70px;
+    padding-bottom: 70px;
+    justify-content: center;
+  }
+  .container {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 12px;
+  }
+  .container a {
+    margin: 0 10px;
+    padding: 0;
+    font-size: 14px;
+  }
+  .register {
+    max-width: 550px;
+    width: 92%;
+    padding: 24px;
+    margin-left: 0;
+  }
+  .form-grid,
+  .account-grid,
+  .address-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .register input,
+  .register select {
+    width: 100%;
+  }
+  .register button {
+    width: 100%;
+    font-size: 16px;
+  }
+  .link-register a {
+    width: 100%;
+    text-align: center;
+  }
+  .forget {
+    text-align: center;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 6px 0;
+  }
+  .container a {
+    padding: 0;
+    font-size: 13px;
+    margin: 0 8px;
+  }
+  .register {
+    width: 94%;
+    padding: 18px;
+  }
+  .form-group label {
+    font-size: 14px;
+  }
+  .register input,
+  .register select {
+    padding: 10px;
+    font-size: 14px;
+  }
+  footer h3 {
+    font-size: 14px;
+  }
+}
+
+/* Field state + helper text */
+.input-error {
+    border: 1.5px solid var(--danger, #a63d32) !important;
+    background-color: #fdf3f1;
+    color: var(--ink, #17211b);
+}
+
+.input-success {
+    border: 1.5px solid var(--accent, #176b52) !important;
+    background-color: #f3fbf8;
+    color: var(--ink, #17211b);
+}
+
+.error-message {
+    color: var(--danger, #a63d32);
+    font-size: 13px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+label .required {
+    color: var(--danger, #a63d32);
+    font-weight: bold;
+}
+
+label .optional {
+    color: var(--muted, #68736c);
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+.hint-message {
+    color: var(--danger, #a63d32);
+    font-size: 13px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.strength-message {
+    font-size: 13px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.message-error {
+    color: var(--danger, #a63d32);
+    font-size: 12px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}

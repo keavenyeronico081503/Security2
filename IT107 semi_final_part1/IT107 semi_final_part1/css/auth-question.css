@@ -1,0 +1,653 @@
+/* auth-question.css - unified with the green/cream system in common.css */
+*{
+    box-sizing: border-box;
+    font-family: 'DM Sans', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper, #f5f3ed);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+    color: var(--ink, #17211b);
+    padding-top: 80px;   /* More space for fixed header */
+    padding-bottom: 50px;/* More space for fixed footer */
+    overflow: hidden; /* Prevent scrolling */
+    position: relative;
+}
+
+.forgot-password {
+    padding: 0.8rem;       /* Match register form padding */
+    background-color: var(--panel, #fffdf8);
+    border: 1px solid var(--line, #d9ded7);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(23, 33, 27, .08);
+    text-align: center;
+    width: 65%;            /* Reduced from 75% to make it smaller */
+    max-width: 650px;      /* Reduced from 750px to make it smaller */
+    margin: 0 auto;
+    position: relative;
+    max-height: 85vh;
+    overflow: hidden;
+}
+
+.forgot-password > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Title styling */
+.forgot-password h1 {
+    color: var(--ink, #17211b);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+/* 3-Column Grid Layout for the form */
+.forgot-password form {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px; /* Match register form gap */
+    text-align: left;
+    margin-top: 10px;
+}
+
+/* Center the global message directly above the button */
+#message {
+    grid-column: span 3; /* span full width in 3-col grid */
+    justify-self: center;
+    text-align: center;
+    margin: 10px auto 0;
+    width: 60%;
+}
+
+/* User Information Row - 3 columns for ID, Email, Username */
+.user-info-row {
+    grid-column: span 3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.user-info-column {
+    grid-column: span 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    min-width: 200px;
+    max-width: 250px;
+    width: auto;
+}
+
+.info-column label {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink, #17211b);
+    text-align: center;
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+/* Username display styling */
+.username-display {
+    padding: 6px 8px;
+    background: #ffffff;
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 8px;
+    color: var(--ink, #17211b);
+    font-weight: bold;
+    font-size: 11px;
+    text-align: center;
+    width: 100%;
+    min-width: 200px;
+    max-width: 250px;
+    box-sizing: border-box;
+}
+
+/* Questions row - All 3 questions side by side in columns */
+.questions-row {
+    grid-column: span 3;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns side by side */
+    gap: 15px;
+    align-items: start;
+    margin-bottom: 15px;
+}
+
+.question-column {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Answers row - All 3 answers side by side in columns */
+.answers-row {
+    grid-column: span 3;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns side by side */
+    gap: 15px;
+    align-items: start;
+    margin-bottom: 20px;
+}
+
+.answer-column {
+    display: flex;
+    flex-direction: column;
+}
+
+/* For backward compatibility */
+.question-part,
+.answer-part {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Question sections - absolutely minimal */
+.question-section {
+    grid-column: span 1;
+    background: transparent;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+    box-shadow: none;
+    transition: none;
+}
+
+.question-section:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Question display styling - shows the pre-populated security questions */
+.question-display {
+    width: 100%;
+    padding: 8px 10px;     /* Match register form padding */
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 8px;    /* Match register form border-radius */
+    background: #ffffff;
+    font-size: 13px;
+    color: var(--ink, #17211b);
+    text-align: left;
+    word-wrap: break-word;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+/* Full-width elements */
+.input-row {
+    grid-column: span 3;
+    margin-bottom: 15px;
+}
+
+/* Enhanced input styling */
+.forgot-password input {
+    width: 100%;
+    padding: 8px 10px;     /* Match register form padding */
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 8px;    /* Match register form border-radius */
+    background: #ffffff;
+    color: var(--ink, #17211b);
+    font-size: 13px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.forgot-password input:focus {
+    border-color: var(--accent, #176b52);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
+}
+
+.forgot-password input:hover {
+    border-color: #b7c6bd;
+}
+
+/* Enhanced select styling */
+.forgot-password select {
+    width: 100%;
+    height: 36px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ink, #17211b);
+    font-size: 13px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+    cursor: pointer;
+}
+
+.forgot-password select:focus {
+    border-color: var(--accent, #176b52);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
+}
+
+.forgot-password select:hover {
+    border-color: #b7c6bd;
+}
+
+/* Button styling */
+.forgot-password button {
+    grid-column: 2;
+    margin: 15px auto 0;
+    width: 80%;
+    height: 42px;
+    background: var(--accent, #176b52);
+    color: #fff;
+    border: 1px solid var(--accent, #176b52);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color .2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.forgot-password button:hover {
+    background: var(--accent-dark, #0f5849);
+    border-color: var(--accent-dark, #0f5849);
+}
+
+/* Enhanced label styling */
+.input-row label,
+.question-section label,
+.question-part label,
+.answer-part label,
+.question-column label,
+.answer-column label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink, #17211b);
+    letter-spacing: 0.2px;
+    text-align: left;
+}
+
+/* Enhanced error message styling */
+.error-message {
+    color: var(--danger, #a63d32);
+    font-size: 14px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    line-height: 1.5;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Back to login styling */
+.back-to-login {
+    grid-column: span 3;
+    margin-top: 20px;
+    text-align: center;
+}
+/* Header styling */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--ink, #17211b);
+    border-bottom: 3px solid var(--accent, #176b52);
+    z-index: 1000;
+    padding: 8px 0;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between; /* brand left, nav right */
+    align-items: center;
+    gap: 10px;
+    padding: 0 24px;
+}
+
+/* Header brand and nav */
+.brand { display: flex; align-items: center; gap: 6px; }
+.brand-mark { height: 60px; width: auto; }
+.brand-text { height: 60px; margin-left: -40px; width: 100%; }
+.brand img { display: block; }
+.nav { display: flex; gap: 10px; }
+
+.container a {
+    display: inline;
+    margin: 0 15px;
+    padding: 0;
+    text-decoration: underline;
+    color: #ffffff;
+    font-weight: normal;
+    background: none;
+    border: none;
+    border-radius: 0;
+    transition: color 0.3s ease;
+    box-shadow: none;
+}
+/* On the auth-questions page, hide any specific nav link if needed */
+.container a[href="auth-questions.html"] { display: none; }
+.container a:hover {
+    color: #b9dfc9;
+    text-decoration: underline;
+}
+.container a.active {
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+footer {
+    position: fixed;
+    font-style: italic;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--ink, #17211b);
+    color: white;
+    text-align: center;
+    padding: 10px;
+    z-index: 999;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+footer h3 {
+    margin: 0;
+    font-size: 16px;
+    color: white;
+}
+
+/* Additional styles for new features */
+.forgot-subtitle {
+    color: var(--muted, #68736c);
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.username-display {
+    background: var(--paper, #f5f3ed);
+    border: 1px solid var(--line, #d9ded7);
+    border-radius: 6px;
+    padding: 10px;
+    font-weight: bold;
+    color: var(--ink, #17211b);
+    text-align: center;
+}
+
+.back-to-login {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.back-to-login a {
+    color: var(--muted, #68736c);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.back-to-login a:hover {
+    color: var(--accent, #176b52);
+    text-decoration: underline;
+}
+
+/* Select dropdown styling */
+.forgot-password select {
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+}
+
+.forgot-password select:focus {
+    border-color: var(--accent, #176b52);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
+}
+
+/* Password strength indicator - more compact */
+.password-strength {
+    margin-top: 2px;
+    margin-bottom: 4px;
+    height: auto;
+    min-height: 16px;
+}
+
+.strength-bar {
+    width: 100%;
+    height: 2px;
+    background: var(--line, #d9ded7);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 1px;
+}
+
+.strength-fill {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: 1px;
+}
+
+.strength-fill.weak {
+    width: 33%;
+    background: var(--danger, #a63d32);
+}
+
+.strength-fill.medium {
+    width: 66%;
+    background: var(--amber, #a46616);
+}
+
+.strength-fill.strong {
+    width: 100%;
+    background: var(--accent, #176b52);
+}
+
+.strength-text {
+    font-size: 10px;
+    color: var(--muted, #68736c);
+    text-align: left;
+    margin: 0;
+    line-height: 1.1;
+    height: auto;
+    min-height: 11px;
+}
+
+.strength-text.weak {
+    color: var(--danger, #a63d32);
+}
+
+.strength-text.medium {
+    color: var(--amber, #a46616);
+}
+
+.strength-text.strong {
+    color: var(--accent, #176b52);
+}
+
+/* Toggle password button */
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--muted, #68736c);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+}
+
+.toggle-password:hover {
+    color: var(--accent, #176b52);
+}
+
+/* Message styling */
+.message {
+    margin: 5px 0;
+    padding: 5px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.message.success {
+    color: var(--accent, #176b52);
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.message.error {
+    color: var(--danger, #a63d32);
+    font-weight: 600;
+}
+
+/* Input container with toggle button */
+.input-container {
+    position: relative;
+}
+
+.input-container input[type="password"] {
+    padding-right: 40px;
+}
+
+/* ==========================
+   Responsive Adjustments
+   ========================== */
+
+/* Responsive Adjustments for 3-Column Grid */
+@media (max-width: 1024px) {
+    .forgot-password {
+        max-width: 95%;
+        padding: 24px;
+    }
+
+    .forgot-password form {
+        gap: 15px;
+    }
+
+    .question-section {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .forgot-password {
+        max-width: 100%;
+        padding: 20px;
+        margin: 0 10px;
+    }
+
+    .forgot-password form {
+        grid-template-columns: 1fr; /* Stack vertically on tablets */
+        gap: 15px;
+    }
+
+    .question-row {
+        grid-column: span 1;
+        grid-template-columns: 1fr; /* Stack question and answer vertically on mobile */
+        gap: 15px;
+    }
+
+    .question-section,
+    .username-display,
+    .back-to-login {
+        grid-column: span 1; /* Reset to single column */
+    }
+
+    .forgot-password button {
+        grid-column: 1;
+        width: 100%;
+        margin: 15px 0 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .forgot-password {
+        padding: 16px;
+        margin: 0 5px;
+    }
+
+    .forgot-password form {
+        gap: 12px;
+    }
+
+    .question-section {
+        padding: 10px;
+    }
+
+    .forgot-password button {
+        height: 44px;
+        font-size: 14px;
+    }
+}
+
+/* Button container styling */
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 15px;
+    grid-column: 1 / -1; /* Span all columns */
+}
+
+.prev-btn {
+    flex: 1;
+    padding: 12px 20px;
+    background: transparent;
+    color: var(--ink, #17211b);
+    border: 1.5px solid var(--line, #d9ded7);
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.prev-btn:hover {
+    border-color: var(--accent, #176b52);
+    color: var(--accent, #176b52);
+}
+
+/* Update the verify button to match */
+.button-container button[type="submit"] {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--accent, #176b52);
+    color: white;
+    border: 1px solid var(--accent, #176b52);
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.button-container button[type="submit"]:hover {
+    background: var(--accent-dark, #0f5849);
+    border-color: var(--accent-dark, #0f5849);
+}
