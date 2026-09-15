@@ -148,6 +148,36 @@ footer p, .dashboard-footer p {
     color: var(--ink) !important;
 }
 
+/* Text-input variant of the .action-confirm-form dialog (admin.css / super-admin.css),
+   used to collect a reason instead of a plain yes/no confirmation. */
+.action-prompt-form textarea {
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--ink);
+    font: inherit;
+    resize: vertical;
+    min-height: 76px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.action-prompt-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(23, 107, 82, .16);
+}
+
+.action-prompt-form .prompt-error {
+    min-height: 18px;
+    margin-top: 6px;
+    color: var(--danger);
+    font-size: 12px;
+    font-weight: 600;
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: .01ms !important;

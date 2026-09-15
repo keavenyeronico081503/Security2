@@ -28,11 +28,18 @@ services:
       - ./database/017_inactivity_auto_deactivation.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzzzzz_inactivity_auto_deactivation.sql:ro
       - ./database/018_super_admin_handoff.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzzzzzz_super_admin_handoff.sql:ro
       - ./database/019_online_presence.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzzzzzzz_online_presence.sql:ro
+      - ./database/020_delete_fk_fixes.sql:/docker-entrypoint-initdb.d/zzzzzzzzzzzzzzzzzzzz_delete_fk_fixes.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
       retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
 
   app:
     build:
@@ -42,6 +49,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     environment:
       DB_HOST: db
       DB_PORT: 3306

@@ -2,6 +2,8 @@
 session_start();
 include 'db.php';
 require_once 'email_policy.php';
+require_once 'mailer.php';
+require_once 'otp.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Collect form inputs
@@ -66,10 +68,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'city' => $city,
         'province' => $province,
         'country' => $country,
-        'zipCode' => $zipCode
+        'zipCode' => $zipCode,
+        'email_verified' => false
     ];
 
-    // Redirect to question page without saving to database yet
-    header("Location: ../html/question.html");
+    // Send a one-time code to the institutional email to confirm the user controls it
+    // before letting them proceed to the rest of the registration flow.
+    $otpCode = issue_registration_otp($email);
+    $displayName = trim($fname . ' ' . $lastName);
+    if (!send_registration_otp_email($email, $displayName, $otpCode)) {
+        unset($_SESSION['temp_user_data'], $_SESSION['registration_otp']);
+        die('We could not send a verification code to that email address. Please try again later.');
+    }
+
+    // Redirect to the email verification page; account is created only after
+    // the code is confirmed and the security questions are answered.
+    header("Location: ../html/verify-email.html");
     exit();
 }

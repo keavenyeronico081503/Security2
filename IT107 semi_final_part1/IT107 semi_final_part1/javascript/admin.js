@@ -141,6 +141,44 @@ function confirmAction(title, messageText) {
     dialog.showModal();
   });
 }
+function promptAction(title, messageText, options = {}) {
+  const { required = true, placeholder = 'Type your reason here…', submitLabel = 'Submit' } = options;
+  return new Promise(resolve => {
+    let dialog = document.getElementById('actionPromptDialog');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'actionPromptDialog';
+      dialog.innerHTML = '<form method="dialog" class="action-confirm-form action-prompt-form"><h2></h2><p class="prompt-message"></p><textarea rows="3" maxlength="500"></textarea><p class="prompt-error"></p><div><button value="cancel" class="confirm-cancel" type="submit">Cancel</button><button value="confirm" class="confirm-accept" type="submit">Submit</button></div></form>';
+      document.body.appendChild(dialog);
+    }
+    const form = dialog.querySelector('form');
+    const textarea = dialog.querySelector('textarea');
+    const errorEl = dialog.querySelector('.prompt-error');
+    const submitBtn = dialog.querySelector('.confirm-accept');
+    dialog.querySelector('h2').textContent = title;
+    dialog.querySelector('.prompt-message').textContent = messageText;
+    textarea.value = '';
+    textarea.placeholder = placeholder;
+    submitBtn.textContent = submitLabel;
+    errorEl.textContent = '';
+
+    const onSubmit = event => {
+      if (event.submitter === submitBtn && required && !textarea.value.trim()) {
+        event.preventDefault();
+        errorEl.textContent = 'A reason is required.';
+        textarea.focus();
+      }
+    };
+    form.addEventListener('submit', onSubmit);
+
+    dialog.onclose = () => {
+      form.removeEventListener('submit', onSubmit);
+      resolve(dialog.returnValue === 'confirm' ? textarea.value.trim() : null);
+    };
+    dialog.showModal();
+    textarea.focus();
+  });
+}
 
 function drawAdminChart(id, type, labels, values, colors) {
   const canvas = document.getElementById(id);
@@ -336,9 +374,8 @@ async function load() {
 table.addEventListener('click', async event => {
   const button = event.target.closest('button[data-action]'); if (!button) return;
   const action = button.dataset.action; const body = {user_id: Number(button.dataset.id)};
-  if (action === 'block' && adminRole === 'admin') { body.reason = prompt('Why should this account be blocked?'); if (!body.reason || !body.reason.trim()) return; }
-  if (action === 'review-block-request') { body.request_id = Number(button.dataset.request); body.decision = button.dataset.decision; body.reason = prompt('Optional review note:', '') || ''; if (!await confirmAction(`${body.decision === 'approve' ? 'Accept' : 'Reject'} block request`, `${body.decision === 'approve' ? 'Accept' : 'Reject'} this block request?`)) return; try { showMessage((await request('review-block-request', body)).message); await loadBlockRequests(); await load(); } catch (error) { showMessage(error.message, true); } return; }
-  if (['request-delete', 'block', 'unblock'].includes(action)) { body.reason = prompt(`Why should this account be ${action === 'request-delete' ? 'deleted' : action + 'ed'}?`); if (!body.reason || !body.reason.trim()) return; }
+  if (action === 'review-block-request') { body.request_id = Number(button.dataset.request); body.decision = button.dataset.decision; body.reason = (await promptAction('Review note', 'Optional note for this decision:', { required: false, submitLabel: 'Save' })) || ''; if (!await confirmAction(`${body.decision === 'approve' ? 'Accept' : 'Reject'} block request`, `${body.decision === 'approve' ? 'Accept' : 'Reject'} this block request?`)) return; try { showMessage((await request('review-block-request', body)).message); await loadBlockRequests(); await load(); } catch (error) { showMessage(error.message, true); } return; }
+  if (['request-delete', 'block', 'unblock'].includes(action)) { body.reason = await promptAction('Reason required', `Why should this account be ${action === 'request-delete' ? 'deleted' : action + 'ed'}?`, { submitLabel: action === 'request-delete' ? 'Send request' : 'Submit' }); if (!body.reason) return; }
   if (action === 'update') { openEditDialog(JSON.parse(button.dataset.user)); return; }
   const username = button.dataset.user ? JSON.parse(button.dataset.user).username : button.closest('tr')?.children[2]?.textContent || 'this account';
   const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', update: 'Save changes to', 'request-delete': 'Send deletion request for'};

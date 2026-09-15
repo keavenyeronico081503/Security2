@@ -70,6 +70,15 @@ try {
         // Get user data from session
         $userData = $_SESSION['temp_user_data'];
 
+        if (empty($userData['email_verified'])) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Please verify your institutional email before completing registration.",
+                "redirect" => "../html/verify-email.html"
+            ]);
+            exit();
+        }
+
         $genderValue = strtolower(trim((string) ($userData['gender'] ?? '')));
         if ($genderValue === 'male') {
             $userData['gender'] = 'Male';

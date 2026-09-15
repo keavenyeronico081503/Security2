@@ -18,8 +18,9 @@ if ($action === 'list') {
     deactivate_inactive_accounts();
     $search = trim($_GET['employee_id'] ?? '');
     $like = "%$search%";
-    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, is_online, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Keavenyadmin1" ORDER BY created_at DESC');
-    $stmt->bind_param('s', $like);
+    $role = trim($_GET['role'] ?? '');
+    $stmt = $conn->prepare('SELECT id, first_name, last_name, id_number, email, username, role, account_status, is_online, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Keavenyadmin1" AND (? = "" OR role = ?) ORDER BY created_at DESC');
+    $stmt->bind_param('sss', $like, $role, $role);
     $stmt->execute();
     $result = $stmt->get_result();
     $users = [];
@@ -162,7 +163,15 @@ if ($action === 'delete') {
         echo json_encode(['status' => 'error', 'message' => 'You cannot delete your own account.']);
         exit;
     }
-    audit('accounts.delete.approve', $userId);
+    $reason = trim((string)($data['reason'] ?? ''));
+    if ($reason === '') {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'A reason is required to delete this account.']);
+        exit;
+    }
+    // Distinct from 'accounts.delete.approve' (used for accepting a pending deletion
+    // request) so the audit log doesn't mislabel a direct delete as "Accepted deletion request".
+    audit('accounts.delete', $userId, ['reason' => $reason]);
     $stmt = $conn->prepare('DELETE FROM users WHERE id = ? AND role <> "super_admin"');
     $stmt->bind_param('i', $userId);
     $stmt->execute();
@@ -190,8 +199,13 @@ if ($action === 'review-delete') {
     $conn->begin_transaction();
     try {
         $status = $decision === 'approve' ? 'approved' : 'rejected';
+        // The emergency admin has no row in `users` (see emergency_admin.php), and
+        // reviewed_by has a hard foreign key to users.id, so its placeholder id (0)
+        // must be stored as NULL instead — same fix audit_service.php already
+        // applies to actor_user_id for the same reason.
+        $reviewerId = ((int)$reviewer['id']) > 0 ? (int)$reviewer['id'] : null;
         $update = $conn->prepare('UPDATE admin_delete_requests SET status = ?, decision_reason = ?, reviewed_by = ?, reviewed_at = NOW(), executed_at = IF(? = "approved", NOW(), NULL) WHERE id = ?');
-        $update->bind_param('ssisi', $status, $decisionReason, $reviewer['id'], $status, $requestId);
+        $update->bind_param('ssisi', $status, $decisionReason, $reviewerId, $status, $requestId);
         $update->execute();
         audit("accounts.delete.$decision", $request['target_user_id'], ['request_id' => $requestId, 'reason' => $decisionReason]);
         if ($decision === 'approve') {

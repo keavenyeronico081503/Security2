@@ -41,6 +41,44 @@ function confirmAction(title, messageText) {
     dialog.showModal();
   });
 }
+function promptAction(title, messageText, options = {}) {
+  const { required = true, placeholder = 'Type your reason here…', submitLabel = 'Submit' } = options;
+  return new Promise(resolve => {
+    let dialog = document.getElementById('actionPromptDialog');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'actionPromptDialog';
+      dialog.innerHTML = '<form method="dialog" class="action-confirm-form action-prompt-form"><h2></h2><p class="prompt-message"></p><textarea rows="3" maxlength="500"></textarea><p class="prompt-error"></p><div><button value="cancel" class="confirm-cancel" type="submit">Cancel</button><button value="confirm" class="confirm-accept" type="submit">Submit</button></div></form>';
+      document.body.appendChild(dialog);
+    }
+    const form = dialog.querySelector('form');
+    const textarea = dialog.querySelector('textarea');
+    const errorEl = dialog.querySelector('.prompt-error');
+    const submitBtn = dialog.querySelector('.confirm-accept');
+    dialog.querySelector('h2').textContent = title;
+    dialog.querySelector('.prompt-message').textContent = messageText;
+    textarea.value = '';
+    textarea.placeholder = placeholder;
+    submitBtn.textContent = submitLabel;
+    errorEl.textContent = '';
+
+    const onSubmit = event => {
+      if (event.submitter === submitBtn && required && !textarea.value.trim()) {
+        event.preventDefault();
+        errorEl.textContent = 'A reason is required.';
+        textarea.focus();
+      }
+    };
+    form.addEventListener('submit', onSubmit);
+
+    dialog.onclose = () => {
+      form.removeEventListener('submit', onSubmit);
+      resolve(dialog.returnValue === 'confirm' ? textarea.value.trim() : null);
+    };
+    dialog.showModal();
+    textarea.focus();
+  });
+}
 async function loadNextEmployeeId() {
   const input = document.getElementById('createEmployeeId');
   if (!input) return;
@@ -258,8 +296,10 @@ function renderUsers(users) {
   }
 }
 
-async function loadUsers(employeeId = '') {
-  try { renderUsers((await request(`list&employee_id=${encodeURIComponent(employeeId)}`)).users); }
+async function loadUsers() {
+  const employeeId = document.getElementById('employeeId').value;
+  const role = document.getElementById('roleFilter').value;
+  try { renderUsers((await request(`list&employee_id=${encodeURIComponent(employeeId)}&role=${encodeURIComponent(role)}`)).users); }
   catch (error) { showMessage(error.message, true); }
 }
 
@@ -328,7 +368,7 @@ editForm.addEventListener('submit', async event => {
   try {
     const result = await request('update', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
     showEditMessage(result.message);
-    await loadUsers(document.getElementById('employeeId').value);
+    await loadUsers();
     await loadAuditLogs();
     setTimeout(() => editDialog.close(), 700);
   } catch (error) { showEditMessage(error.message, true); }
@@ -467,14 +507,18 @@ async function handleAccountAction(event) {
     return;
   }
   if (['block', 'unblock'].includes(action)) {
-    body.reason = prompt(`Why should this account be ${action === 'block' ? 'blocked' : 'unblocked'}?`);
-    if (!body.reason || !body.reason.trim()) return;
+    body.reason = await promptAction('Reason required', `Why should this account be ${action === 'block' ? 'blocked' : 'unblocked'}?`);
+    if (!body.reason) return;
+  }
+  if (action === 'delete') {
+    body.reason = await promptAction('Reason required', 'Why should this account be deleted?', { submitLabel: 'Delete' });
+    if (!body.reason) return;
   }
   const username = button.dataset.user ? JSON.parse(decodeURIComponent(button.dataset.user)).username : button.closest('tr')?.children[2]?.textContent || 'this account';
   const confirmationLabels = {approve: 'Approve', block: 'Block', unblock: 'Unblock', delete: 'Delete', reactivate: 'Reactivate'};
   if (action === 'reactivate' && !await confirmAction('Reactivate Super Administrator', `Reactivate "${username}" as Super Administrator? Your own account will be automatically deactivated the next time you log out.`)) return;
   if (action !== 'reactivate' && confirmationLabels[action] && !await confirmAction(`${confirmationLabels[action]} account`, `${confirmationLabels[action]} account "${username}"?`)) return;
-  try { showMessage((await request(action, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })).message); loadUsers(document.getElementById('employeeId').value); }
+  try { showMessage((await request(action, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) })).message); loadUsers(); }
   catch (error) { showMessage(error.message, true); }
 }
 
@@ -506,15 +550,16 @@ document.getElementById('cancelPrivileges').addEventListener('click', () => priv
 
 requests.addEventListener('click', async event => {
   const button = event.target.closest('button[data-request]'); if (!button) return;
-  const reason = prompt(`Reason for ${button.dataset.decision}:`); if (!reason || !reason.trim()) return;
   const decisionLabel = button.dataset.decision === 'approve' ? 'Approve' : 'Reject';
+  const reason = await promptAction('Reason required', `Reason to ${decisionLabel.toLowerCase()} this deletion request:`, { submitLabel: decisionLabel });
+  if (!reason) return;
   if (!await confirmAction(`${decisionLabel} deletion request`, `${decisionLabel} this deletion request?`)) return;
   try { showMessage((await request('review-delete', {request_id: Number(button.dataset.request), decision: button.dataset.decision, reason})).message); await loadRequests(); await loadUsers(); }
   catch (error) { showMessage(error.message, true); }
 });
 
-document.getElementById('filterForm').addEventListener('submit', event => { event.preventDefault(); loadUsers(document.getElementById('employeeId').value); });
-document.getElementById('clearFilter').addEventListener('click', () => { document.getElementById('employeeId').value = ''; loadUsers(); });
+document.getElementById('filterForm').addEventListener('submit', event => { event.preventDefault(); loadUsers(); });
+document.getElementById('clearFilter').addEventListener('click', () => { document.getElementById('employeeId').value = ''; document.getElementById('roleFilter').value = ''; loadUsers(); });
 document.getElementById('refreshStatistics').addEventListener('click', loadStatistics);
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();

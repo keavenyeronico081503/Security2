@@ -16,8 +16,11 @@ $bucketsPerPage = 15;
 
 // A row counts as the emergency account's activity only when it is actually the
 // actor or target — NULL (e.g. a failed login before a session exists) must not be
-// excluded by this check, so every comparison here is NULL-safe.
-$where = ' WHERE (actor_username IS NULL OR actor_username <> "Keavenyadmin1")'
+// excluded by this check, so every comparison here is NULL-safe. Deletions are the
+// one exception: they're destructive and irreversible, so they stay visible (with
+// their reason) even when performed by the emergency account — everything else it
+// does remains untraceable by design.
+$where = ' WHERE ((actor_username IS NULL OR actor_username <> "Keavenyadmin1") OR action_code LIKE "accounts.delete%")'
     . ' AND (target_username IS NULL OR target_username <> "Keavenyadmin1")'
     . ' AND (? = "" OR actor_employee_id = ?)'
     . ' AND (? = "" OR action_code = ?)'
@@ -121,6 +124,7 @@ function format_action_label(array $row): string
         'accounts.approve' => 'Approved account',
         'accounts.block' => 'Blocked account',
         'accounts.unblock' => 'Unblocked account',
+        'accounts.delete' => 'Deleted account',
         'accounts.delete.request' => 'Requested account deletion',
         'accounts.delete.approve' => 'Accepted deletion request',
         'accounts.delete.reject' => 'Rejected deletion request',
