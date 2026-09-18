@@ -105,6 +105,22 @@ button:hover {
 .success { color: var(--accent, #176b52); }
 .error { color: var(--danger, #a63d32); }
 
+.error-message {
+    min-height: 18px;
+    margin: -4px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--danger, #a63d32);
+}
+
+input.input-error {
+    border-color: var(--danger, #a63d32) !important;
+}
+
+input.input-success {
+    border-color: var(--accent, #176b52) !important;
+}
+
 @media (max-width: 640px) {
     .onboarding-card {
         padding: 20px 16px;

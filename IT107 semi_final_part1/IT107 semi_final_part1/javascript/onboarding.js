@@ -19,6 +19,36 @@ for (const select of form.querySelectorAll('select[name^="question"]')) {
         .join('');
 }
 
+const newPasswordInput = document.getElementById('newPassword');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const confirmPasswordError = document.getElementById('confirmPasswordError');
+
+function passwordsMatch() {
+    const newPassword = newPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    if (!confirmPassword) {
+        confirmPasswordError.textContent = '';
+        confirmPasswordInput.classList.remove('input-error', 'input-success');
+        return false;
+    }
+
+    if (newPassword !== confirmPassword) {
+        confirmPasswordError.textContent = 'Passwords do not match.';
+        confirmPasswordInput.classList.add('input-error');
+        confirmPasswordInput.classList.remove('input-success');
+        return false;
+    }
+
+    confirmPasswordError.textContent = '';
+    confirmPasswordInput.classList.remove('input-error');
+    confirmPasswordInput.classList.add('input-success');
+    return true;
+}
+
+newPasswordInput.addEventListener('input', passwordsMatch);
+confirmPasswordInput.addEventListener('input', passwordsMatch);
+
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
     message.textContent = '';
@@ -27,6 +57,14 @@ form.addEventListener('submit', async (event) => {
     const selected = [...form.querySelectorAll('select[name^="question"]')].map((select) => select.value);
     if (new Set(selected).size !== 3) {
         message.textContent = 'Choose three different recovery questions.';
+        message.className = 'error';
+        return;
+    }
+
+    if (!passwordsMatch()) {
+        confirmPasswordError.textContent = 'Passwords do not match.';
+        confirmPasswordInput.classList.add('input-error');
+        message.textContent = 'Passwords must match and contain 8 to 20 characters.';
         message.className = 'error';
         return;
     }

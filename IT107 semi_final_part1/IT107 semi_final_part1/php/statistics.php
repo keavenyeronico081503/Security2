@@ -28,9 +28,11 @@ $deletionRequests = [];
 $result = $conn->query('SELECT status AS label, COUNT(*) AS total FROM admin_delete_requests GROUP BY status ORDER BY FIELD(status, "pending", "approved", "rejected")');
 while ($row = $result->fetch_assoc()) $deletionRequests[] = ['label' => ucfirst($row['label']), 'count' => (int)$row['total']];
 
+$period = normalize_period($_GET['period'] ?? null);
+[$bucketExpr, $sinceExpr] = period_bucket_sql($period);
 $registrations = [];
-$result = $conn->query('SELECT DATE(created_at) AS date, COUNT(*) AS total FROM users WHERE username <> "Keavenyadmin1" AND created_at >= CURRENT_DATE - INTERVAL 29 DAY GROUP BY DATE(created_at) ORDER BY date');
-while ($row = $result->fetch_assoc()) $registrations[] = ['date' => $row['date'], 'count' => (int)$row['total']];
+$result = $conn->query("SELECT $bucketExpr AS bucket, COUNT(*) AS total FROM users WHERE username <> \"Keavenyadmin1\" AND created_at >= $sinceExpr GROUP BY bucket ORDER BY bucket");
+while ($row = $result->fetch_assoc()) $registrations[] = ['date' => format_period_label($row['bucket'], $period), 'count' => (int)$row['total']];
 
 $pendingDeletions = 0;
 $result = $conn->query('SELECT COUNT(*) AS total FROM admin_delete_requests WHERE status = "pending"');
@@ -47,6 +49,7 @@ echo json_encode([
     'role_breakdown' => $roles,
     'deletion_requests' => $deletionRequests,
     'registrations' => $registrations,
+    'registrations_period' => $period,
     'action_required' => [
         'pending_users' => $summary['pending'],
         'pending_deletions' => $pendingDeletions,

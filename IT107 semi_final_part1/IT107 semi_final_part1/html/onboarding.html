@@ -38,9 +38,10 @@
             <fieldset>
                 <legend>Change password</legend>
                 <div class="field-grid">
-                    <label>New password<input type="password" name="new_password" minlength="8" maxlength="20" required></label>
-                    <label>Confirm password<input type="password" name="confirm_password" minlength="8" maxlength="20" required></label>
+                    <label>New password<input type="password" id="newPassword" name="new_password" minlength="8" maxlength="20" required></label>
+                    <label>Confirm password<input type="password" id="confirmPassword" name="confirm_password" minlength="8" maxlength="20" required></label>
                 </div>
+                <div id="confirmPasswordError" class="error-message"></div>
             </fieldset>
             <fieldset>
                 <legend>Recovery questions</legend>

@@ -234,13 +234,13 @@ body {
     left: 13px;
 }
 
-.input-container i:last-of-type {
+.input-container i:last-of-type:not(:first-of-type) {
     right: 12px;
     cursor: pointer;
     pointer-events: auto;
 }
 
-.input-container i:last-of-type:hover {
+.input-container i:last-of-type:not(:first-of-type):hover {
     color: var(--accent, #176b52);
 }
 

@@ -14,12 +14,15 @@ $requestSql = can('accounts.delete.approve', (int)$user['id'])
 $result = $conn->query($requestSql);
 $summary['my_requests'] = (int)$result->fetch_assoc()['total'];
 
+$period = normalize_period($_GET['period'] ?? null);
+[$bucketExpr, $sinceExpr] = period_bucket_sql($period);
+
 $registrations = [];
-$result = $conn->query('SELECT DATE(created_at) AS date, COUNT(*) AS total FROM users WHERE role <> "super_admin" AND created_at >= CURRENT_DATE - INTERVAL 29 DAY GROUP BY DATE(created_at) ORDER BY date');
-while ($row = $result->fetch_assoc()) $registrations[] = ['date' => $row['date'], 'count' => (int)$row['total']];
+$result = $conn->query("SELECT $bucketExpr AS bucket, COUNT(*) AS total FROM users WHERE role <> \"super_admin\" AND created_at >= $sinceExpr GROUP BY bucket ORDER BY bucket");
+while ($row = $result->fetch_assoc()) $registrations[] = ['date' => format_period_label($row['bucket'], $period), 'count' => (int)$row['total']];
 
 $actions = [];
-$actionStmt = $conn->prepare('SELECT action_code AS label, COUNT(*) AS total FROM audit_logs WHERE actor_user_id = ? AND created_at >= CURRENT_DATE - INTERVAL 29 DAY GROUP BY action_code ORDER BY total DESC, action_code LIMIT 8');
+$actionStmt = $conn->prepare("SELECT action_code AS label, COUNT(*) AS total FROM audit_logs WHERE actor_user_id = ? AND created_at >= $sinceExpr GROUP BY action_code ORDER BY total DESC, action_code LIMIT 8");
 $actionStmt->bind_param('i', $user['id']);
 $actionStmt->execute();
 $result = $actionStmt->get_result();
@@ -39,6 +42,7 @@ echo json_encode([
         ['label' => 'Blocked', 'count' => $summary['blocked']]
     ],
     'registrations' => $registrations,
+    'registrations_period' => $period,
     'actions' => $actions,
     'action_required' => ['pending_users' => $summary['pending'], 'pending_deletions' => $summary['my_requests'], 'failed_actions' => $failedActions]
 ]);

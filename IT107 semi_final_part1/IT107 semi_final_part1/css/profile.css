@@ -2,7 +2,7 @@
 
 :root { --ink: #17211b; --muted: #68736c; --paper: #f5f3ed; --panel: #fffdf8; --line: #d9ded7; --accent: #176b52; --danger: #a63d32; }
 * { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; padding: 36px max(24px, calc((100% - 1180px) / 2)); background: linear-gradient(135deg, #eef2e9, #f8f1e5); color: var(--ink); font: 15px 'DM Sans', sans-serif; }
+body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, #eef2e9, #f8f1e5); color: var(--ink); font: 15px 'DM Sans', sans-serif; }
 .profile-shell { width: min(920px, 100%); margin: 0 auto; }
 .back-link { color: var(--accent); font-weight: 700; text-decoration: none; }
 .profile-header { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin: 22px 0 28px; }

@@ -221,7 +221,26 @@ function validateDashboardCreateForm(form) {
 }
 
 function chartConfig(type, labels, values, colors) {
-  return { type, data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#fffdf8', borderWidth: 2, borderRadius: type === 'bar' ? 4 : 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: type === 'doughnut' ? 'bottom' : 'top', labels: { color: '#17211b', usePointStyle: true, padding: 16 } } }, scales: type === 'bar' || type === 'line' ? { x: { ticks: { color: '#68736c' }, grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0, color: '#68736c' }, grid: { color: '#d9ded7' } } } : undefined } };
+  const dataset = { data: values, borderWidth: 2 };
+  if (type === 'line') {
+    // A line's stroke comes from borderColor, not backgroundColor — using the same
+    // near-white tone this helper uses for bar/doughnut borders would make the line
+    // invisible against the panel background, so line charts get their own treatment.
+    const perPoint = Array.isArray(colors);
+    dataset.borderColor = perPoint ? '#176b52' : colors;
+    dataset.backgroundColor = 'rgba(23, 107, 82, 0.12)';
+    dataset.pointBackgroundColor = perPoint ? colors : (colors || '#176b52');
+    dataset.pointBorderColor = perPoint ? colors : (colors || '#176b52');
+    dataset.pointRadius = perPoint ? 4 : 3;
+    dataset.pointHoverRadius = 6;
+    dataset.fill = true;
+    dataset.tension = 0.3;
+  } else {
+    dataset.backgroundColor = colors;
+    dataset.borderColor = '#fffdf8';
+    dataset.borderRadius = type === 'bar' ? 4 : 0;
+  }
+  return { type, data: { labels, datasets: [dataset] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: type === 'doughnut' ? 'bottom' : 'top', labels: { color: '#17211b', usePointStyle: true, padding: 16 } } }, scales: type === 'bar' || type === 'line' ? { x: { ticks: { color: '#68736c' }, grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0, color: '#68736c' }, grid: { color: '#d9ded7' } } } : undefined } };
 }
 
 function drawChart(id, config) {
@@ -231,9 +250,42 @@ function drawChart(id, config) {
   charts[id] = new Chart(canvas, config);
 }
 
+// Logged before window.print() runs, not after — so the attempt is recorded even if the
+// print dialog gets cancelled or the print itself never completes.
+async function logReportPrint(report, extra = {}) {
+  try {
+    await fetch('../php/report_print.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ report, ...extra })
+    });
+  } catch (error) {
+    // Printing should never be blocked by a logging failure.
+  }
+}
+
+const periodLabels = { days: 'last 30 days', weeks: 'last 12 weeks', months: 'last 12 months' };
+
 function renderStatistics(data) {
   const summary = data.summary;
-  statCards.innerHTML = [['total', 'Total accounts'], ['approved', 'Approved'], ['pending', 'Pending registrations'], ['blocked', 'Blocked'], ['admins', 'Administrators'], ['data_administrators', 'Data administrators'], ['super_admins', 'Super administrators']].map(([key, label]) => `<article class="stat-card"><strong>${summary[key]}</strong><span>${label}</span></article>`).join('');
+  const printMeta = document.getElementById('overviewPrintMeta');
+  if (printMeta) {
+    const preparedBy = document.getElementById('sidebarBrandName')?.textContent || '';
+    const preparedByRole = document.getElementById('sidebarBrandRole')?.textContent || '';
+    printMeta.innerHTML = `
+      <div><strong>Report period:</strong> Registrations shown for the ${periodLabels[data.registrations_period] || 'selected period'}</div>
+      <div><strong>Prepared by:</strong> ${preparedBy}${preparedByRole ? ` (${preparedByRole})` : ''}</div>
+      <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+    `;
+  }
+  statCards.innerHTML = [
+    ['Total accounts', summary.total],
+    ['Approved', summary.approved],
+    ['Pending registrations', summary.pending],
+    ['Blocked', summary.blocked],
+    ['Administrators', summary.admins + summary.data_administrators],
+    ['Super administrators', summary.super_admins]
+  ].map(([label, value]) => `<article class="stat-card"><strong>${value}</strong><span>${label}</span></article>`).join('');
   const required = data.action_required;
   actionRequired.innerHTML = `<h3>Action required</h3><div class="required-items"><a href="#accounts" data-view="accounts"><strong>${required.pending_users}</strong><span>Pending registrations</span></a><a href="#requests-panel" data-view="requests"><strong>${required.pending_deletions}</strong><span>Deletion requests</span></a><a href="#audit" data-view="audit"><strong>${required.failed_actions}</strong><span>Failed actions, last 30 days</span></a></div>`;
   actionRequired.querySelectorAll('[data-view]').forEach(link => link.addEventListener('click', () => window.dispatchEvent(new HashChangeEvent('hashchange'))));
@@ -245,7 +297,8 @@ function renderStatistics(data) {
 
 async function loadStatistics() {
   try {
-    const response = await fetch('../php/statistics.php');
+    const period = document.getElementById('registrationsPeriod')?.value || 'days';
+    const response = await fetch(`../php/statistics.php?period=${encodeURIComponent(period)}`);
     const data = await response.json();
     if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Statistics unavailable.');
     renderStatistics(data);
@@ -253,6 +306,8 @@ async function loadStatistics() {
     actionRequired.textContent = error.message;
   }
 }
+
+document.getElementById('registrationsPeriod')?.addEventListener('change', loadStatistics);
 
 async function request(action, options = {}) {
   const response = await fetch(`${api}?action=${action}`, options);
@@ -276,12 +331,14 @@ function renderUsers(users) {
   accounts.innerHTML = users.map(user => {
     const role = user.role.replace('_', ' ');
     const status = user.account_status;
+    const loginReportButton = `<button data-action="login-report" data-employee="${user.id_number}">Login report</button>`;
     const controls = user.role === 'super_admin'
-      ? (status === 'blocked' ? `<button data-action="reactivate" data-id="${user.id}">Reactivate</button>` : '<span>Protected</span>')
+      ? (status === 'blocked' ? `<button data-action="reactivate" data-id="${user.id}">Reactivate</button> ${loginReportButton}` : `<span>Protected</span> ${loginReportButton}`)
       : `
       ${status === 'pending' ? `<button data-action="approve" data-id="${user.id}">Approve</button>` : ''}
       <button data-action="${status === 'blocked' ? 'unblock' : 'block'}" data-id="${user.id}">${status === 'blocked' ? 'Unblock' : 'Block'}</button>
       <button data-action="update" data-id="${user.id}" data-first="${user.first_name}" data-last="${user.last_name}" data-employee="${user.id_number}" data-email="${user.email}" data-username="${user.username}" data-role="${user.role}">Edit</button>
+      ${loginReportButton}
       <button class="danger" data-action="delete" data-id="${user.id}">Delete</button>`;
     const presence = status === 'approved' ? (user.is_online ? 'Online' : 'Offline') : '—';
     return `<tr><td>${user.first_name} ${user.last_name}</td><td>${user.id_number}</td><td>${user.username}</td><td class="role">${role}</td><td class="status status-${status}">${status}</td><td class="status status-${presence.toLowerCase()}">${presence}</td><td class="actions">${controls}</td></tr>`;
@@ -302,6 +359,125 @@ async function loadUsers() {
   try { renderUsers((await request(`list&employee_id=${encodeURIComponent(employeeId)}&role=${encodeURIComponent(role)}`)).users); }
   catch (error) { showMessage(error.message, true); }
 }
+
+function formatDateTime(value) {
+  if (!value) return '—';
+  const date = new Date(value.replace(' ', 'T'));
+  return { date: date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }), time: date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) };
+}
+
+function renderLoginReport(data) {
+  const results = document.getElementById('loginReportResults');
+  results.hidden = false;
+  document.getElementById('loginReportName').textContent = `${data.account.name} (${data.account.employee_id})`;
+  document.getElementById('loginReportMeta').textContent = `${data.account.username} · ${data.account.role.replaceAll('_', ' ')} · ${data.account.account_status}`;
+  const printSubtitle = document.getElementById('loginReportPrintSubtitle');
+  if (printSubtitle) printSubtitle.textContent = `Account: ${data.account.name} (${data.account.employee_id})`;
+
+  const alertBox = document.getElementById('loginReportAnomalyAlert');
+  if (alertBox) {
+    const anomalies = data.timeline.filter(entry => entry.is_anomaly);
+    if (!data.summary.has_enough_data) {
+      alertBox.hidden = true;
+    } else if (anomalies.length > 0) {
+      const shown = anomalies.slice(0, 5).map(entry => {
+        const when = formatDateTime(entry.time);
+        return `<li>${when.date} at ${when.time}</li>`;
+      }).join('');
+      const more = anomalies.length > 5 ? `<li>+ ${anomalies.length - 5} more</li>` : '';
+      alertBox.className = 'anomaly-alert';
+      alertBox.innerHTML = `<i class="fas fa-triangle-exclamation" aria-hidden="true"></i><div><strong>${anomalies.length} anomalous login${anomalies.length === 1 ? '' : 's'} flagged in the selected period</strong><p>${data.account.name} signed in outside their usual hours. Review these before dismissing them as normal.</p><ul>${shown}${more}</ul></div>`;
+      alertBox.hidden = false;
+    } else {
+      alertBox.className = 'anomaly-alert is-clear';
+      alertBox.innerHTML = `<i class="fas fa-circle-check" aria-hidden="true"></i><div><strong>No anomalies detected</strong><p>Every login in the selected period falls within this account's usual hours.</p></div>`;
+      alertBox.hidden = false;
+    }
+  }
+
+  const stats = document.getElementById('loginReportStats');
+  const first = formatDateTime(data.summary.first_seen);
+  const last = formatDateTime(data.summary.last_seen);
+  stats.innerHTML = [
+    ['total_logins', 'Successful logins', data.summary.total_logins],
+    ['total_failed', 'Failed attempts', data.summary.total_failed],
+    ['first_seen', 'First seen', data.summary.first_seen ? `${first.date}` : '—'],
+    ['last_seen', 'Most recent login', data.summary.last_seen ? `${last.date} ${last.time}` : '—']
+  ].map(([key, label, value]) => `<article class="stat-card"><strong>${value}</strong><span>${label}</span></article>`).join('');
+
+  const usualHoursText = document.getElementById('loginReportUsualHours');
+  if (!data.summary.has_enough_data) {
+    usualHoursText.textContent = 'Not enough login history yet to establish a usual pattern (needs at least 5 successful logins).';
+  } else if (data.usual_hours_text.length) {
+    usualHoursText.textContent = `Usual login hours: ${data.usual_hours_text.join(', ')}. Points in a different color mark hours this account rarely signs in — worth a second look.`;
+  } else {
+    usualHoursText.textContent = 'No clearly usual hours yet — logins are spread thin across the day.';
+  }
+  const baselineNote = document.getElementById('loginReportBaselineNote');
+  baselineNote.textContent = data.summary.has_enough_data
+    ? `Chart and table below are scoped to the ${periodLabels[data.period] || 'selected period'}; the usual-hours baseline above is always based on this account's full history (${data.summary.baseline_total_logins} logins on record).`
+    : '';
+  const printMeta = document.getElementById('loginReportPrintMeta');
+  if (printMeta) {
+    const preparedBy = document.getElementById('sidebarBrandName')?.textContent || '';
+    const preparedByRole = document.getElementById('sidebarBrandRole')?.textContent || '';
+    printMeta.innerHTML = `
+      <div><strong>Role:</strong> ${data.account.role.replaceAll('_', ' ')} · <strong>Status:</strong> ${data.account.account_status}</div>
+      <div><strong>Report period:</strong> ${periodLabels[data.period] || 'selected period'}</div>
+      <div><strong>Prepared by:</strong> ${preparedBy}${preparedByRole ? ` (${preparedByRole})` : ''}</div>
+      <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+    `;
+  }
+
+  const labels = data.hourly_histogram.map(bucket => bucket.label);
+  const values = data.hourly_histogram.map(bucket => bucket.count);
+  const colors = data.hourly_histogram.map(bucket => bucket.is_anomaly ? '#a63d32' : '#176b52');
+  drawChart('loginHourChart', chartConfig('line', labels, values, colors));
+
+  const timelineBody = document.getElementById('loginReportTimeline');
+  timelineBody.innerHTML = data.timeline.map(entry => {
+    const when = formatDateTime(entry.time);
+    const logout = entry.logout_time ? formatDateTime(entry.logout_time).time : (entry.type === 'login' ? 'Still active / no logout recorded' : '—');
+    const type = entry.type === 'login'
+      ? (entry.is_anomaly ? '<span class="status status-blocked">Login (unusual time)</span>' : '<span class="status status-approved">Login</span>')
+      : '<span class="status status-blocked">Failed attempt</span>';
+    return `<tr><td>${when.date}</td><td>${when.time}</td><td>${type}</td><td>${logout}</td></tr>`;
+  }).join('') || '<tr><td colspan="4">No login activity recorded for this account yet.</td></tr>';
+}
+
+async function loadLoginReport(employeeIdOverride) {
+  const message = document.getElementById('loginReportMessage');
+  const input = document.getElementById('loginReportEmployeeId');
+  const employeeId = (employeeIdOverride ?? input.value).trim();
+  message.textContent = '';
+  document.getElementById('loginReportResults').hidden = true;
+  if (!employeeId) return;
+  const period = document.getElementById('loginReportPeriod')?.value || 'days';
+  try {
+    const response = await fetch(`../php/login_report.php?employee_id=${encodeURIComponent(employeeId)}&period=${encodeURIComponent(period)}`);
+    const data = await response.json();
+    if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Unable to load login report.');
+    renderLoginReport(data);
+  } catch (error) {
+    message.textContent = error.message;
+    message.style.color = '#a63d32';
+  }
+}
+
+document.getElementById('loginReportForm')?.addEventListener('submit', event => {
+  event.preventDefault();
+  loadLoginReport();
+});
+document.getElementById('loginReportPeriod')?.addEventListener('change', () => {
+  if (document.getElementById('loginReportEmployeeId').value.trim()) loadLoginReport();
+});
+document.getElementById('printLoginReport')?.addEventListener('click', async () => {
+  await logReportPrint('login_report', {
+    employee_id: document.getElementById('loginReportEmployeeId').value.trim(),
+    period: document.getElementById('loginReportPeriod')?.value || 'days'
+  });
+  window.print();
+});
 
 async function openPrivilegeDialog(user) {
   const catalog = (await request('permission-catalog')).permissions;
@@ -494,6 +670,13 @@ async function handleAccountAction(event) {
     try { await openPrivilegeDialog(JSON.parse(decodeURIComponent(button.dataset.user))); } catch (error) { showMessage(error.message, true); }
     return;
   }
+  if (action === 'login-report') {
+    location.hash = '#login-report';
+    const input = document.getElementById('loginReportEmployeeId');
+    if (input) input.value = button.dataset.employee;
+    loadLoginReport(button.dataset.employee);
+    return;
+  }
   if (action === 'update') {
     openEditDialog({
       id: button.dataset.id,
@@ -561,6 +744,10 @@ requests.addEventListener('click', async event => {
 document.getElementById('filterForm').addEventListener('submit', event => { event.preventDefault(); loadUsers(); });
 document.getElementById('clearFilter').addEventListener('click', () => { document.getElementById('employeeId').value = ''; document.getElementById('roleFilter').value = ''; loadUsers(); });
 document.getElementById('refreshStatistics').addEventListener('click', loadStatistics);
+document.getElementById('printOverview')?.addEventListener('click', async () => {
+  await logReportPrint('overview', { period: document.getElementById('registrationsPeriod')?.value || 'days' });
+  window.print();
+});
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();
   const form = event.target;

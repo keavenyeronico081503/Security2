@@ -115,6 +115,15 @@ function format_action_label(array $row): string
         $module = (string)($details['module'] ?? 'module');
         return 'Opened ' . ($moduleNames[$module] ?? ucfirst(str_replace('-', ' ', $module)));
     }
+    if ($row['action_code'] === 'report.print') {
+        $reportNames = ['overview' => 'Super Admin overview', 'admin_overview' => 'Administrator overview', 'login_report' => 'account login'];
+        $reportType = (string)($details['report'] ?? 'report');
+        $label = 'Printed the ' . ($reportNames[$reportType] ?? $reportType) . ' report';
+        if (!empty($details['employee_id'])) {
+            $label .= ' for ' . $details['employee_id'];
+        }
+        return $label;
+    }
     $labels = [
         'auth.login.success' => 'Logged in',
         'auth.login.failed' => 'Failed login attempt',

@@ -1,4 +1,39 @@
 <?php
+// Shared by every "days / weeks / months" trend chart (Overview registrations, the
+// Login report) so they all bucket and label time the same way.
+function normalize_period(?string $period): string
+{
+    return in_array($period, ['days', 'weeks', 'months'], true) ? $period : 'days';
+}
+
+function period_bucket_sql(string $period): array
+{
+    return match ($period) {
+        'weeks' => ['DATE_SUB(DATE(created_at), INTERVAL WEEKDAY(created_at) DAY)', 'CURRENT_DATE - INTERVAL 83 DAY'],
+        'months' => ['DATE_FORMAT(created_at, "%Y-%m-01")', 'CURRENT_DATE - INTERVAL 11 MONTH'],
+        default => ['DATE(created_at)', 'CURRENT_DATE - INTERVAL 29 DAY'],
+    };
+}
+
+function format_period_label(string $bucketDate, string $period): string
+{
+    $timestamp = strtotime($bucketDate);
+    return match ($period) {
+        'weeks' => 'Wk of ' . date('M j', $timestamp),
+        'months' => date('M Y', $timestamp),
+        default => date('M j', $timestamp),
+    };
+}
+
+function period_lookback_days(string $period): int
+{
+    return match ($period) {
+        'weeks' => 84,
+        'months' => 365,
+        default => 30,
+    };
+}
+
 function account_snapshot(int $userId): ?array
 {
     global $conn;

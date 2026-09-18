@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'create-account': ['#create-account'],
     requests: ['#requests-panel'],
     audit: ['#audit'],
+    'login-report': ['#login-report'],
     privileges: ['#privileges'],
     dashboard: ['.app-user main > .dashboard-hero', '.app-user main > .dashboard-grid'],
     statistics: ['#statistics'],

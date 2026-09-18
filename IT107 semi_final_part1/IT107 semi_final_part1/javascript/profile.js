@@ -36,7 +36,7 @@ async function loadProfile() {
   document.getElementById('profileRole').textContent = (profile.role || '').replaceAll('_', ' ');
 }
 
-const moduleNames = {
+const privilegeModuleNames = {
   dashboard: 'Dashboard',
   profile: 'Profile',
   password: 'Password',
@@ -69,7 +69,7 @@ async function loadPrivileges() {
       const section = document.createElement('section');
       section.className = 'privilege-module';
       const heading = document.createElement('label');
-      heading.textContent = `${moduleNames[module] || module} (${grouped[module].length})`;
+      heading.textContent = `${privilegeModuleNames[module] || module} (${grouped[module].length})`;
       section.appendChild(heading);
       const children = document.createElement('div');
       children.className = 'privilege-children';

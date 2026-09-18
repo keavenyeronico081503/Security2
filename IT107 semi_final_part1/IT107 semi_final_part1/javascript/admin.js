@@ -187,12 +187,38 @@ function drawAdminChart(id, type, labels, values, colors) {
   charts[id] = new Chart(canvas, {type, data: {labels, datasets: [{data: values, backgroundColor: colors, borderColor: '#fffdf8', borderWidth: 2, borderRadius: type === 'bar' ? 4 : 0}]}, options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {position: type === 'doughnut' ? 'bottom' : 'top', labels: {color: '#17211b', usePointStyle: true, padding: 16}}}, scales: type === 'bar' || type === 'line' ? {x: {ticks: {color: '#68736c'}, grid: {display: false}}, y: {beginAtZero: true, ticks: {precision: 0, color: '#68736c'}, grid: {color: '#d9ded7'}}} : undefined}});
 }
 
+// Logged before window.print() runs, not after — so the attempt is recorded even if the
+// print dialog gets cancelled or the print itself never completes.
+async function logReportPrint(report, extra = {}) {
+  try {
+    await fetch('../php/report_print.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ report, ...extra })
+    });
+  } catch (error) {
+    // Printing should never be blocked by a logging failure.
+  }
+}
+
 async function loadStatistics() {
   try {
-    const response = await fetch('../php/admin-statistics.php');
+    const period = document.getElementById('adminStatsPeriod')?.value || 'days';
+    const response = await fetch(`../php/admin-statistics.php?period=${encodeURIComponent(period)}`);
     const data = await response.json();
     if (!response.ok || data.status !== 'success') throw new Error(data.message || 'Statistics unavailable.');
     const summary = data.summary;
+    const periodLabels = {days: 'last 30 days', weeks: 'last 12 weeks', months: 'last 12 months'};
+    const printMeta = document.getElementById('adminOverviewPrintMeta');
+    if (printMeta) {
+      const preparedBy = document.getElementById('sidebarBrandName')?.textContent || '';
+      const preparedByRole = document.getElementById('sidebarBrandRole')?.textContent || '';
+      printMeta.innerHTML = `
+        <div><strong>Report period:</strong> Charts shown for the ${periodLabels[data.registrations_period] || 'selected period'}</div>
+        <div><strong>Prepared by:</strong> ${preparedBy}${preparedByRole ? ` (${preparedByRole})` : ''}</div>
+        <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+      `;
+    }
     statCards.innerHTML = [['total', 'Managed accounts'], ['approved', 'Approved'], ['pending', 'Pending'], ['blocked', 'Blocked'], ['my_requests', 'Pending deletion requests']].map(([key, label]) => `<article class="stat-card"><strong>${summary[key]}</strong><span>${label}</span></article>`).join('');
     const required = data.action_required;
     actionRequired.innerHTML = `<h3>Action required</h3><div class="required-items"><a href="#accounts"><strong>${required.pending_users}</strong><span>Pending registrations</span></a><a href="#accounts"><strong>${required.pending_deletions}</strong><span>Pending deletion requests</span></a><a href="#accounts"><strong>${required.failed_actions}</strong><span>Failed actions, last 30 days</span></a></div>`;
@@ -386,6 +412,11 @@ document.getElementById('filter').addEventListener('submit', event => { event.pr
 document.getElementById('clear').addEventListener('click', () => { document.getElementById('employeeId').value = ''; load(); });
 document.getElementById('refreshBlockRequests')?.addEventListener('click', loadBlockRequests);
 document.getElementById('refreshAdminStatistics').addEventListener('click', loadStatistics);
+document.getElementById('adminStatsPeriod')?.addEventListener('change', loadStatistics);
+document.getElementById('printAdminOverview')?.addEventListener('click', async () => {
+  await logReportPrint('admin_overview', { period: document.getElementById('adminStatsPeriod')?.value || 'days' });
+  window.print();
+});
 document.getElementById('createForm').addEventListener('submit', async event => {
   event.preventDefault();
   const form = event.target;
