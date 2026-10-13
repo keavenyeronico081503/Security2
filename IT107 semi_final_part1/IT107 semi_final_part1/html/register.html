@@ -6,8 +6,9 @@
     <title>Register</title>
     <link rel="stylesheet" href="../css/register.css">
     <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/wizard.css">
 </head>
-<body>
+<body class="wizard-page">
     <header>
      <div class="container">
         <div class="brand">
@@ -22,135 +23,117 @@
     </div>
      </header>
 
-     <div class="register">
-<a class="google-button google-signup" href="../php/google_login.php"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Sign up with Google</a>
-<div class="or-divider"><span>or fill in the form</span></div>
-<form action="../php/register.php" name="myform" id="registerForm" method="post" onsubmit="return validateForm()" novalidate>
-        <h2>Personal Information</h2>
-        <div class="form-grid">
-            <!-- ID Number Section - First Field -->
-            <div class="form-group">
-                <label for="ID">ID Number</label>
-                <input type="text" name="ID" id="idNumber" readonly>
-            </div>
-            <!-- Name Section -->
-            <div class="form-group">
-                <label for="FirstName">First Name <span class="required">*</span></label>
-                <input type="text" name="fname" id="fname" 
-                minlength="2" maxlength="25" required oninput="validateFname()">
-                <div id="fnameError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="MiddleName">Middle Name <span class="optional">optional</span></label>
-                <input type="text" name="MiddleName" id="middleName" 
-                minlength="2" maxlength="25" oninput="validateMiddleName()">
-                <div id="middleNameError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="LastName">Last Name <span class="required">*</span></label>
-                <input type="text" name="LastName" id="LastName" 
-                minlength="2" maxlength="25" required oninput="validateLastName()">
-                    <div id="lastNameError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="suffix">Suffix <span class="optional">optional</span></label>
-                <input type="text" name="suffix" id="suffix" 
-                minlength="2" maxlength="10" oninput="validateSuffix()">
-                <div id="suffixError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="birthday">Birthday <span class="required">*</span></label>
-                <input type="date" name="birthday" id="birthday" onchange="calculateAge()" required>
-                <div id="birthdayError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="Age">Age <span class="required">*</span></label>
-                <input type="number" name="Age" id="Age" min="0" required readonly>
-                <div id="ageError" class="error-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="gender">Sex <span class="required">*</span></label>
-                <select name="gender" id="gender" required>
-                    <option value="">Sex</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="email">Email<span class="required">*</span></label>
-                <input id="email" name="email" type="text" oninput="validateEmail(this.value, this, 'input')" onblur="validateEmail(this.value, this, 'blur')">
-                <div class="error-message" id="email-error"></div>
-            </div>
-        </div>
+    <main class="wizard">
+      <h1>Create your account</h1>
+      <p class="wizard-intro">Four short steps. Your account is reviewed by an administrator before you can log in.</p>
+      <a class="google-button" href="../php/google_login.php"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Sign up with Google</a>
+      <div class="or-divider"><span>or fill in the steps</span></div>
 
-        <!-- Account Information -->
-        <h3>Account Information</h3>
-        <div class="account-grid">
-            <div class="form-group">
-                <label for="Username">Username <span class="required">*</span></label>
-                <input type="text" name="Username" id="Username"
-                minlength="6" maxlength="25" required>
-                <div id="usernameError" class="error-message"></div>
-                <div id="UsernameHint" class="hint-message"></div>
-            </div>
-            <div class="form-group">
-                <label for="Password">Password <span class="required">*</span></label>
-                <div class="input-container">
-                    <input type="password" name="password" id="Password" required
-                    minlength="8" maxlength="20" oninput="validatePassword()">
-                    <i class="fa-solid fa-eye" id="toggleRegPassword" style="cursor: pointer;"></i>
+      <form id="registerWizard" novalidate>
+        <ol class="stepper">
+          <li data-step="1"><button type="button"><span class="step-dot"><span class="step-num">1</span></span>Account</button></li>
+          <li data-step="2"><button type="button"><span class="step-dot"><span class="step-num">2</span></span>Personal</button></li>
+          <li data-step="3"><button type="button"><span class="step-dot"><span class="step-num">3</span></span>Address</button></li>
+          <li data-step="4"><button type="button"><span class="step-dot"><span class="step-num">4</span></span>Security</button></li>
+        </ol>
+        <p class="stepper-compact"></p>
+        <div class="wizard-notice" role="alert" hidden></div>
+
+        <section class="wizard-step" data-step="1" data-title="Account">
+          <h2>Account</h2>
+          <p class="step-hint">Verify your school email first, then choose your login details.</p>
+          <div class="field-grid">
+            <div class="field wide">
+              <label for="email">School email</label>
+              <div class="input-row">
+                <input id="email" name="email" type="email" autocomplete="email" placeholder="yourname@csucc.edu.ph" data-review="School email">
+                <button type="button" class="wz-btn secondary small" id="sendCode">Send code</button>
+              </div>
+              <span class="verified-badge" id="emailVerified" hidden>✔ Email verified</span>
+              <div class="code-panel" id="codePanel" hidden>
+                <p>Enter the 6-digit code we emailed you. It expires in 10 minutes.</p>
+                <div class="field">
+                  <div class="input-row">
+                    <input id="emailCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" data-no-persist>
+                    <button type="button" class="wz-btn small" id="verifyCode">Verify</button>
+                  </div>
                 </div>
-                <div id="passwordError" class="error-message"></div>
-                <div id="passwordStrength" class="strength-message"></div>
+              </div>
             </div>
-            <div class="form-group">
-                <label for="RePassword">Confirm Password <span class="required">*</span></label>
-                <div class="input-container">
-                    <input type="password" name="repassword" id="RePassword" required oninput="validateConfirmPassword()">
-                    <i class="fa-solid fa-eye" id="toggleRegRePassword" style="cursor: pointer;"></i>
-                </div>
-                <div id="confirmPasswordError" class="error-message"></div>
+            <div class="field wide">
+              <label for="username">Username</label>
+              <input id="username" name="username" autocomplete="username" maxlength="25" placeholder="e.g. JuanDelaCruz" data-review="Username">
             </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="pw-wrap">
+                <input id="password" name="password" type="password" autocomplete="new-password" maxlength="20" data-review="Password">
+                <button type="button" class="pw-toggle" aria-label="Show password">👁</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="confirmPassword">Confirm password</label>
+              <div class="pw-wrap">
+                <input id="confirmPassword" name="confirm_password" type="password" autocomplete="new-password" maxlength="20">
+                <button type="button" class="pw-toggle" aria-label="Show password">👁</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="2" data-title="Personal" hidden>
+          <h2>Personal information</h2>
+          <p class="step-hint">As it appears on your school records.</p>
+          <div class="field-grid">
+            <div class="field"><label for="firstName">First name</label><input id="firstName" name="first_name" autocomplete="given-name" maxlength="25" data-review="First name"></div>
+            <div class="field"><label for="middleName">Middle name <span class="optional">(optional)</span></label><input id="middleName" name="middle_name" autocomplete="additional-name" maxlength="25" data-review="Middle name"></div>
+            <div class="field"><label for="lastName">Last name</label><input id="lastName" name="last_name" autocomplete="family-name" maxlength="25" data-review="Last name"></div>
+            <div class="field"><label for="suffix">Suffix <span class="optional">(optional)</span></label><input id="suffix" name="suffix" maxlength="10" placeholder="Jr., Sr., III" data-review="Suffix"></div>
+            <div class="field"><label for="birthday">Birthday</label><input id="birthday" name="birthday" type="date" data-review="Birthday"></div>
+            <div class="field"><label for="age">Age</label><input id="age" type="text" readonly placeholder="Calculated from birthday"></div>
+            <div class="field"><label for="gender">Sex</label><select id="gender" name="gender" data-review="Sex"><option value="">Select sex</option><option>Male</option><option>Female</option></select></div>
+            <div class="field"><label for="idPreview">ID number</label><input id="idPreview" type="text" readonly placeholder="Assigned when you submit"></div>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="3" data-title="Address" hidden>
+          <h2>Address</h2>
+          <p class="step-hint">Pick from the lists. Each list only shows places inside the one above it.</p>
+          <div class="field-grid" id="addressPicker">
+            <div class="field"><label for="region">Region</label><select id="region" name="region_code" data-level="region" data-review="Region"></select></div>
+            <div class="field"><label for="province">Province</label><select id="province" name="province_code" data-level="province" data-review="Province"></select></div>
+            <div class="field"><label for="city">City / Municipality</label><select id="city" name="city_code" data-level="city" data-review="City / Municipality"></select></div>
+            <div class="field"><label for="barangay">Barangay</label><select id="barangay" name="barangay_code" data-level="barangay" data-review="Barangay"></select></div>
+            <div class="field"><label for="street">Purok / Street / House no.</label><input id="street" name="street" list="purokList" maxlength="100" placeholder="e.g. Purok 3, Rizal St." data-review="Purok / Street"></div>
+            <div class="field"><label for="zipCode">ZIP code</label><input id="zipCode" name="zip_code" inputmode="numeric" maxlength="4" placeholder="e.g. 8605" data-review="ZIP code"></div>
+          </div>
+          <datalist id="purokList"></datalist>
+        </section>
+
+        <section class="wizard-step" data-step="4" data-title="Security" hidden>
+          <h2>Security questions</h2>
+          <p class="step-hint">Used to recover your account if you forget your password. Pick three different questions.</p>
+          <div class="question-row field"><select name="question1" aria-label="Question 1"></select><input name="answer1" type="password" autocomplete="off" placeholder="Answer 1" data-no-persist></div>
+          <div class="question-row field"><select name="question2" aria-label="Question 2"></select><input name="answer2" type="password" autocomplete="off" placeholder="Answer 2" data-no-persist></div>
+          <div class="question-row field"><select name="question3" aria-label="Question 3"></select><input name="answer3" type="password" autocomplete="off" placeholder="Answer 3" data-no-persist></div>
+          <div class="review" data-review-target></div>
+        </section>
+
+        <div class="wizard-nav">
+          <button type="button" class="wz-btn secondary" data-wizard="back">Back</button>
+          <span class="spacer"></span>
+          <button type="button" class="wz-btn" data-wizard="next">Next</button>
+          <button type="submit" class="wz-btn" data-wizard="submit" hidden>Submit registration</button>
         </div>
+      </form>
+      <p class="wizard-intro" style="margin:18px 0 0;text-align:center">Already have an account? <a href="login.html">Log in</a></p>
+    </main>
 
-        <!-- Address Section -->
-        <h3>Address Information</h3>
-        <div class="address-grid">
-            <div class="form-group"><label for="Street">Street/Purok <span class="required">*</span></label>
-                <input type="text" name="Street" id="Street" minlength="2" maxlength="25" required oninput="validateStreet()">
-                 <div id="streetError" class="error-message"></div>
-            </div>
-            <div class="form-group"><label for="Barangay">Barangay <span class="required">*</span></label>
-                <input type="text" name="barangay" id="Barangay" minlength="2" maxlength="25" required oninput="validateBarangay()">
-                <div id="barangayError" class="error-message"></div>
-            </div>
-            <div class="form-group"><label for="City">City <span class="required">*</span></label>
-                <input type="text" name="City" id="City" minlength="2" maxlength="25" required oninput="validateCity()">
-                <div id="cityError" class="error-message"></div>
-            </div>
-            <div class="form-group"><label for="Province">Province <span class="required">*</span></label>
-                <input type="text" name="Province" id="Province" minlength="2" maxlength="25" required oninput="validateProvince()">
-                <div id="provinceError" class="error-message"></div>
-            </div>
-            <div class="form-group"><label for="Country">Country <span class="required">*</span></label>
-                <input type="text" name="Country" id="Country" minlength="2" maxlength="25" required oninput="validateCountry()">
-                <div id="countryError" class="error-message"></div>
-            </div>
-            <div class="form-group"><label for="ZipCode">Zip Code <span class="required">*</span></label>
-                <input type="number" name="ZipCode" id="ZipCode" min="1000" max="9999999999" minlength="4" maxlength="10" required oninput="validateZipCode()"></div>
-        </div>
-
-        <!-- Submit Button -->
-      <button type="submit" name="submit">Next</button>
-
-
-    </form>
-</div>
-<footer>&copy;Caraga State University 2025</footer>
-<script src="../javascript/register.js"></script>
-<script src="../javascript/generate_id.js"></script>
-<script src="../javascript/check_user.js"></script>
-<script src="../javascript/email-validation.js"></script>
-<script src="../javascript/username_format.js"></script>
+    <footer>&copy;Caraga State University 2025</footer>
+    <script src="../javascript/wizard.js"></script>
+    <script src="../javascript/password-meter.js"></script>
+    <script src="../javascript/address-picker.js"></script>
+    <script src="../javascript/email-code.js"></script>
+    <script src="../javascript/register-wizard.js"></script>
 </body>
 </html>

@@ -1,8 +1,8 @@
 // Send visitors who aren't logged in to the login page, and logged-in visitors
 // on another role's page to their own home page (same mapping as php/login.php).
 (async () => {
-  const roleHomes = { super_admin: 'super-admin.html', admin: 'admin.html', data_administrator: 'admin.html' };
-  const pageRoles = { 'app-superadmin': ['super_admin'], 'app-admin': ['admin', 'data_administrator'], 'app-user': ['user'] };
+  const roleHomes = { super_admin: 'super-admin.html', admin: 'admin.html' };
+  const pageRoles = { 'app-superadmin': ['super_admin'], 'app-admin': ['admin'], 'app-user': ['user'] };
   const pageClass = Object.keys(pageRoles).find(name => document.body.classList.contains(name));
   if (!pageClass) return;
   try {
@@ -60,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const roleLabels = {
     user: 'User',
     admin: 'Administrator',
-    data_administrator: 'Data Administrator',
     super_admin: 'Super Administrator'
   };
 
@@ -84,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const moduleSelectors = {
     overview: ['#overview'],
-    accounts: ['.app-superadmin main > .toolbar', '.app-superadmin main > #message', '.app-superadmin main > #accounts-panel', '.app-admin main > .toolbar', '.app-admin main > #message', '.app-admin main > .table-wrap'],
+    accounts: ['#pending-registrations', '.app-superadmin main > .toolbar', '.app-superadmin main > #message', '.app-superadmin main > #accounts-panel', '.app-admin main > .toolbar', '.app-admin main > #message', '.app-admin main > .table-wrap'],
     'create-account': ['#create-account'],
     requests: ['#requests-panel'],
     audit: ['#audit'],

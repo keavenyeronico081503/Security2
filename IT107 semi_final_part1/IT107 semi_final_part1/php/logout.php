@@ -3,6 +3,7 @@
 session_start();
 include 'db.php';
 require_once 'audit_service.php';
+require_once 'account_mail.php';
 
 if (!empty($_SESSION['user_id'])) {
     $loggingOutUserId = (int)$_SESSION['user_id'];
@@ -25,6 +26,7 @@ if (!empty($_SESSION['user_id'])) {
         $deactivate->bind_param('i', $loggingOutUserId);
         $deactivate->execute();
         audit('accounts.block', $loggingOutUserId, ['reason' => 'Automatically deactivated: stepped down after activating another Super Administrator account']);
+        notify_account(account_snapshot($loggingOutUserId), 'blocked', ['reason' => 'You stepped down after activating another Super Administrator account.']);
     }
 }
 

@@ -7,6 +7,9 @@ $summary = ['total' => 0, 'approved' => 0, 'pending' => 0, 'blocked' => 0, 'my_r
 $result = $conn->query('SELECT COUNT(*) AS total, SUM(account_status = "approved") AS approved, SUM(account_status = "pending") AS pending, SUM(account_status = "blocked") AS blocked FROM users WHERE role <> "super_admin"');
 $row = $result->fetch_assoc();
 foreach (['total', 'approved', 'pending', 'blocked'] as $key) $summary[$key] = (int)($row[$key] ?? 0);
+// Accounts waiting for approval are kept in pending_registrations, not `users`.
+$summary['pending'] = (int)$conn->query('SELECT COUNT(*) AS total FROM pending_registrations')->fetch_assoc()['total'];
+$summary['total'] += $summary['pending'];
 
 $requestSql = can('accounts.delete.approve', (int)$user['id'])
     ? 'SELECT COUNT(*) AS total FROM admin_delete_requests WHERE status = "pending"'

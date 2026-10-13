@@ -88,6 +88,14 @@ if (!$user && !$isSchoolAccount) {
 }
 
 if (!$user) {
+    // Already registered and waiting for approval (kept outside `users`).
+    $pendingStmt = $conn->prepare('SELECT 1 FROM pending_registrations WHERE LOWER(email) = ? LIMIT 1');
+    $pendingStmt->bind_param('s', $email);
+    $pendingStmt->execute();
+    if ($pendingStmt->get_result()->fetch_row()) {
+        google_fail('This account is waiting for administrator approval.');
+    }
+
     // No account yet: start a normal registration with Google's details filled in.
     // register.php skips the email code for this address, since Google verified it.
     $_SESSION['google_signup'] = [

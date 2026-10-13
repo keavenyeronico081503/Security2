@@ -2,6 +2,11 @@
 include 'admin_auth.php';
 require_once 'account_service.php';
 
+// Every action here is for the Super Administrator only. Administrators have some
+// of the same permissions (block, approve, update) but must go through admin.php,
+// where, for example, blocking is a request the Super Administrator reviews.
+require_super_admin();
+
 $action = $_GET['action'] ?? 'list';
 
 if ($action === 'permission-catalog') {
@@ -50,7 +55,11 @@ $userId = (int)($data['user_id'] ?? 0);
     $stmt = $conn->prepare('UPDATE users SET account_status = ? WHERE id = ? AND role <> "super_admin"');
     $stmt->bind_param('si', $status, $userId);
     $stmt->execute();
+    $changed = $stmt->affected_rows > 0;
     audit("accounts.$action", $userId);
+    if ($changed) {
+        notify_account(account_snapshot($userId), $action === 'approve' ? 'approved' : ($action === 'unblock' ? 'unblocked' : 'blocked'), ['reason' => trim((string)($data['reason'] ?? ''))]);
+    }
     echo json_encode(['status' => 'success', 'message' => "Account $status."]);
     exit;
 }
@@ -58,7 +67,7 @@ $userId = (int)($data['user_id'] ?? 0);
 if ($action === 'reactivate') {
     // The generic approve/block/unblock action above deliberately excludes
     // role = "super_admin" (see its WHERE clause) since deactivating/reactivating a
-    // Super Administrator has handoff consequences a plain admin/data_administrator
+    // Super Administrator has handoff consequences a plain admin
     // block does not. Only another Super Administrator may perform this.
     require_super_admin();
     require_permission('accounts.block');
@@ -76,6 +85,7 @@ if ($action === 'reactivate') {
     $reactivate->bind_param('i', $userId);
     $reactivate->execute();
     audit('accounts.approve', $userId, ['reason' => 'Reactivated as Super Administrator']);
+    notify_account(account_snapshot($userId), 'unblocked');
 
     // As with creating a new Super Administrator, the account performing this
     // reactivation is flagged to step down once it logs out, so both accounts can
@@ -132,10 +142,6 @@ if ($action === 'update') {
     require_permission('accounts.update');
     try {
         update_account($userId, $data);
-        if (array_key_exists('role', $data) && $data['role'] !== '') {
-            require_permission('roles.assign');
-            change_account_role($userId, (string)$data['role']);
-        }
         echo json_encode(['status' => 'success', 'message' => 'Account information updated.']);
     } catch (Throwable $error) {
         http_response_code(400);
@@ -173,6 +179,7 @@ if ($action === 'delete') {
     // request) so the audit log doesn't mislabel a direct delete as "Accepted deletion request".
     // The audit row is written first so it can still copy the target's username, but
     // it only commits together with the delete, so a failed delete leaves no record.
+    $deletedAccount = account_snapshot($userId);
     $conn->begin_transaction();
     audit('accounts.delete', $userId, ['reason' => $reason]);
     $stmt = $conn->prepare('DELETE FROM users WHERE id = ? AND role <> "super_admin"');
@@ -185,6 +192,7 @@ if ($action === 'delete') {
         exit;
     }
     $conn->commit();
+    notify_account($deletedAccount, 'deleted', ['reason' => $reason]);
     echo json_encode(['status' => 'success', 'message' => 'Account deleted.']);
     exit;
 }
@@ -217,7 +225,9 @@ if ($action === 'review-delete') {
         $update->bind_param('ssisi', $status, $decisionReason, $reviewerId, $status, $requestId);
         $update->execute();
         audit("accounts.delete.$decision", $request['target_user_id'], ['request_id' => $requestId, 'reason' => $decisionReason]);
+        $deletedAccount = null;
         if ($decision === 'approve') {
+            $deletedAccount = account_snapshot((int)$request['target_user_id']);
             $delete = $conn->prepare('DELETE FROM users WHERE id = ? AND role <> "super_admin"');
             $delete->bind_param('i', $request['target_user_id']);
             $delete->execute();
@@ -235,53 +245,60 @@ if ($action === 'review-delete') {
         $conn->rollback();
         throw $error;
     }
+    notify_account($deletedAccount, 'deleted', ['reason' => $decisionReason]);
     echo json_encode(['status' => 'success', 'message' => "Deletion request $status."]);
-    exit;
-}
-
-if ($action === 'data-administrator-status') {
-    require_super_admin();
-    require_permission('accounts.create');
-    $activeDataAdminResult = $conn->query('SELECT COUNT(*) AS total FROM users WHERE role = "data_administrator" AND account_status = "approved" AND username <> "Keavenyadmin1"');
-    $activeDataAdministrators = (int)($activeDataAdminResult->fetch_assoc()['total'] ?? 0);
-    echo json_encode(['status' => 'success', 'active_data_administrators' => $activeDataAdministrators]);
     exit;
 }
 
 if ($action === 'create') {
     require_super_admin();
     require_permission('accounts.create');
-    $allowedRoles = ['admin', 'data_administrator', 'super_admin'];
+    $allowedRoles = ['admin', 'super_admin'];
     $role = in_array($data['role'] ?? '', $allowedRoles, true) ? $data['role'] : 'admin';
-    $employeeId = next_employee_id();
     $username = trim((string)($data['username'] ?? ''));
     $temporaryPassword = (string)($data['password'] ?? '');
-    if ($username === '' || $temporaryPassword === '') {
+    $problem = validate_name_fields(['username' => $username])
+        ?? password_rule_problem($temporaryPassword, $temporaryPassword)
+        ?? password_problem($temporaryPassword);
+    if ($problem !== null) {
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'Username and temporary password are required.']);
+        echo json_encode(['status' => 'error', 'message' => $problem]);
         exit;
     }
     $password = password_hash($temporaryPassword, PASSWORD_DEFAULT);
-    $status = 'approved';
-    $firstName = 'Pending';
-    $lastName = 'Account';
-    $email = $employeeId . '@pending.local';
-    $stmt = $conn->prepare('INSERT INTO users (first_name, last_name, birthday, age, gender, id_number, email, username, password, street, barangay, city, province, country, zip_code, registration_status, role, account_status, privileges) VALUES (?, ?, CURDATE(), 0, "Male", ?, ?, ?, ?, "", "", "", "", "", "", "incomplete", ?, ?, ?)');
     $privileges = json_encode($data['privileges'] ?? []);
-    $stmt->bind_param('sssssssss', $firstName, $lastName, $employeeId, $email, $username, $password, $role, $status, $privileges);
-    if (!$stmt->execute()) {
+    // Duplicate check, ID number and insert run under one lock (see with_identity_lock()).
+    $created = with_identity_lock(function () use ($conn, $username, $password, $role, $privileges) {
+        $taken = identity_taken('', $username, '');
+        if ($taken !== null) {
+            return ['error' => identity_taken_message($taken)];
+        }
+        $employeeId = next_employee_id();
+        $status = 'approved';
+        $firstName = 'Pending';
+        $lastName = 'Account';
+        $email = $employeeId . '@pending.local';
+        $stmt = $conn->prepare('INSERT INTO users (first_name, last_name, birthday, age, gender, id_number, email, username, password, street, barangay, city, province, country, zip_code, registration_status, role, account_status, privileges) VALUES (?, ?, CURDATE(), 0, "Male", ?, ?, ?, ?, "", "", "", "", "", "", "incomplete", ?, ?, ?)');
+        $stmt->bind_param('sssssssss', $firstName, $lastName, $employeeId, $email, $username, $password, $role, $status, $privileges);
+        if (!$stmt->execute()) {
+            return ['error' => is_duplicate_key_error() ? identity_taken_message('username') : 'Could not create account: ' . $conn->error];
+        }
+        $createdUserId = (int)$conn->insert_id;
+        $roleStmt = $conn->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE code = ?');
+        $roleStmt->bind_param('is', $createdUserId, $role);
+        if (!$roleStmt->execute()) {
+            $conn->query("DELETE FROM users WHERE id = " . $createdUserId);
+            return ['error' => 'Account role could not be assigned.'];
+        }
+        return ['employee_id' => $employeeId];
+    });
+    if (isset($created['error'])) {
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'Could not create account: ' . $conn->error]);
+        echo json_encode(['status' => 'error', 'message' => $created['error']]);
         exit;
     }
-    $createdUserId = $conn->insert_id;
-    $roleStmt = $conn->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE code = ?');
-    $roleStmt->bind_param('is', $createdUserId, $role);
-    if (!$roleStmt->execute()) {
-        $conn->query("DELETE FROM users WHERE id = " . (int)$createdUserId);
-        throw new RuntimeException('Account role could not be assigned.');
-    }
-    audit('accounts.create', null, ['role' => $role, 'username' => $data['username']]);
+    $employeeId = $created['employee_id'];
+    audit('accounts.create', null, ['role' => $role, 'username' => $username]);
 
     // Only one created (non-emergency) Super Administrator account is meant to stay
     // active long-term, but a brand-new one and the admin who created it may both be

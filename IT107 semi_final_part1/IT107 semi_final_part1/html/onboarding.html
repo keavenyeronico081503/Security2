@@ -6,64 +6,114 @@
     <title>Complete Account Setup</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/onboarding.css">
+    <link rel="stylesheet" href="../css/wizard.css">
 </head>
-<body>
-    <main class="onboarding-card">
-        <h1>Complete your account</h1>
-        <p class="intro">Enter your information, choose a new password, and set three recovery questions.</p>
-        <form id="onboardingForm">
-            <fieldset>
-                <legend>Personal information</legend>
-                <div class="field-grid">
-                    <label>First name<input name="first_name" required></label>
-                    <label>Middle name<input name="middle_name"></label>
-                    <label>Last name<input name="last_name" required></label>
-                    <label>Suffix<input name="suffix"></label>
-                    <label>Birthday<input type="date" name="birthday" required></label>
-                    <label>Sex<select name="gender" required><option value="">Select sex</option><option>Male</option><option>Female</option></select></label>
-                    <label class="wide">Email<input type="email" name="email" required></label>
+<body class="wizard-page">
+    <main class="wizard">
+      <h1>Complete your account</h1>
+      <p class="wizard-intro">You signed in with a temporary password. Finish these four steps to activate your administrator account.</p>
+
+      <form id="onboardingWizard" novalidate>
+        <ol class="stepper">
+          <li data-step="1"><button type="button"><span class="step-dot"><span class="step-num">1</span></span>Account</button></li>
+          <li data-step="2"><button type="button"><span class="step-dot"><span class="step-num">2</span></span>Personal</button></li>
+          <li data-step="3"><button type="button"><span class="step-dot"><span class="step-num">3</span></span>Address</button></li>
+          <li data-step="4"><button type="button"><span class="step-dot"><span class="step-num">4</span></span>Security</button></li>
+        </ol>
+        <p class="stepper-compact"></p>
+        <div class="wizard-notice" role="alert" hidden></div>
+
+        <section class="wizard-step" data-step="1" data-title="Account">
+          <h2>Account</h2>
+          <p class="step-hint">Verify your <strong>personal</strong> email (administrators can't use a school address), then replace your temporary password.</p>
+          <div class="field-grid">
+            <div class="field wide">
+              <label for="username">Username</label>
+              <input id="username" type="text" readonly placeholder="Loading…">
+            </div>
+            <div class="field wide">
+              <label for="email">Personal email</label>
+              <div class="input-row">
+                <input id="email" name="email" type="email" autocomplete="email" placeholder="yourname@gmail.com" data-review="Personal email">
+                <button type="button" class="wz-btn secondary small" id="sendCode">Send code</button>
+              </div>
+              <span class="verified-badge" id="emailVerified" hidden>✔ Email verified</span>
+              <div class="code-panel" id="codePanel" hidden>
+                <p>Enter the 6-digit code we emailed you. It expires in 10 minutes.</p>
+                <div class="field">
+                  <div class="input-row">
+                    <input id="emailCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" data-no-persist>
+                    <button type="button" class="wz-btn small" id="verifyCode">Verify</button>
+                  </div>
                 </div>
-            </fieldset>
-            <fieldset>
-                <legend>Address</legend>
-                <div class="field-grid">
-                    <label>Street<input name="street" required></label>
-                    <label>Barangay<input name="barangay" required></label>
-                    <label>City<input name="city" required></label>
-                    <label>Province<input name="province" required></label>
-                    <label>Country<input name="country" required></label>
-                    <label>ZIP code<input name="zip_code" required></label>
-                </div>
-            </fieldset>
-            <fieldset>
-                <legend>Change password</legend>
-                <div class="field-grid">
-                    <label>New password<input type="password" id="newPassword" name="new_password" minlength="8" maxlength="20" required></label>
-                    <label>Confirm password<input type="password" id="confirmPassword" name="confirm_password" minlength="8" maxlength="20" required></label>
-                </div>
-                <div id="confirmPasswordError" class="error-message"></div>
-            </fieldset>
-            <fieldset>
-                <legend>Recovery questions</legend>
-                <p class="hint">Choose three different questions and provide an answer for each.</p>
-                <div class="question-grid">
-                    <label>Question 1<select name="question1" required></select><input name="answer1" placeholder="Your answer" required></label>
-                    <label>Question 2<select name="question2" required></select><input name="answer2" placeholder="Your answer" required></label>
-                    <label>Question 3<select name="question3" required></select><input name="answer3" placeholder="Your answer" required></label>
-                </div>
-            </fieldset>
-            <fieldset id="emailCodeBox" hidden>
-                <legend>Check your email</legend>
-                <p class="hint">Enter the 6-digit code we emailed you to confirm your address.</p>
-                <div class="code-row">
-                    <input id="emailCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456">
-                    <button id="resendCode" type="button" class="secondary">Resend code</button>
-                </div>
-            </fieldset>
-            <p id="formMessage" role="alert"></p>
-            <button id="submitButton" type="submit">Finish account setup</button>
-        </form>
+              </div>
+            </div>
+            <div class="field">
+              <label for="password">New password</label>
+              <div class="pw-wrap">
+                <input id="password" name="new_password" type="password" autocomplete="new-password" maxlength="20" data-review="New password">
+                <button type="button" class="pw-toggle" aria-label="Show password">👁</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="confirmPassword">Confirm new password</label>
+              <div class="pw-wrap">
+                <input id="confirmPassword" name="confirm_password" type="password" autocomplete="new-password" maxlength="20">
+                <button type="button" class="pw-toggle" aria-label="Show password">👁</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="2" data-title="Personal" hidden>
+          <h2>Personal information</h2>
+          <p class="step-hint">Your name and details for the administrator profile.</p>
+          <div class="field-grid">
+            <div class="field"><label for="firstName">First name</label><input id="firstName" name="first_name" autocomplete="given-name" maxlength="25" data-review="First name"></div>
+            <div class="field"><label for="middleName">Middle name <span class="optional">(optional)</span></label><input id="middleName" name="middle_name" autocomplete="additional-name" maxlength="25" data-review="Middle name"></div>
+            <div class="field"><label for="lastName">Last name</label><input id="lastName" name="last_name" autocomplete="family-name" maxlength="25" data-review="Last name"></div>
+            <div class="field"><label for="suffix">Suffix <span class="optional">(optional)</span></label><input id="suffix" name="suffix" maxlength="10" placeholder="Jr., Sr., III" data-review="Suffix"></div>
+            <div class="field"><label for="birthday">Birthday</label><input id="birthday" name="birthday" type="date" data-review="Birthday"></div>
+            <div class="field"><label for="age">Age</label><input id="age" type="text" readonly placeholder="Calculated from birthday"></div>
+            <div class="field"><label for="gender">Sex</label><select id="gender" name="gender" data-review="Sex"><option value="">Select sex</option><option>Male</option><option>Female</option></select></div>
+          </div>
+        </section>
+
+        <section class="wizard-step" data-step="3" data-title="Address" hidden>
+          <h2>Address</h2>
+          <p class="step-hint">Pick from the lists. Each list only shows places inside the one above it.</p>
+          <div class="field-grid" id="addressPicker">
+            <div class="field"><label for="region">Region</label><select id="region" name="region_code" data-level="region" data-review="Region"></select></div>
+            <div class="field"><label for="province">Province</label><select id="province" name="province_code" data-level="province" data-review="Province"></select></div>
+            <div class="field"><label for="city">City / Municipality</label><select id="city" name="city_code" data-level="city" data-review="City / Municipality"></select></div>
+            <div class="field"><label for="barangay">Barangay</label><select id="barangay" name="barangay_code" data-level="barangay" data-review="Barangay"></select></div>
+            <div class="field"><label for="street">Purok / Street / House no.</label><input id="street" name="street" list="purokList" maxlength="100" placeholder="e.g. Purok 3, Rizal St." data-review="Purok / Street"></div>
+            <div class="field"><label for="zipCode">ZIP code</label><input id="zipCode" name="zip_code" inputmode="numeric" maxlength="4" placeholder="e.g. 8605" data-review="ZIP code"></div>
+          </div>
+          <datalist id="purokList"></datalist>
+        </section>
+
+        <section class="wizard-step" data-step="4" data-title="Security" hidden>
+          <h2>Security questions</h2>
+          <p class="step-hint">Used to recover your account if you forget your password. Pick three different questions.</p>
+          <div class="question-row field"><select name="question1" aria-label="Question 1"></select><input name="answer1" type="password" autocomplete="off" placeholder="Answer 1" data-no-persist></div>
+          <div class="question-row field"><select name="question2" aria-label="Question 2"></select><input name="answer2" type="password" autocomplete="off" placeholder="Answer 2" data-no-persist></div>
+          <div class="question-row field"><select name="question3" aria-label="Question 3"></select><input name="answer3" type="password" autocomplete="off" placeholder="Answer 3" data-no-persist></div>
+          <div class="review" data-review-target></div>
+        </section>
+
+        <div class="wizard-nav">
+          <button type="button" class="wz-btn secondary" data-wizard="back">Back</button>
+          <span class="spacer"></span>
+          <button type="button" class="wz-btn" data-wizard="next">Next</button>
+          <button type="submit" class="wz-btn" data-wizard="submit" hidden>Finish setup</button>
+        </div>
+      </form>
     </main>
+    <script src="../javascript/wizard.js"></script>
+    <script src="../javascript/password-meter.js"></script>
+    <script src="../javascript/address-picker.js"></script>
+    <script src="../javascript/email-code.js"></script>
     <script src="../javascript/onboarding.js"></script>
 </body>
 </html>

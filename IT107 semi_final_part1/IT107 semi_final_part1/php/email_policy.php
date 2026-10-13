@@ -18,10 +18,10 @@ function institutional_email_error_message(): string
 }
 
 // Regular users sign in with their school (@csucc.edu.ph) address; staff roles
-// (admin, data administrator, super admin) must use a personal address instead.
+// (admin, super admin) must use a personal address instead.
 function is_staff_role(string $role): bool
 {
-    return in_array($role, ['admin', 'data_administrator', 'super_admin'], true);
+    return in_array($role, ['admin', 'super_admin'], true);
 }
 
 function is_email_allowed_for_role(string $email, string $role): bool

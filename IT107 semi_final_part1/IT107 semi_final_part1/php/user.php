@@ -1,6 +1,8 @@
 <?php
 require_once 'auth.php';
 require_once 'email_policy.php';
+require_once 'account_mail.php';
+require_once 'profile_validation.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $action = $_GET['action'] ?? 'session';
@@ -41,9 +43,10 @@ if ($action === 'update-profile') {
     $suffix = trim((string)($_POST['suffix'] ?? ''));
     $email = trim((string)($_POST['email'] ?? ''));
     $contact = trim((string)($_POST['contact_number'] ?? ''));
-    if ($firstName === '' || $lastName === '') {
+    $nameProblem = validate_name_fields(['first_name' => $firstName, 'middle_name' => $middleName, 'last_name' => $lastName, 'suffix' => $suffix]);
+    if ($nameProblem !== null) {
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'First name and last name are required.']);
+        echo json_encode(['status' => 'error', 'message' => $nameProblem]);
         exit;
     }
     $accountRole = (string)($user['role_code'] ?? $user['legacy_role'] ?? 'user');
@@ -74,6 +77,9 @@ if ($action === 'update-profile') {
         exit;
     }
     audit('profile.update', (int)$user['id'], [], $oldValues, account_snapshot((int)$user['id']));
+    if ($oldValues && strcasecmp((string)$oldValues['email'], $email) !== 0) {
+        notify_account($oldValues, 'email_changed', ['new_email' => $email]);
+    }
     echo json_encode(['status' => 'success', 'message' => 'Profile updated successfully.']);
     exit;
 }

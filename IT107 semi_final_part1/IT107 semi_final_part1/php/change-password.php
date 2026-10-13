@@ -6,6 +6,8 @@ header('Content-Type: application/json');
 
 // Include database connection
 require_once 'auth.php';
+require_once 'account_mail.php';
+require_once 'password_policy.php';
 
 // Get user ID from session (either from login or from forgot password flow)
 $userId = $_SESSION['user_id'] ?? $_SESSION['reset_user_id'] ?? null;
@@ -95,25 +97,21 @@ try {
     
     $stmt->close();
     
-    // Check if password already exists in database (used by another user)
-    $checkPasswordStmt = $conn->prepare("SELECT password FROM users WHERE id != ?");
-    $checkPasswordStmt->bind_param("i", $userId);
-    $checkPasswordStmt->execute();
-    $passwordResult = $checkPasswordStmt->get_result();
-    
-    while ($row = $passwordResult->fetch_assoc()) {
-        if (password_verify($newPassword, $row['password'])) {
-            $checkPasswordStmt->close();
-            echo json_encode([
-                'success' => false,
-                'message' => 'Password already exists!'
-            ]);
-            $conn->close();
-            exit;
-        }
+    // Only this account's own current/recent passwords are compared. Checking other
+    // people's passwords would tell anyone that some account uses a guessed one.
+    if (password_recently_used((int)$userId, $newPassword)) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'You used this password recently. Please choose a new one.'
+        ]);
+        exit;
     }
-    $checkPasswordStmt->close();
-    
+    $passwordIssue = password_problem($newPassword);
+    if ($passwordIssue !== null) {
+        echo json_encode(['success' => false, 'message' => $passwordIssue]);
+        exit;
+    }
+
     // Hash the new password
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
     
@@ -123,9 +121,11 @@ try {
     
     if ($updateStmt->execute()) {
         audit('password.change', (int)$userId);
+        record_password_history((int)$userId, $hashedPassword);
+        notify_account(account_snapshot((int)$userId), 'password_changed');
         // Clear reset session if it exists
         if (isset($_SESSION['reset_user_id'])) {
-            unset($_SESSION['reset_user_id']);
+            unset($_SESSION['reset_user_id'], $_SESSION['reset_candidate_id'], $_SESSION['reset_passed'], $_SESSION['reset_id_number']);
             unset($_SESSION['reset_username']);
         }
         

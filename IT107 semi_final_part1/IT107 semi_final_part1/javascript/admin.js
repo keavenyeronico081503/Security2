@@ -1,3 +1,8 @@
+// Escapes text before it is placed into HTML (names come from the database).
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+}
+
 let lastTrackedModule = '';
 function trackModuleOpen() {
   const module = location.hash.slice(1) || 'overview';
@@ -15,16 +20,7 @@ const statCards = document.getElementById('adminStatCards');
 const actionRequired = document.getElementById('adminActionRequired');
 const charts = {};
 let adminRole = '';
-const toggleAdminCreatePassword = document.getElementById('toggleAdminCreatePassword');
-toggleAdminCreatePassword?.addEventListener('click', () => {
-  const input = document.getElementById('adminCreatePassword');
-  const visible = input.type === 'password';
-  input.type = visible ? 'text' : 'password';
-  toggleAdminCreatePassword.setAttribute('aria-pressed', String(visible));
-  toggleAdminCreatePassword.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} temporary password`);
-  toggleAdminCreatePassword.querySelector('i').className = `fas fa-eye${visible ? '-slash' : ''}`;
-});
-
+// Create Account is handled by javascript/create-account.js.
 function setInlineError(input, message, errorId) {
   const field = input;
   const error = document.getElementById(errorId);
@@ -215,7 +211,7 @@ async function loadStatistics() {
       const preparedByRole = document.getElementById('sidebarBrandRole')?.textContent || '';
       printMeta.innerHTML = `
         <div><strong>Report period:</strong> Charts shown for the ${periodLabels[data.registrations_period] || 'selected period'}</div>
-        <div><strong>Prepared by:</strong> ${preparedBy}${preparedByRole ? ` (${preparedByRole})` : ''}</div>
+        <div><strong>Prepared by:</strong> ${escapeHtml(preparedBy)}${preparedByRole ? ` (${escapeHtml(preparedByRole)})` : ''}</div>
         <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
       `;
     }
@@ -311,7 +307,6 @@ function render(users) {
     row.append(textCell(`${user.first_name} ${user.last_name}`), textCell(user.id_number), textCell(user.username), textCell(user.role.replace('_', ' '), 'role'), textCell(user.account_status, `status status-${user.account_status}`), textCell(presence, `status status-${presence.toLowerCase()}`));
     const actions = document.createElement('td'); actions.className = 'actions';
     if (user.role !== 'super_admin') {
-      if (user.account_status === 'pending') actions.appendChild(actionButton('Approve', 'approve', user.id));
       actions.appendChild(actionButton(user.account_status === 'blocked' ? 'Unblock' : 'Block', user.account_status === 'blocked' ? 'unblock' : 'block', user.id));
       actions.appendChild(actionButton('Edit', 'update', user.id, user));
       if (user.account_status !== 'blocked') actions.appendChild(actionButton('Request delete', 'request-delete', user.id));
@@ -417,38 +412,7 @@ document.getElementById('printAdminOverview')?.addEventListener('click', async (
   await logReportPrint('admin_overview', { period: document.getElementById('adminStatsPeriod')?.value || 'days' });
   window.print();
 });
-document.getElementById('createForm').addEventListener('submit', async event => {
-  event.preventDefault();
-  const form = event.target;
-  const isValid = validateDashboardCreateForm(form);
-  if (!isValid) {
-    showCreateMessage('Please correct the highlighted fields before creating the account.', true);
-    return;
-  }
-  if (!await confirmAction('Create user account', 'Create this user account now?')) return;
-  try {
-    const formData = Object.fromEntries(new FormData(event.target));
-    showCreateMessage((await request('create', formData)).message);
-    event.target.reset();
-    await load();
-    await loadStatistics();
-    await loadNextEmployeeId();
-  } catch (error) {
-    showCreateMessage(error.message, true);
-  }
-});
-
-['first_name', 'last_name', 'email', 'username', 'password'].forEach(fieldName => {
-  const selector = document.querySelector(`#createForm [name="${fieldName}"]`);
-  if (!selector) return;
-  selector.addEventListener('input', () => {
-    if (fieldName === 'first_name') validateNameField(selector, 'adminCreateFirstNameError', 'First name');
-    if (fieldName === 'last_name') validateNameField(selector, 'adminCreateLastNameError', 'Last name');
-    if (fieldName === 'email') validateDashboardEmail(selector, 'adminCreateEmailError');
-    if (fieldName === 'username') validateDashboardUsername(selector, 'adminCreateUsernameError', 'adminCreateUsernameHint');
-    if (fieldName === 'password') validateDashboardPassword(selector, 'adminCreatePasswordError', 'adminCreatePasswordStrength');
-  });
-});
+// Create Account is handled by javascript/create-account.js.
 const contentApi = '../php/content.php';
 async function contentRequest(action, body, method = 'POST') {
   const options = method === 'GET' ? {} : {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})};

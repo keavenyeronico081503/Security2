@@ -45,6 +45,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             const data = await response.json();
+            if (data.status === 'locked' || /start again/i.test(data.message || '')) {
+                // Recovery is locked (too many wrong answers) or the session expired.
+                messageDiv.className = 'message error';
+                messageDiv.textContent = data.message;
+            }
             return data.status === 'success';
         } catch (error) {
             console.error('Error verifying answer:', error);
@@ -305,15 +310,9 @@ document.addEventListener('DOMContentLoaded', function() {
         messageDiv.style.fontSize = '18px'; // Bigger text
         messageDiv.style.textShadow = '0 2px 4px rgba(0, 0, 0, 0.3)'; // Text shadow for visibility
         
-        // Store verification data and redirect
+        // Redirect (the server already recorded the verification in the session;
+        // answers are never stored in the browser)
         setTimeout(() => {
-            localStorage.setItem('securityQuestion', question);
-            localStorage.setItem('securityAnswer', answer);
-            localStorage.setItem('securityQuestion2', question2);
-            localStorage.setItem('securityAnswer2', answer2);
-            localStorage.setItem('securityQuestion3', question3);
-            localStorage.setItem('securityAnswer3', answer3);
-            
             // Redirect to change password page
             window.location.href = `change-password.html?id=${encodeURIComponent(id)}`;
         }, 2000);

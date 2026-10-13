@@ -274,7 +274,7 @@ function renderStatistics(data) {
     const preparedByRole = document.getElementById('sidebarBrandRole')?.textContent || '';
     printMeta.innerHTML = `
       <div><strong>Report period:</strong> Registrations shown for the ${periodLabels[data.registrations_period] || 'selected period'}</div>
-      <div><strong>Prepared by:</strong> ${preparedBy}${preparedByRole ? ` (${preparedByRole})` : ''}</div>
+      <div><strong>Prepared by:</strong> ${escapeHtml(preparedBy)}${preparedByRole ? ` (${escapeHtml(preparedByRole)})` : ''}</div>
       <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
     `;
   }
@@ -283,7 +283,7 @@ function renderStatistics(data) {
     ['Approved', summary.approved],
     ['Pending registrations', summary.pending],
     ['Blocked', summary.blocked],
-    ['Administrators', summary.admins + summary.data_administrators],
+    ['Administrators', summary.admins],
     ['Super administrators', summary.super_admins]
   ].map(([label, value]) => `<article class="stat-card"><strong>${value}</strong><span>${label}</span></article>`).join('');
   const required = data.action_required;
@@ -327,21 +327,28 @@ function showCreateMessage(text, error = false) {
   el.className = `form-message ${error ? 'error' : 'success'}`;
 }
 
+// Every value from the database is escaped before it goes into HTML, so a name
+// like "<img onerror=...>" shows as text instead of running as code.
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+}
+
 function renderUsers(users) {
   accounts.innerHTML = users.map(user => {
-    const role = user.role.replace('_', ' ');
-    const status = user.account_status;
-    const loginReportButton = `<button data-action="login-report" data-employee="${user.id_number}">Login report</button>`;
+    const e = escapeHtml;
+    const id = Number(user.id);
+    const role = e(user.role.replace('_', ' '));
+    const status = e(user.account_status);
+    const loginReportButton = `<button data-action="login-report" data-employee="${e(user.id_number)}">Login report</button>`;
     const controls = user.role === 'super_admin'
-      ? (status === 'blocked' ? `<button data-action="reactivate" data-id="${user.id}">Reactivate</button> ${loginReportButton}` : `<span>Protected</span> ${loginReportButton}`)
+      ? (user.account_status === 'blocked' ? `<button data-action="reactivate" data-id="${id}">Reactivate</button> ${loginReportButton}` : `<span>Protected</span> ${loginReportButton}`)
       : `
-      ${status === 'pending' ? `<button data-action="approve" data-id="${user.id}">Approve</button>` : ''}
-      <button data-action="${status === 'blocked' ? 'unblock' : 'block'}" data-id="${user.id}">${status === 'blocked' ? 'Unblock' : 'Block'}</button>
-      <button data-action="update" data-id="${user.id}" data-first="${user.first_name}" data-last="${user.last_name}" data-employee="${user.id_number}" data-email="${user.email}" data-username="${user.username}" data-role="${user.role}">Edit</button>
+      <button data-action="${user.account_status === 'blocked' ? 'unblock' : 'block'}" data-id="${id}">${user.account_status === 'blocked' ? 'Unblock' : 'Block'}</button>
+      <button data-action="update" data-id="${id}" data-first="${e(user.first_name)}" data-last="${e(user.last_name)}" data-employee="${e(user.id_number)}" data-email="${e(user.email)}" data-username="${e(user.username)}" data-role="${e(user.role)}">Edit</button>
       ${loginReportButton}
-      <button class="danger" data-action="delete" data-id="${user.id}">Delete</button>`;
-    const presence = status === 'approved' ? (user.is_online ? 'Online' : 'Offline') : '—';
-    return `<tr><td>${user.first_name} ${user.last_name}</td><td>${user.id_number}</td><td>${user.username}</td><td class="role">${role}</td><td class="status status-${status}">${status}</td><td class="status status-${presence.toLowerCase()}">${presence}</td><td class="actions">${controls}</td></tr>`;
+      <button class="danger" data-action="delete" data-id="${id}">Delete</button>`;
+    const presence = user.account_status === 'approved' ? (user.is_online ? 'Online' : 'Offline') : '—';
+    return `<tr><td>${e(user.first_name)} ${e(user.last_name)}</td><td>${e(user.id_number)}</td><td>${e(user.username)}</td><td class="role">${role}</td><td class="status status-${status}">${status}</td><td class="status status-${presence.toLowerCase()}">${presence}</td><td class="actions">${controls}</td></tr>`;
   }).join('') || '<tr><td colspan="7">No accounts found.</td></tr>';
   if (privilegeAccounts) {
     privilegeAccounts.replaceChildren();
@@ -386,11 +393,11 @@ function renderLoginReport(data) {
       }).join('');
       const more = anomalies.length > 5 ? `<li>+ ${anomalies.length - 5} more</li>` : '';
       alertBox.className = 'anomaly-alert';
-      alertBox.innerHTML = `<i class="fas fa-triangle-exclamation" aria-hidden="true"></i><div><strong>${anomalies.length} anomalous login${anomalies.length === 1 ? '' : 's'} flagged in the selected period</strong><p>${data.account.name} signed in outside their usual hours. Review these before dismissing them as normal.</p><ul>${shown}${more}</ul></div>`;
+      alertBox.innerHTML = `<i class="fas fa-exclamation-triangle" aria-hidden="true"></i><div><strong>${anomalies.length} anomalous login${anomalies.length === 1 ? '' : 's'} flagged in the selected period</strong><p>${escapeHtml(data.account.name)} signed in outside their usual hours. Review these before dismissing them as normal.</p><ul>${shown}${more}</ul></div>`;
       alertBox.hidden = false;
     } else {
       alertBox.className = 'anomaly-alert is-clear';
-      alertBox.innerHTML = `<i class="fas fa-circle-check" aria-hidden="true"></i><div><strong>No anomalies detected</strong><p>Every login in the selected period falls within this account's usual hours.</p></div>`;
+      alertBox.innerHTML = `<i class="fas fa-check-circle" aria-hidden="true"></i><div><strong>No anomalies detected</strong><p>Every login in the selected period falls within this account's usual hours.</p></div>`;
       alertBox.hidden = false;
     }
   }
@@ -422,9 +429,9 @@ function renderLoginReport(data) {
     const preparedBy = document.getElementById('sidebarBrandName')?.textContent || '';
     const preparedByRole = document.getElementById('sidebarBrandRole')?.textContent || '';
     printMeta.innerHTML = `
-      <div><strong>Role:</strong> ${data.account.role.replaceAll('_', ' ')} · <strong>Status:</strong> ${data.account.account_status}</div>
+      <div><strong>Role:</strong> ${escapeHtml(data.account.role.replaceAll('_', ' '))} · <strong>Status:</strong> ${escapeHtml(data.account.account_status)}</div>
       <div><strong>Report period:</strong> ${periodLabels[data.period] || 'selected period'}</div>
-      <div><strong>Prepared by:</strong> ${preparedBy}${preparedByRole ? ` (${preparedByRole})` : ''}</div>
+      <div><strong>Prepared by:</strong> ${escapeHtml(preparedBy)}${preparedByRole ? ` (${escapeHtml(preparedByRole)})` : ''}</div>
       <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
     `;
   }
@@ -522,7 +529,6 @@ function openEditDialog(user) {
   editForm.id_number.value = user.id_number;
   editForm.email.value = user.email;
   editForm.username.value = user.username;
-  editForm.role.value = user.role;
   document.getElementById('editAccountLabel').textContent = `${user.first_name} ${user.last_name} (${user.username})`;
   showEditMessage('');
   editDialog.showModal();
@@ -536,8 +542,7 @@ editForm.addEventListener('submit', async event => {
     last_name: editForm.last_name.value.trim(),
     id_number: editForm.id_number.value.trim(),
     email: editForm.email.value.trim(),
-    username: editForm.username.value.trim(),
-    role: editForm.role.value
+    username: editForm.username.value.trim()
   };
   if (Object.values(body).some(value => value === '')) { showEditMessage('All fields are required.', true); return; }
   if (!await confirmAction('Save changes', `Save changes to account "${body.username}"?`)) return;
@@ -748,43 +753,7 @@ document.getElementById('printOverview')?.addEventListener('click', async () => 
   await logReportPrint('overview', { period: document.getElementById('registrationsPeriod')?.value || 'days' });
   window.print();
 });
-document.getElementById('createForm').addEventListener('submit', async event => {
-  event.preventDefault();
-  const form = event.target;
-  const isValid = validateDashboardCreateForm(form);
-  if (!isValid) {
-    showCreateMessage('Please correct the highlighted fields before creating the account.', true);
-    return;
-  }
-  if (form.querySelector('[name="role"]')?.value === 'data_administrator') {
-    try {
-      const status = await request('data-administrator-status');
-      if (status.active_data_administrators > 0 && !await confirmAction('Active Data Administrator already exists', 'There is already an active Data Administrator. Are you sure you want to create another one?')) return;
-    } catch (error) {
-      showCreateMessage(error.message, true);
-      return;
-    }
-  }
-  if (!await confirmAction('Create account', 'Create this account now?')) return;
-  try {
-    const result = await request('create', { method: 'POST', body: new FormData(event.target) });
-    const credentials = result.credentials || {};
-    showCreateMessage(`${result.message} Employee ID: ${credentials.employee_id || 'not available'}, Username: ${credentials.username || 'not available'}`);
-    event.target.reset();
-    loadUsers();
-    await loadNextEmployeeId();
-  }
-  catch (error) { showCreateMessage(error.message, true); }
-});
-
-['username', 'password'].forEach(fieldName => {
-  const selector = document.querySelector(`#createForm [name="${fieldName}"]`);
-  if (!selector) return;
-  selector.addEventListener('input', () => {
-    if (fieldName === 'username') validateDashboardUsername(selector, 'superCreateUsernameError', 'superCreateUsernameHint');
-    if (fieldName === 'password') validateDashboardPassword(selector, 'superCreatePasswordError', 'superCreatePasswordStrength');
-  });
-});
+// Create Account is handled by javascript/create-account.js.
 document.getElementById('logoutButton')?.addEventListener('click', () => { window.location.href = '../php/logout.php'; });
 document.getElementById('refreshRequests').addEventListener('click', () => loadRequests().catch(error => showMessage(error.message, true)));
 document.getElementById('refreshAudit').addEventListener('click', () => loadAuditLogs().catch(error => showMessage(error.message, true)));

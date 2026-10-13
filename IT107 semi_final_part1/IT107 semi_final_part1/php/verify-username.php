@@ -4,6 +4,10 @@ header('Content-Type: application/json');
 
 // Include database connection
 require_once 'db.php';
+require_once 'rate_limit.php';
+
+// Slow down anyone stepping through ID numbers to discover accounts.
+enforce_rate_limit('verify_id', 10, 600);
 
 // Get ID from POST
 $id = $_POST['id'] ?? '';
@@ -46,7 +50,11 @@ try {
     
     // ID EXISTS - store in session and proceed to security questions
     $user = $result->fetch_assoc();
-    $_SESSION['reset_user_id'] = $user['id'];
+    // Knowing an ID number only selects the account to recover. The password reset
+    // itself is authorized later, once all three security answers are verified
+    // (verify_security_question.php sets reset_user_id).
+    unset($_SESSION['reset_user_id'], $_SESSION['reset_passed']);
+    $_SESSION['reset_candidate_id'] = (int)$user['id'];
     $_SESSION['reset_username'] = $user['username'];
     $_SESSION['reset_id_number'] = $user['id_number'];
     

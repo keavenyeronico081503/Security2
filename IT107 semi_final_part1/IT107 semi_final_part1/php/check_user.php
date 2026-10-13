@@ -1,22 +1,27 @@
 <?php
 include 'db.php'; // make sure correct connection
+require_once 'rate_limit.php';
+
+// Live "already taken?" checks for the signup form (email and username only).
+// Passwords are deliberately not checked against other accounts here: saying
+// "this password is already used" would confirm a working password to anyone.
+// See password_check.php for the safe breached-password check instead.
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = trim($_POST['password'] ?? '');
-    $email    = trim($_POST['email'] ?? ''); //  new email
-    $suffix   = trim($_POST['suffix'] ?? ''); //  new suffix
+    enforce_rate_limit('check_user', 60, 60);
 
-    //  If walay sulod tanan
-    if ($username === '' && $password === '' && $email === '' && $suffix === '') {
-        echo json_encode(["status" => "error", "message" => "No input provided."]);
+    $username = trim($_POST['username'] ?? '');
+    $email    = trim($_POST['email'] ?? '');
+
+    if ($username === '' && $email === '') {
+        echo json_encode(["status" => "available", "message" => "All available."]);
         exit;
     }
 
-    //  Check kung naa na ang Email
+    // Accounts waiting for approval live in pending_registrations, so check both tables.
     if ($email !== '') {
-        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->bind_param("s", $email);
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? UNION SELECT id FROM pending_registrations WHERE email = ?");
+        $stmt->bind_param("ss", $email, $email);
         $stmt->execute();
         $stmt->store_result();
         if ($stmt->num_rows > 0) {
@@ -26,25 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    //  Check kung naa nay existing Password maski lahi ug Username (PRIORITY - check password first)
-    if ($password !== '') {
-        $stmt = $conn->prepare("SELECT password FROM users");
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        while ($row = $result->fetch_assoc()) {
-            if (password_verify($password, $row['password'])) {
-                echo json_encode(["status" => "password_exists", "message" => "Password already exists!"]);
-                exit;
-            }
-        }
-        $stmt->close();
-    }
-
-    //  Check kung naa na ang Username
     if ($username !== '') {
-        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND username <> 'Keavenyadmin1'");
-        $stmt->bind_param("s", $username);
+        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND username <> 'Keavenyadmin1' UNION SELECT id FROM pending_registrations WHERE username = ?");
+        $stmt->bind_param("ss", $username, $username);
         $stmt->execute();
         $stmt->store_result();
         if ($stmt->num_rows > 0) {
@@ -54,20 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // Check kung naa na ang Suffix
-    if ($suffix !== '') {
-        $stmt = $conn->prepare("SELECT id FROM users WHERE suffix = ?");
-        $stmt->bind_param("s", $suffix);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            echo json_encode(["status" => "suffix_exists", "message" => "Suffix already exists!"]);
-            exit;
-        }
-        $stmt->close();
-    }
-
-    //  If walay conflict
     echo json_encode(["status" => "available", "message" => "All available."]);
 }
 ?>

@@ -15,7 +15,8 @@ if ($mysqli->connect_error) {
 }
 
 $year = date('Y');
-$result = $mysqli->query("SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(id_number, '-', -1) AS UNSIGNED)), 0) AS last_number FROM users WHERE id_number LIKE CONCAT('" . $mysqli->real_escape_string($year) . "', '-%')");
+// Pending registrations already hold ID numbers too, so count both tables.
+$result = $mysqli->query("SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(id_number, '-', -1) AS UNSIGNED)), 0) AS last_number FROM (SELECT id_number FROM users UNION ALL SELECT id_number FROM pending_registrations) ids WHERE id_number LIKE CONCAT('" . $mysqli->real_escape_string($year) . "', '-%')");
 if ($result) {
     $row = $result->fetch_assoc();
     $count = (int)($row['last_number'] ?? 0) + 1;

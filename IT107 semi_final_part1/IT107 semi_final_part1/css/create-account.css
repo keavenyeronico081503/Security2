@@ -1,0 +1,108 @@
+/* Create Account card, shared by the Super Administrator page (creates
+   administrators) and the Administrator page (creates regular users).
+   Same look as the registration/setup wizards. Everything is scoped to .ca-panel. */
+.ca-panel {
+  --ca-ink: #17211b; --ca-muted: #68736c; --ca-line: #d9ded7; --ca-soft: #f3f6f2;
+  --ca-accent: #176b52; --ca-accent-dark: #0f5849; --ca-danger: #a63d32; --ca-warn: #9a5b00;
+  max-width: 920px; padding: 0 !important; overflow: hidden; border: 1px solid var(--ca-line); border-radius: 12px;
+  background: #fffdf8; box-shadow: 0 14px 34px rgba(23, 33, 27, .07);
+}
+.ca-header {
+  display: flex; align-items: center; gap: 16px; padding: 24px 28px;
+  background: linear-gradient(120deg, #173f35 0%, #176b52 65%, #2f8064 100%); color: #fff;
+}
+.ca-icon { display: grid; place-items: center; flex: 0 0 52px; height: 52px; border-radius: 14px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); font-size: 22px; }
+.ca-header .eyebrow { margin: 0 0 2px; color: #b9dfc9; }
+.ca-header h2 { margin: 0; color: #fff !important; font: 700 24px 'Space Grotesk', sans-serif; }
+.ca-header p:last-child { margin: 4px 0 0; color: #dcefe5; font-size: 14px; }
+.ca-note { display: flex; gap: 10px; align-items: flex-start; margin: 20px 28px 0; padding: 12px 14px; border: 1px solid #cce4d6; border-radius: 8px; background: #f0faf4; color: #456658; font-size: 13.5px; line-height: 1.5; }
+.ca-note i { margin-top: 2px; color: var(--ca-accent); }
+
+.ca-form { padding: 22px 28px 26px; }
+.ca-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; }
+.ca-grid .ca-wide { grid-column: 1 / -1; }
+.ca-panel .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ca-panel .field > label, .ca-panel .ca-legend { font-size: 13px; font-weight: 700; color: #24382e; }
+.ca-panel .field > label span { margin-left: 6px; color: #829087; font-size: 11px; font-weight: 600; }
+.ca-panel .field input {
+  width: 100%; height: 44px; padding: 9px 12px; border: 1px solid #cbd8ce; border-radius: 8px; background: #fff;
+  color: var(--ca-ink); font: 15px 'DM Sans', sans-serif; box-sizing: border-box;
+}
+.ca-panel .field input:focus { outline: none; border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(23, 107, 82, .14); }
+.ca-panel .field input[readonly] { background: var(--ca-soft); color: #53665b; font-weight: 700; }
+.ca-panel .field.invalid input { border-color: var(--ca-danger); box-shadow: 0 0 0 3px rgba(166, 61, 50, .1); }
+.ca-panel .field-msg { min-height: 17px; font-size: 12.5px; font-weight: 600; color: var(--ca-danger); }
+.ca-panel .field-msg.ok { color: var(--ca-accent); }
+.ca-panel .field-msg.info { color: var(--ca-muted); font-weight: 500; }
+
+/* Buttons (reset the dashboard's generic button rules) */
+.ca-panel .ca-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; min-width: 0; height: 44px; margin: 0;
+  padding: 0 16px; border: 1px solid var(--ca-accent); border-radius: 8px; background: var(--ca-accent); color: #fff;
+  font: 700 14px 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; grid-column: auto; grid-row: auto; justify-self: auto;
+}
+.ca-panel .ca-btn:hover:not(:disabled) { background: var(--ca-accent-dark); border-color: var(--ca-accent-dark); }
+.ca-panel .ca-btn.secondary { background: #fff; color: var(--ca-accent); }
+.ca-panel .ca-btn.secondary:hover:not(:disabled) { background: #eef6f1; }
+.ca-panel .ca-btn:disabled { opacity: .55; cursor: not-allowed; }
+.ca-panel [hidden] { display: none !important; }
+
+/* Temporary password row + meter (password-meter.js) */
+.ca-pw-row { display: flex; gap: 8px; }
+.ca-pw-row .pw-wrap { position: relative; flex: 1; min-width: 0; }
+.ca-pw-row .pw-wrap input { padding-right: 44px; font-family: 'DM Mono', ui-monospace, monospace; letter-spacing: .03em; }
+.ca-panel .pw-toggle {
+  position: absolute; right: 6px; top: 6px; width: 32px !important; min-width: 32px !important; height: 32px !important; padding: 0 !important;
+  border: 0 !important; background: transparent !important; color: var(--ca-muted) !important; cursor: pointer; font-size: 15px; box-shadow: none !important;
+}
+.ca-panel .pw-meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 2px; }
+.ca-panel .pw-meter span { height: 6px; border-radius: 3px; background: #e3e7e2; }
+.ca-panel .pw-meter[data-level="1"] span:nth-child(-n+1) { background: #c0392b; }
+.ca-panel .pw-meter[data-level="2"] span:nth-child(-n+2) { background: #e67e22; }
+.ca-panel .pw-meter[data-level="3"] span:nth-child(-n+3) { background: #d4ac0d; }
+.ca-panel .pw-meter[data-level="4"] span:nth-child(-n+4) { background: #27ae60; }
+.ca-panel .pw-meter[data-level="5"] span:nth-child(-n+5) { background: #138d75; }
+.ca-panel .pw-label { font-size: 13px; font-weight: 700; }
+.ca-panel .pw-checklist { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 2px 0 0; padding: 0; list-style: none; font-size: 12.5px; color: var(--ca-muted); }
+.ca-panel .pw-checklist li::before { content: "\25CB"; margin-right: 5px; }
+.ca-panel .pw-checklist li.ok { color: var(--ca-accent); }
+.ca-panel .pw-checklist li.ok::before { content: "\2713"; font-weight: 700; }
+
+/* Account type cards (Super Administrator page) */
+.ca-roles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 6px; }
+.ca-role { position: relative; display: block; padding: 14px 16px 14px 46px; border: 1px solid #cbd8ce; border-radius: 10px; background: #fff; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.ca-role input { position: absolute; left: 16px; top: 17px; width: 18px; height: 18px; accent-color: var(--ca-accent); }
+.ca-role strong { display: block; font-size: 15px; color: var(--ca-ink); }
+.ca-role span { display: block; margin-top: 3px; font-size: 13px; color: var(--ca-muted); line-height: 1.45; }
+.ca-role:has(input:checked) { border-color: var(--ca-accent); box-shadow: 0 0 0 3px rgba(23, 107, 82, .14); background: #f6fbf8; }
+.ca-role .ca-warn { color: var(--ca-warn); font-weight: 600; }
+
+.ca-alert { margin: 16px 0 0; padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; background: #fdf0ee; border: 1px solid #ecc6c0; color: var(--ca-danger); }
+.ca-footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #dce5de; color: #718077; font-size: 12.5px; }
+
+/* Credentials card shown once after creating */
+.ca-result { margin: 22px 28px 26px; padding: 20px; border: 1px solid #b9d9c7; border-radius: 12px; background: #f3fbf6; }
+.ca-result h3 { margin: 0 0 4px; font: 700 18px 'Space Grotesk', sans-serif; color: var(--ca-accent); }
+.ca-result > p { margin: 0 0 14px; color: #456658; font-size: 14px; }
+.ca-creds { display: grid; grid-template-columns: 170px 1fr; gap: 8px 14px; margin: 0 0 16px; padding: 14px 16px; border-radius: 8px; background: #fff; border: 1px dashed #b9d9c7; font-size: 15px; }
+.ca-creds dt { color: var(--ca-muted); font-weight: 600; }
+.ca-creds dd { margin: 0; font-family: 'DM Mono', ui-monospace, monospace; font-weight: 700; overflow-wrap: anywhere; }
+.ca-result .ca-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.ca-result .ca-once { margin-top: 12px; color: var(--ca-warn); font-size: 13px; font-weight: 600; }
+
+@media (max-width: 760px) {
+  .ca-header, .ca-form { padding-left: 18px; padding-right: 18px; }
+  .ca-note, .ca-result { margin-left: 18px; margin-right: 18px; }
+  .ca-grid, .ca-roles { grid-template-columns: 1fr; }
+  .ca-pw-row { flex-wrap: wrap; }
+  .ca-pw-row .pw-wrap { flex-basis: 100%; }
+  .ca-footer { flex-direction: column; align-items: stretch; }
+  .ca-creds { grid-template-columns: 1fr; }
+}
+
+@media print {
+  body.ca-printing * { visibility: hidden !important; }
+  body.ca-printing .ca-result, body.ca-printing .ca-result * { visibility: visible !important; }
+  body.ca-printing .ca-result { position: absolute; left: 0; top: 0; width: 100%; margin: 0; }
+  body.ca-printing .ca-result .ca-actions { display: none !important; }
+}

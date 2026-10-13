@@ -5,3 +5,10 @@
 
 # Show the styled page for any missing URL under /security2/.
 ErrorDocument 404 /security2/html/404.html
+
+# Session cookie hardening: scripts can't read the session cookie (HttpOnly),
+# other websites can't send it along with their requests (SameSite=Lax), and
+# PHP refuses session IDs it didn't create itself (strict mode).
+php_flag session.cookie_httponly On
+php_value session.cookie_samesite Lax
+php_flag session.use_strict_mode On

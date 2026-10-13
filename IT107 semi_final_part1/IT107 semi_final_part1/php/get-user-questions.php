@@ -4,6 +4,7 @@ header('Content-Type: application/json');
 
 // Include database connection
 require_once 'db.php';
+require_once 'security_questions.php';
 
 // Get ID from POST or GET
 $id = $_POST['id'] ?? $_GET['id'] ?? '';
@@ -14,6 +15,12 @@ if (empty($id)) {
         'status' => 'error',
         'message' => 'ID is required.'
     ]);
+    exit;
+}
+// Only the account chosen in this browser's forgot-password session.
+if (($_SESSION['reset_id_number'] ?? null) !== $id) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'Please start again from the Forgot Password page.']);
     exit;
 }
 
@@ -56,24 +63,14 @@ try {
     
     $questionData = $questionResult->fetch_assoc();
     
-    // Map question values to full question text
-    $questionMap = [
-        // Codes used by self-registration (question.html / question.js)
-        'petName' => 'What is the name of your pet?',
-        'hobby' => 'What\'s your favorite hobby?',
-        'travel' => 'What\'s your favorite place you\'ve visited?',
-        'music' => 'Who\'s your favorite artist or band?',
+    // Map question values to full question text: the current list (security_questions.php)
+    // plus older codes that existing accounts may still have from the previous signup form.
+    $questionMap = SECURITY_QUESTIONS + [
+        'hobby' => "What's your favorite hobby?",
+        'travel' => "What's your favorite place you've visited?",
+        'music' => "Who's your favorite artist or band?",
         'movies' => 'Do you enjoy movies or TV shows?',
         'previousPassword' => 'What was your previous password?',
-        // Codes used by admin-onboarded accounts (onboarding.html / onboarding.js)
-        'favoriteColor' => 'What is your favorite color?',
-        'favoriteFood' => 'What is your favorite food?',
-        'birthCity' => 'In what city were you born?',
-        'firstSchool' => 'What was the name of your first school?',
-        'childhoodNickname' => 'What was your childhood nickname?',
-        'favoriteTeacher' => 'What was the name of your favorite teacher?',
-        'dreamJob' => 'What was your dream job as a child?',
-        'memorablePlace' => 'What is a memorable place you have visited?'
     ];
     
     // Convert question values to full text

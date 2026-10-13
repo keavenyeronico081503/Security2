@@ -2,12 +2,36 @@
 require_once 'auth.php';
 require_once 'email_policy.php';
 require_once 'mailer.php';
+require_once 'account_mail.php';
+require_once 'password_policy.php';
+require_once 'profile_validation.php';
+
+// A fresh one-time password for each reset: 12 characters with at least one
+// upper, lower, digit and symbol, skipping look-alikes (0/O, 1/l/I).
+function generate_temporary_password(): string
+{
+    $sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnopqrstuvwxyz', '23456789', '!@#$%'];
+    $all = implode('', $sets);
+    $chars = [];
+    foreach ($sets as $set) {
+        $chars[] = $set[random_int(0, strlen($set) - 1)];
+    }
+    while (count($chars) < 12) {
+        $chars[] = $all[random_int(0, strlen($all) - 1)];
+    }
+    for ($i = count($chars) - 1; $i > 0; $i--) {
+        $j = random_int(0, $i);
+        [$chars[$i], $chars[$j]] = [$chars[$j], $chars[$i]];
+    }
+    return implode('', $chars);
+}
 
 function next_employee_id(): string
 {
     global $conn;
     $year = date('Y');
-    $stmt = $conn->prepare('SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(id_number, "-", -1) AS UNSIGNED)), 0) AS last_number FROM users WHERE id_number LIKE CONCAT(?, "-%")');
+    // Pending registrations already hold ID numbers too, so count both tables.
+    $stmt = $conn->prepare('SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(id_number, "-", -1) AS UNSIGNED)), 0) AS last_number FROM (SELECT id_number FROM users UNION ALL SELECT id_number FROM pending_registrations) ids WHERE id_number LIKE CONCAT(?, "-%")');
     $stmt->bind_param('s', $year);
     $stmt->execute();
     $lastNumber = (int)$stmt->get_result()->fetch_assoc()['last_number'];
@@ -23,6 +47,7 @@ function deactivate_inactive_accounts(): void
         $stmt->bind_param('i', $row['id']);
         $stmt->execute();
         audit('accounts.block', (int)$row['id'], ['reason' => 'Automatically deactivated after 7 days of inactivity']);
+        notify_account(account_snapshot((int)$row['id']), 'blocked', ['reason' => 'No login for 7 days. Ask an administrator to unblock your account.']);
     }
 }
 
@@ -54,8 +79,16 @@ function update_account(int $userId, array $data): void
         throw new RuntimeException('Super Administrator accounts cannot be edited here.');
     }
     $username = trim((string)($data['username'] ?? ''));
-    if ($username === '') {
-        throw new InvalidArgumentException('Username is required.');
+    $problem = validate_name_fields(['first_name' => $data['first_name'] ?? '', 'last_name' => $data['last_name'] ?? '', 'username' => $username]);
+    if ($problem !== null) {
+        throw new InvalidArgumentException($problem);
+    }
+    $pendingCheck = $conn->prepare('SELECT 1 FROM pending_registrations WHERE username = ? OR email = ? LIMIT 1');
+    $pendingEmail = trim((string)($data['email'] ?? ''));
+    $pendingCheck->bind_param('ss', $username, $pendingEmail);
+    $pendingCheck->execute();
+    if ($pendingCheck->get_result()->fetch_row()) {
+        throw new InvalidArgumentException('That username or email belongs to a registration waiting for approval.');
     }
     $email = trim((string)($data['email'] ?? ''));
     if (!is_email_allowed_for_role($email, (string)$oldValues['role'])) {
@@ -74,6 +107,9 @@ function update_account(int $userId, array $data): void
     }
     $newValues = account_snapshot($userId);
     audit('accounts.update', $userId, [], $oldValues, $newValues);
+    if (strcasecmp((string)$oldValues['email'], $email) !== 0) {
+        notify_account($oldValues, 'email_changed', ['new_email' => $email]);
+    }
 }
 
 function reset_account_password(int $userId): void
@@ -90,12 +126,12 @@ function reset_account_password(int $userId): void
         throw new RuntimeException('This account has no valid email on file for its role. Update its email before resetting the password.');
     }
 
-    $defaultPassword = 'Abcde12345';
+    $temporaryPassword = generate_temporary_password();
     $subject = 'Your Security2 account password was reset';
     $body = "Hello {$oldValues['first_name']},\n\n"
         . "An administrator reset your Security2 account password.\n\n"
-        . "Your temporary password is: $defaultPassword\n\n"
-        . "Log in with this password — you will be asked to choose a new password immediately before you can access your account. If you did not expect this, contact your administrator immediately.";
+        . "Your temporary password is: $temporaryPassword\n\n"
+        . "Log in with this password — you will be asked to choose your own password immediately, and this temporary one stops working once you do. If you did not expect this, contact your administrator immediately.";
 
     // Send before persisting: if the email fails, the account keeps its old working
     // password instead of being locked out with a password nobody received.
@@ -103,54 +139,13 @@ function reset_account_password(int $userId): void
         throw new RuntimeException('Could not send the reset email. The password was not changed.');
     }
 
-    $hashed = password_hash($defaultPassword, PASSWORD_DEFAULT);
+    $hashed = password_hash($temporaryPassword, PASSWORD_DEFAULT);
     $stmt = $conn->prepare('UPDATE users SET password = ?, must_change_password = 1 WHERE id = ? AND role <> "super_admin"');
     $stmt->bind_param('si', $hashed, $userId);
     if (!$stmt->execute()) {
         throw new RuntimeException('Password was not reset: ' . $conn->error);
     }
     audit('accounts.password_reset', $userId);
-}
-
-function change_account_role(int $userId, string $newRole): void
-{
-    global $conn;
-    $allowedRoles = ['admin', 'data_administrator'];
-    if (!in_array($newRole, $allowedRoles, true)) {
-        throw new InvalidArgumentException('Role must be Administrator or Data Administrator.');
-    }
-    $oldValues = account_snapshot($userId);
-    if (!$oldValues) {
-        throw new RuntimeException('Account was not found.');
-    }
-    if ($oldValues['role'] === 'super_admin') {
-        throw new RuntimeException('Super Administrator accounts cannot have their role changed here.');
-    }
-    if ($oldValues['role'] === $newRole) {
-        return;
-    }
-    $conn->begin_transaction();
-    try {
-        $stmt = $conn->prepare('UPDATE users SET role = ? WHERE id = ? AND role <> "super_admin"');
-        $stmt->bind_param('si', $newRole, $userId);
-        if (!$stmt->execute()) {
-            throw new RuntimeException('Role was not changed: ' . $conn->error);
-        }
-        $clearRoles = $conn->prepare('DELETE FROM user_roles WHERE user_id = ?');
-        $clearRoles->bind_param('i', $userId);
-        $clearRoles->execute();
-        $assignRole = $conn->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE code = ?');
-        $assignRole->bind_param('is', $userId, $newRole);
-        if (!$assignRole->execute()) {
-            throw new RuntimeException('Role permissions were not assigned.');
-        }
-        $conn->commit();
-    } catch (Throwable $error) {
-        $conn->rollback();
-        throw $error;
-    }
-    $newValues = account_snapshot($userId);
-    audit('accounts.role_change', $userId, [], $oldValues, $newValues);
 }
 
 function request_account_deletion(int $requesterId, int $targetUserId, string $reason): void
@@ -216,11 +211,218 @@ function complete_login(array $user, bool $isEmergencyLogin = false, string $met
 
     $redirect = match ($user['role']) {
         'super_admin' => '../html/super-admin.html',
-        'admin', 'data_administrator' => '../html/admin.html',
+        'admin' => '../html/admin.html',
         default => '../html/dashboard.html'
     };
     if (!empty($user['must_change_password'])) {
         $redirect = '../html/change-password.html';
     }
     return ['status' => 'success', 'message' => 'Login successful!', 'redirect' => $redirect];
+}
+
+// ---- Pending registrations -------------------------------------------------
+// Accounts waiting for approval live only in `pending_registrations`, never in
+// `users`. Approving moves a row into `users`; rejecting deletes it.
+
+// Runs $fn while holding one database-wide lock, so "is this username/email/ID
+// free?" and the insert that claims it happen as one step. Two windows (or two
+// people) submitting the same identity at the same moment are queued, and the
+// second one sees the first one's row instead of slipping past the check.
+function with_identity_lock(callable $fn)
+{
+    global $conn;
+    $got = (int)($conn->query("SELECT GET_LOCK('security2_identity', 10) AS got")->fetch_assoc()['got'] ?? 0);
+    if ($got !== 1) {
+        throw new RuntimeException('The system is busy. Please try again in a moment.');
+    }
+    try {
+        return $fn();
+    } finally {
+        $conn->query("SELECT RELEASE_LOCK('security2_identity')");
+    }
+}
+
+// MySQL error 1062 = a UNIQUE key refused a duplicate (the database's own last line of defence).
+function is_duplicate_key_error(): bool
+{
+    global $conn;
+    return (int)$conn->errno === 1062;
+}
+
+// Returns which identity field is already used by an account or a pending
+// registration ('email', 'username' or 'id_number'), or null when all are free.
+function identity_taken(string $email, string $username, string $idNumber): ?string
+{
+    global $conn;
+    foreach (['users', 'pending_registrations'] as $table) {
+        foreach (['email' => $email, 'username' => $username, 'id_number' => $idNumber] as $field => $value) {
+            if ($value === '') {
+                continue;
+            }
+            $stmt = $conn->prepare("SELECT 1 FROM $table WHERE $field = ? LIMIT 1");
+            $stmt->bind_param('s', $value);
+            $stmt->execute();
+            if ($stmt->get_result()->fetch_row()) {
+                return $field;
+            }
+        }
+    }
+    return null;
+}
+
+function identity_taken_message(string $field): string
+{
+    return [
+        'email' => 'That email address is already registered or waiting for approval.',
+        'username' => 'That username is already taken or waiting for approval.',
+        'id_number' => 'That ID number is already registered or waiting for approval.',
+    ][$field] ?? 'That account already exists.';
+}
+
+function list_pending_registrations(): array
+{
+    global $conn;
+    $result = $conn->query('SELECT p.id, p.first_name, p.middle_name, p.last_name, p.suffix, p.id_number, p.email, p.username, p.submitted_at, creator.username AS created_by FROM pending_registrations p LEFT JOIN users creator ON creator.id = p.created_by ORDER BY p.submitted_at ASC');
+    $rows = [];
+    while ($row = $result->fetch_assoc()) {
+        $rows[] = $row;
+    }
+    return $rows;
+}
+
+function approve_pending_registration(int $pendingId): void
+{
+    with_identity_lock(fn() => approve_pending_registration_locked($pendingId));
+}
+
+function approve_pending_registration_locked(int $pendingId): void
+{
+    global $conn;
+    $conn->begin_transaction();
+    try {
+        $stmt = $conn->prepare('SELECT * FROM pending_registrations WHERE id = ? FOR UPDATE');
+        $stmt->bind_param('i', $pendingId);
+        $stmt->execute();
+        $pending = $stmt->get_result()->fetch_assoc();
+        if (!$pending) {
+            throw new RuntimeException('This registration is no longer waiting for approval.');
+        }
+        foreach (['email', 'username', 'id_number'] as $field) {
+            $check = $conn->prepare("SELECT 1 FROM users WHERE $field = ? LIMIT 1");
+            $check->bind_param('s', $pending[$field]);
+            $check->execute();
+            if ($check->get_result()->fetch_row()) {
+                throw new RuntimeException("Cannot approve: another account already uses this $field.");
+            }
+        }
+
+        // Accounts an Administrator created have no address or security questions
+        // yet, so they start "incomplete": the first login with the temporary
+        // password opens the setup wizard (onboarding.html) before the dashboard.
+        $registrationStatus = $pending['question1'] === null ? 'incomplete' : 'complete';
+        $insert = $conn->prepare('INSERT INTO users (first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, password, street, region, barangay, barangay_code, city, province, country, zip_code, role, registration_status, account_status, privileges) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "user", ?, "approved", "{}")');
+        $insert->bind_param('sssssi' . str_repeat('s', 14),
+            $pending['first_name'], $pending['middle_name'], $pending['last_name'], $pending['suffix'],
+            $pending['birthday'], $pending['age'], $pending['gender'], $pending['id_number'], $pending['email'],
+            $pending['username'], $pending['password'], $pending['street'], $pending['region'], $pending['barangay'],
+            $pending['barangay_code'], $pending['city'], $pending['province'], $pending['country'], $pending['zip_code'],
+            $registrationStatus);
+        if (!$insert->execute()) {
+            throw new RuntimeException(is_duplicate_key_error()
+                ? 'Cannot approve: another account already uses this username, email or ID number.'
+                : 'Account could not be created: ' . $conn->error);
+        }
+        $userId = (int)$conn->insert_id;
+        record_password_history($userId, $pending['password']);
+
+        $role = $conn->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE code = "user"');
+        $role->bind_param('i', $userId);
+        if (!$role->execute() || $role->affected_rows < 1) {
+            throw new RuntimeException('Account permissions could not be assigned.');
+        }
+
+        if ($pending['question1'] !== null) {
+            $questions = $conn->prepare('INSERT INTO security_questions (user_id, authQuestion1, authAnswer1, authQuestion2, authAnswer2, authQuestion3, authAnswer3) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $questions->bind_param('issssss', $userId, $pending['question1'], $pending['answer1'], $pending['question2'], $pending['answer2'], $pending['question3'], $pending['answer3']);
+            if (!$questions->execute()) {
+                throw new RuntimeException('Recovery questions could not be saved.');
+            }
+        }
+
+        $remove = $conn->prepare('DELETE FROM pending_registrations WHERE id = ?');
+        $remove->bind_param('i', $pendingId);
+        $remove->execute();
+
+        audit('accounts.approve', $userId, ['pending_id' => $pendingId]);
+        $conn->commit();
+    } catch (Throwable $error) {
+        $conn->rollback();
+        throw $error;
+    }
+    notify_account(account_snapshot($userId), 'approved');
+}
+
+function reject_pending_registration(int $pendingId, string $reason): void
+{
+    global $conn;
+    $reason = trim($reason);
+    if ($reason === '') {
+        throw new InvalidArgumentException('A reason is required to reject a registration.');
+    }
+    $stmt = $conn->prepare('SELECT id, first_name, last_name, email, username FROM pending_registrations WHERE id = ?');
+    $stmt->bind_param('i', $pendingId);
+    $stmt->execute();
+    $pending = $stmt->get_result()->fetch_assoc();
+    if (!$pending) {
+        throw new RuntimeException('This registration is no longer waiting for approval.');
+    }
+    $remove = $conn->prepare('DELETE FROM pending_registrations WHERE id = ?');
+    $remove->bind_param('i', $pendingId);
+    $remove->execute();
+    if ($remove->affected_rows < 1) {
+        throw new RuntimeException('This registration is no longer waiting for approval.');
+    }
+    audit('accounts.registration.reject', null, ['username' => $pending['username'], 'email' => $pending['email'], 'reason' => $reason]);
+    notify_account($pending, 'rejected', ['reason' => $reason]);
+}
+
+// Saves a student's completed registration into pending_registrations (never
+// `users`). $data holds already-validated fields; the password is a hash and the
+// answers are hashed here. Duplicate-proof: the "is it taken?" check, the
+// server-assigned ID number and the insert run under one lock.
+function create_pending_registration(array $data, array $questions, array $answers): array
+{
+    global $conn;
+    return with_identity_lock(function () use ($conn, $data, $questions, $answers) {
+        $taken = identity_taken($data['email'], $data['username'], '');
+        if ($taken !== null) {
+            return ['status' => 'error', 'message' => identity_taken_message($taken)];
+        }
+        $idNumber = next_employee_id();
+        $hashed = array_map(fn($answer) => password_hash(trim($answer), PASSWORD_DEFAULT), $answers);
+        $stmt = $conn->prepare('INSERT INTO pending_registrations
+            (first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, password,
+             street, region, barangay, barangay_code, city, province, country, zip_code,
+             question1, answer1, question2, answer2, question3, answer3)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $stmt->bind_param('sssssi' . str_repeat('s', 19),
+            $data['first_name'], $data['middle_name'], $data['last_name'], $data['suffix'],
+            $data['birthday'], $data['age'], $data['gender'], $idNumber,
+            $data['email'], $data['username'], $data['password_hash'],
+            $data['street'], $data['region'], $data['barangay'], $data['barangay_code'],
+            $data['city'], $data['province'], $data['country'], $data['zip_code'],
+            $questions[0], $hashed[0], $questions[1], $hashed[1], $questions[2], $hashed[2]);
+        if (!$stmt->execute()) {
+            if (is_duplicate_key_error()) {
+                return ['status' => 'error', 'message' => identity_taken_message(identity_taken($data['email'], $data['username'], '') ?? '')];
+            }
+            error_log('Pending registration insert failed: ' . $stmt->error);
+            return ['status' => 'error', 'message' => 'Your registration could not be saved. Please try again.'];
+        }
+        return [
+            'status' => 'success',
+            'message' => "Registration submitted. Your ID number is $idNumber. You can log in once an administrator approves your account.",
+            'redirect' => '../html/login.html',
+        ];
+    });
 }

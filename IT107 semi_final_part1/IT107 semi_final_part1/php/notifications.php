@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=utf-8');
 $user = require_auth();
 $notifications = [
     'pending_users' => 0,
+    'block_requests' => 0,
     'deletion_requests' => 0,
     'today_events' => 0
 ];
@@ -25,8 +26,13 @@ if ($seenAt) {
 }
 
 if (can('accounts.approve', (int)$user['id'])) {
-    $result = $conn->query('SELECT COUNT(*) AS total FROM users WHERE username <> "Keavenyadmin1" AND account_status = "pending"');
+    $result = $conn->query('SELECT COUNT(*) AS total FROM pending_registrations');
     $notifications['pending_users'] = (int)$result->fetch_assoc()['total'];
+}
+
+if (can('accounts.block.review', (int)$user['id'])) {
+    $result = $conn->query('SELECT COUNT(*) AS total FROM admin_block_requests WHERE status = "pending"');
+    $notifications['block_requests'] = (int)$result->fetch_assoc()['total'];
 }
 
 if (can('accounts.delete.approve', (int)$user['id'])) {
