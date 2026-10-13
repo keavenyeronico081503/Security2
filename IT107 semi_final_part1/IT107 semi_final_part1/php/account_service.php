@@ -51,13 +51,14 @@ function deactivate_inactive_accounts(): void
     }
 }
 
-function list_accounts(string $employeeId = ''): array
+function list_accounts(string $employeeId = '', string $role = ''): array
 {
     global $conn;
     deactivate_inactive_accounts();
     $like = "%$employeeId%";
-    $stmt = $conn->prepare('SELECT id, first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, role, account_status, is_online, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Keavenyadmin1" ORDER BY created_at DESC');
-    $stmt->bind_param('s', $like);
+    $role = in_array($role, ['super_admin', 'admin', 'user'], true) ? $role : '';
+    $stmt = $conn->prepare('SELECT id, first_name, middle_name, last_name, suffix, birthday, age, gender, id_number, email, username, role, account_status, is_online, privileges, created_at FROM users WHERE id_number LIKE ? AND username <> "Keavenyadmin1" AND (? = "" OR role = ?) ORDER BY created_at DESC');
+    $stmt->bind_param('sss', $like, $role, $role);
     $stmt->execute();
     $users = [];
     $result = $stmt->get_result();

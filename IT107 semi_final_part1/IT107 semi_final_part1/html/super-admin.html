@@ -61,13 +61,13 @@
       <div class="ca-header"><span class="ca-icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span><div><p class="eyebrow">Account management</p><h2>Create administrator account</h2><p>Issue starter credentials for a new Administrator or Super Administrator.</p></div></div>
       <p class="ca-note"><i class="fas fa-info-circle" aria-hidden="true"></i><span>You only set the username and a temporary password. At first login the account holder verifies their personal email, chooses their own password, and completes their profile and recovery questions.</span></p>
       <form id="createForm" class="ca-form" data-endpoint="../php/super-admin.php?action=create" novalidate>
-        <div class="ca-grid">
-          <div class="field"><label for="createEmployeeId">Employee ID <span>Generated automatically</span></label><input id="createEmployeeId" data-ca="employee-id" readonly placeholder="Loading…"></div>
-          <div class="field"><label for="superCreateUsername">Username <span>Shared with the account holder</span></label><input id="superCreateUsername" name="username" autocomplete="off" maxlength="25" placeholder="e.g. MariaAdmin1"></div>
-          <div class="field ca-wide"><label for="superCreatePassword">Temporary password <span>Used once, then replaced</span></label>
+        <div class="ca-grid" data-layout="admin">
+          <div class="field" data-area="id"><label for="createEmployeeId">Employee ID <span>Generated automatically</span></label><input id="createEmployeeId" data-ca="employee-id" readonly placeholder="Loading…"></div>
+          <div class="field" data-area="username"><label for="superCreateUsername">Username <span>Shared with the account holder</span></label><input id="superCreateUsername" name="username" autocomplete="off" maxlength="25" placeholder="e.g. MariaAdmin1"></div>
+          <div class="field ca-wide" data-area="password"><label for="superCreatePassword">Temporary password <span>Used once, then replaced</span></label>
             <div class="ca-pw-row"><div class="pw-wrap"><input id="superCreatePassword" name="password" type="password" autocomplete="new-password" maxlength="20" placeholder="Generate or type one"><button type="button" class="pw-toggle" aria-label="Show password">👁</button></div><button type="button" class="ca-btn secondary" data-ca="generate"><i class="fas fa-dice" aria-hidden="true"></i> Generate</button><button type="button" class="ca-btn secondary" data-ca="copy"><i class="far fa-copy" aria-hidden="true"></i> Copy</button></div>
           </div>
-          <div class="ca-wide"><span class="ca-legend">Account type</span>
+          <div class="ca-wide" data-area="roles"><span class="ca-legend">Account type</span>
             <div class="ca-roles">
               <label class="ca-role"><input type="radio" name="role" value="admin" checked><strong>Administrator</strong><span>Manages user accounts, approves registrations, publishes posts and events. Blocking a user needs your approval.</span></label>
               <label class="ca-role"><input type="radio" name="role" value="super_admin"><strong>Super Administrator</strong><span>Full control of the system. <span class="ca-warn">Handover: only one stays active, so your own account is deactivated when you log out.</span></span></label>

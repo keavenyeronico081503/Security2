@@ -9,7 +9,7 @@ $user = null;
 try {
     if ($action === 'list') {
         require_permission('accounts.view');
-        echo json_encode(['status' => 'success', 'users' => list_accounts(trim($_GET['employee_id'] ?? ''))]);
+        echo json_encode(['status' => 'success', 'users' => list_accounts(trim($_GET['employee_id'] ?? ''), (string)($_GET['role'] ?? ''))]);
         exit;
     }
 

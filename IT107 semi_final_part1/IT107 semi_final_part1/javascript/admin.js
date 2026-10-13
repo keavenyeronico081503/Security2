@@ -236,19 +236,17 @@ async function request(action, body) {
 
 async function loadAdminAccess() {
   const createLink = document.querySelector('[data-permission="accounts.create"]');
-  const createPanel = document.getElementById('create-account');
   try {
     const response = await fetch('../php/user.php?action=session');
     const data = await response.json();
     const allowed = response.ok && data.status === 'success' && data.user.permissions.includes('accounts.create');
     adminRole = data.user.role || '';
-    if (allowed) {
-      createLink.hidden = false;
-      createPanel.hidden = false;
-    }
+    // Only reveal the sidebar links here. Which sections are visible is decided by
+    // the current module (sidebar.js), so a section never shows up inside another
+    // module's view (e.g. Create account appearing on the Accounts page).
+    if (allowed) createLink.hidden = false;
     if (data.user.permissions.includes('accounts.block.review')) {
       document.querySelector('[data-permission="accounts.block.review"]').hidden = false;
-      document.getElementById('block-requests').hidden = false;
       loadBlockRequests();
     }
     if (data.user.permissions.includes('content.manage')) {
@@ -256,6 +254,7 @@ async function loadAdminAccess() {
       loadPosts();
       loadEvents();
     }
+    window.dispatchEvent(new HashChangeEvent('hashchange')); // re-apply the current module view
   } catch (error) {
     return;
   }
@@ -388,7 +387,9 @@ document.getElementById('closeEdit').addEventListener('click', () => editDialog.
 document.getElementById('cancelEdit').addEventListener('click', () => editDialog.close());
 
 async function load() {
-  try { render((await request(`list&employee_id=${encodeURIComponent(document.getElementById('employeeId').value)}`)).users); }
+  const employeeId = document.getElementById('employeeId').value;
+  const role = document.getElementById('roleFilter')?.value || '';
+  try { render((await request(`list&employee_id=${encodeURIComponent(employeeId)}&role=${encodeURIComponent(role)}`)).users); }
   catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
 }
 
@@ -404,7 +405,8 @@ table.addEventListener('click', async event => {
   try { message.textContent = (await request(action, body)).message; message.style.color = '#176b52'; await load(); } catch (error) { message.textContent = error.message; message.style.color = '#a63d32'; }
 });
 document.getElementById('filter').addEventListener('submit', event => { event.preventDefault(); load(); });
-document.getElementById('clear').addEventListener('click', () => { document.getElementById('employeeId').value = ''; load(); });
+document.getElementById('clear').addEventListener('click', () => { document.getElementById('employeeId').value = ''; document.getElementById('roleFilter').value = ''; load(); });
+document.getElementById('roleFilter').addEventListener('change', load);
 document.getElementById('refreshBlockRequests')?.addEventListener('click', loadBlockRequests);
 document.getElementById('refreshAdminStatistics').addEventListener('click', loadStatistics);
 document.getElementById('adminStatsPeriod')?.addEventListener('change', loadStatistics);

@@ -4,7 +4,7 @@
 .ca-panel {
   --ca-ink: #17211b; --ca-muted: #68736c; --ca-line: #d9ded7; --ca-soft: #f3f6f2;
   --ca-accent: #176b52; --ca-accent-dark: #0f5849; --ca-danger: #a63d32; --ca-warn: #9a5b00;
-  max-width: 920px; padding: 0 !important; overflow: hidden; border: 1px solid var(--ca-line); border-radius: 12px;
+  width: 100%; box-sizing: border-box; padding: 0 !important; overflow: hidden; border: 1px solid var(--ca-line); border-radius: 12px;
   background: #fffdf8; box-shadow: 0 14px 34px rgba(23, 33, 27, .07);
 }
 .ca-header {
@@ -106,3 +106,34 @@
   body.ca-printing .ca-result { position: absolute; left: 0; top: 0; width: 100%; margin: 0; }
   body.ca-printing .ca-result .ca-actions { display: none !important; }
 }
+
+/* Wide screens: three columns with related fields grouped (data-area on each field). */
+@media (min-width: 1200px) {
+  .ca-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ca-grid[data-layout="user"] {
+    grid-template-areas:
+      "id first last"
+      "email username username"
+      "password password password";
+  }
+  .ca-grid[data-layout="admin"] {
+    grid-template-areas:
+      "id username username"
+      "password password password"
+      "roles roles roles";
+  }
+  .ca-grid > [data-area="id"] { grid-area: id; }
+  .ca-grid > [data-area="first"] { grid-area: first; }
+  .ca-grid > [data-area="last"] { grid-area: last; }
+  .ca-grid > [data-area="email"] { grid-area: email; }
+  .ca-grid > [data-area="username"] { grid-area: username; }
+  .ca-grid > [data-area="password"] { grid-area: password; }
+  .ca-grid > [data-area="roles"] { grid-area: roles; }
+  /* Credentials: label/value pairs side by side so the card has no empty right half. */
+  .ca-creds { grid-template-columns: 170px minmax(0, 1fr) 170px minmax(0, 1fr); }
+}
+
+/* The dashboard stylesheet gives every input flex:1, which made inputs grow taller than 44px in a
+   stretched grid row; keep them at their own height and align fields to the top. */
+.ca-panel .field input { flex: none; }
+.ca-grid { align-items: start; }
