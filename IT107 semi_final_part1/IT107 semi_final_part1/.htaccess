@@ -1,0 +1,7 @@
+# Block secrets from being downloaded through Apache.
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Show the styled page for any missing URL under /security2/.
+ErrorDocument 404 /security2/html/404.html

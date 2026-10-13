@@ -3,3 +3,4 @@
 !.env.example
 php_server.log
 php_server_err.log
+logs/*.txt

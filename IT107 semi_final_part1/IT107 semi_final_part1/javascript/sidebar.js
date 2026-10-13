@@ -1,3 +1,26 @@
+// Send visitors who aren't logged in to the login page, and logged-in visitors
+// on another role's page to their own home page (same mapping as php/login.php).
+(async () => {
+  const roleHomes = { super_admin: 'super-admin.html', admin: 'admin.html', data_administrator: 'admin.html' };
+  const pageRoles = { 'app-superadmin': ['super_admin'], 'app-admin': ['admin', 'data_administrator'], 'app-user': ['user'] };
+  const pageClass = Object.keys(pageRoles).find(name => document.body.classList.contains(name));
+  if (!pageClass) return;
+  try {
+    const response = await fetch('../php/user.php?action=profile');
+    if (response.status === 401) {
+      location.replace('login.html');
+      return;
+    }
+    const data = await response.json();
+    const role = data.profile?.role;
+    if (role && !pageRoles[pageClass].includes(role)) {
+      location.replace(roleHomes[role] || 'dashboard.html');
+    }
+  } catch (error) {
+    return;
+  }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   const sidebar = document.querySelector('.app-sidebar');
   const scrim = document.querySelector('.sidebar-scrim');
@@ -46,14 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const brandRole = document.getElementById('sidebarBrandRole');
     if (!brandName || !brandRole) return;
     try {
-      if (document.body.classList.contains('app-pending')) {
-        const response = await fetch('../php/user.php?action=status');
-        const data = await response.json();
-        if (!response.ok || data.status !== 'success') return;
-        brandName.textContent = data.account.display_name || data.account.username;
-        brandRole.textContent = roleLabels[data.account.role] || data.account.role;
-        return;
-      }
       const response = await fetch('../php/user.php?action=profile');
       const data = await response.json();
       if (!response.ok || data.status !== 'success') return;
@@ -87,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const applyModuleView = () => {
-    const hash = location.hash.slice(1) || (document.body.classList.contains('app-superadmin') || document.body.classList.contains('app-admin') ? 'overview' : document.body.classList.contains('app-pending') ? 'account-status' : 'dashboard');
+    const hash = location.hash.slice(1) || (document.body.classList.contains('app-superadmin') || document.body.classList.contains('app-admin') ? 'overview' : 'dashboard');
     const targets = moduleSelectors[hash];
     if (!targets) return;
     const main = document.querySelector('main');
