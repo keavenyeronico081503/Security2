@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", function() {
     const form = document.querySelector('form[name="myform"]');
     const loginError = document.getElementById("loginError");
+
+    // google_callback.php sends Google sign-in problems back here as ?google_error=…
+    const googleError = new URLSearchParams(location.search).get("google_error");
+    if (googleError) showMessage(googleError, "error");
     const passwordInput = document.getElementById("Password");
     const passwordError = document.getElementById("passwordError");
     const usernameInputLive = document.getElementById("Username");

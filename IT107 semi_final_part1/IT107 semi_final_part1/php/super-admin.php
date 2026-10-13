@@ -171,15 +171,20 @@ if ($action === 'delete') {
     }
     // Distinct from 'accounts.delete.approve' (used for accepting a pending deletion
     // request) so the audit log doesn't mislabel a direct delete as "Accepted deletion request".
+    // The audit row is written first so it can still copy the target's username, but
+    // it only commits together with the delete, so a failed delete leaves no record.
+    $conn->begin_transaction();
     audit('accounts.delete', $userId, ['reason' => $reason]);
     $stmt = $conn->prepare('DELETE FROM users WHERE id = ? AND role <> "super_admin"');
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     if ($stmt->affected_rows < 1) {
+        $conn->rollback();
         http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => 'Account was not deleted.']);
         exit;
     }
+    $conn->commit();
     echo json_encode(['status' => 'success', 'message' => 'Account deleted.']);
     exit;
 }
@@ -189,14 +194,18 @@ if ($action === 'review-delete') {
     $requestId = (int)($data['request_id'] ?? 0);
     $decision = ($data['decision'] ?? '') === 'approve' ? 'approve' : 'reject';
     $decisionReason = trim((string)($data['reason'] ?? ''));
+    // Lock the request row inside the transaction so two reviewers can't both act on it.
+    $conn->begin_transaction();
     $stmt = $conn->prepare('SELECT target_user_id, status FROM admin_delete_requests WHERE id = ? FOR UPDATE');
     $stmt->bind_param('i', $requestId);
     $stmt->execute();
     $request = $stmt->get_result()->fetch_assoc();
     if (!$request || $request['status'] !== 'pending' || !$decisionReason) {
-        throw new RuntimeException('This request is not available for review.');
+        $conn->rollback();
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'This request is not available for review.']);
+        exit;
     }
-    $conn->begin_transaction();
     try {
         $status = $decision === 'approve' ? 'approved' : 'rejected';
         // The emergency admin has no row in `users` (see emergency_admin.php), and
@@ -212,6 +221,14 @@ if ($action === 'review-delete') {
             $delete = $conn->prepare('DELETE FROM users WHERE id = ? AND role <> "super_admin"');
             $delete->bind_param('i', $request['target_user_id']);
             $delete->execute();
+            if ($delete->affected_rows < 1) {
+                // Keep the request pending instead of marking it approved for an
+                // account that was never actually deleted.
+                $conn->rollback();
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'This account can no longer be deleted.']);
+                exit;
+            }
         }
         $conn->commit();
     } catch (Throwable $error) {

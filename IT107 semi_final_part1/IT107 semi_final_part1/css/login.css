@@ -550,3 +550,9 @@ footer h3 {
         padding: 10px 20px;
     }
 }
+
+.or-divider{display:flex;align-items:center;gap:12px;margin:18px 0 0;color:#7a857e;font-size:13px}
+.or-divider::before,.or-divider::after{content:"";flex:1;height:1px;background:#d9ded7}
+.google-button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:12px;padding:11px 14px;border:1px solid #d0d5d1;border-radius:8px;background:#fff;color:#1f1f1f;font-weight:600;text-decoration:none}
+.google-button:hover{background:#f5f7f5}
+.google-button svg{width:18px;height:18px}

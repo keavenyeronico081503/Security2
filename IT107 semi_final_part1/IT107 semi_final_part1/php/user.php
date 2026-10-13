@@ -46,9 +46,10 @@ if ($action === 'update-profile') {
         echo json_encode(['status' => 'error', 'message' => 'First name and last name are required.']);
         exit;
     }
-    if (!is_institutional_email($email)) {
+    $accountRole = (string)($user['role_code'] ?? $user['legacy_role'] ?? 'user');
+    if (!is_email_allowed_for_role($email, $accountRole)) {
         http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => institutional_email_error_message()]);
+        echo json_encode(['status' => 'error', 'message' => email_role_error_message($accountRole)]);
         exit;
     }
     if ($contact !== '' && !preg_match('/^[0-9+() .-]{7,30}$/', $contact)) {

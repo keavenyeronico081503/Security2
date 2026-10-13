@@ -1590,3 +1590,38 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+// Show a server-side error passed back in the URL, and prefill signups that
+// started from "Continue with Google" (their email is already verified by Google).
+document.addEventListener('DOMContentLoaded', async function () {
+    const form = document.getElementById('registerForm');
+    if (!form) return;
+    const showNotice = (text, isError) => {
+        const notice = document.createElement('div');
+        notice.className = isError ? 'form-notice form-notice-error' : 'form-notice';
+        notice.textContent = text;
+        form.prepend(notice);
+    };
+
+    const params = new URLSearchParams(location.search);
+    if (params.get('error')) showNotice(params.get('error'), true);
+
+    try {
+        const response = await fetch('../php/google_signup.php');
+        const data = await response.json();
+        if (data.status !== 'success') return;
+        const fill = (id, value) => {
+            const field = document.getElementById(id);
+            if (!field || !value) return;
+            field.value = value;
+            field.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+        fill('fname', data.signup.first_name);
+        fill('LastName', data.signup.last_name);
+        fill('email', data.signup.email);
+        const email = document.getElementById('email');
+        if (email) email.readOnly = true;
+        showNotice('Signed in with Google: your email is already verified. Fill in the remaining details to finish signing up.', false);
+    } catch (error) {
+        return;
+    }
+});

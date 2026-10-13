@@ -130,3 +130,38 @@ input.input-success {
         grid-template-columns: 1fr;
     }
 }
+
+#emailCodeBox[hidden] {
+    display: none;
+}
+
+.code-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.code-row input {
+    flex: 1;
+    max-width: 220px;
+    letter-spacing: .3em;
+    font-size: 18px;
+}
+
+.code-row .secondary {
+    width: auto;
+    margin: 0;
+    background: transparent;
+    color: var(--accent, #176b52);
+    border: 1px solid var(--accent, #176b52);
+}
+
+.code-row .secondary:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.code-row .secondary:hover:not(:disabled) {
+    background: #f0faf4;
+    color: var(--accent, #176b52);
+}

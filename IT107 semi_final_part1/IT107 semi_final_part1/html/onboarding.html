@@ -52,8 +52,16 @@
                     <label>Question 3<select name="question3" required></select><input name="answer3" placeholder="Your answer" required></label>
                 </div>
             </fieldset>
+            <fieldset id="emailCodeBox" hidden>
+                <legend>Check your email</legend>
+                <p class="hint">Enter the 6-digit code we emailed you to confirm your address.</p>
+                <div class="code-row">
+                    <input id="emailCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456">
+                    <button id="resendCode" type="button" class="secondary">Resend code</button>
+                </div>
+            </fieldset>
             <p id="formMessage" role="alert"></p>
-            <button type="submit">Finish account setup</button>
+            <button id="submitButton" type="submit">Finish account setup</button>
         </form>
     </main>
     <script src="../javascript/onboarding.js"></script>

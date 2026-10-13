@@ -2,6 +2,8 @@
 session_start();
 require_once 'db.php';
 require_once 'email_policy.php';
+require_once 'mailer.php';
+require_once 'otp.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -45,8 +47,12 @@ if ($firstName === '' || $lastName === '' || $birthday === '' || $gender === '' 
     echo json_encode(['status' => 'error', 'message' => 'Please complete all profile fields.']);
     exit;
 }
-if (!is_institutional_email($email)) {
-    echo json_encode(['status' => 'error', 'message' => institutional_email_error_message()]);
+$roleStmt = $conn->prepare('SELECT role FROM users WHERE id = ?');
+$roleStmt->bind_param('i', $userId);
+$roleStmt->execute();
+$accountRole = (string)($roleStmt->get_result()->fetch_assoc()['role'] ?? 'user');
+if (!is_email_allowed_for_role($email, $accountRole)) {
+    echo json_encode(['status' => 'error', 'message' => email_role_error_message($accountRole)]);
     exit;
 }
 if (!in_array($gender, ['Male', 'Female'], true)) {
@@ -81,6 +87,37 @@ if ($emailCheck->get_result()->num_rows > 0) {
     exit;
 }
 $emailCheck->close();
+
+// Prove the email works before saving: the first submit emails a code, and the
+// same form is submitted again with that code to actually finish setup.
+$submittedCode = trim((string)($_POST['otp'] ?? ''));
+if ($submittedCode === '') {
+    $existing = $_SESSION['onboarding_otp'] ?? null;
+    if ($existing && strcasecmp((string)($existing['email'] ?? ''), $email) === 0) {
+        $waitRemaining = $existing['last_sent_at'] + REGISTRATION_OTP_RESEND_COOLDOWN_SECONDS - time();
+        if ($waitRemaining > 0) {
+            echo json_encode(['status' => 'error', 'message' => "Please wait $waitRemaining second(s) before requesting another code.", 'retry_after' => $waitRemaining]);
+            exit;
+        }
+    }
+    $otpCode = issue_registration_otp($email, 'onboarding_otp');
+    if (!send_registration_otp_email($email, trim($firstName . ' ' . $lastName), $otpCode)) {
+        unset($_SESSION['onboarding_otp']);
+        echo json_encode(['status' => 'error', 'message' => "We couldn't send a code to that email. Check the address and try again."]);
+        exit;
+    }
+    echo json_encode([
+        'status' => 'verify',
+        'message' => 'We sent a 6-digit code to ' . mask_email($email) . '. Enter it below to finish.',
+        'retry_after' => REGISTRATION_OTP_RESEND_COOLDOWN_SECONDS,
+    ]);
+    exit;
+}
+$codeError = check_otp_code('onboarding_otp', $email, $submittedCode);
+if ($codeError !== null) {
+    echo json_encode(['status' => 'error', 'message' => $codeError]);
+    exit;
+}
 
 $conn->begin_transaction();
 try {

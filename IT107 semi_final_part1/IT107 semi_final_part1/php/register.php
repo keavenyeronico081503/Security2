@@ -72,13 +72,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'email_verified' => false
     ];
 
+    // Signups that started from "Continue with Google" already proved they own this
+    // address through Google, so they skip the emailed code.
+    $googleEmail = $_SESSION['google_signup']['email'] ?? '';
+    if ($googleEmail !== '' && strcasecmp($googleEmail, trim($email)) === 0) {
+        $_SESSION['temp_user_data']['email_verified'] = true;
+        unset($_SESSION['google_signup'], $_SESSION['registration_otp']);
+        header("Location: ../html/question.html");
+        exit();
+    }
+
     // Send a one-time code to the institutional email to confirm the user controls it
     // before letting them proceed to the rest of the registration flow.
     $otpCode = issue_registration_otp($email);
     $displayName = trim($fname . ' ' . $lastName);
     if (!send_registration_otp_email($email, $displayName, $otpCode)) {
         unset($_SESSION['temp_user_data'], $_SESSION['registration_otp']);
-        die('We could not send a verification code to that email address. Please try again later.');
+        header("Location: ../html/register.html?error=" . rawurlencode('We could not send a verification code to that email address. Please try again later.'));
+        exit();
     }
 
     // Redirect to the email verification page; account is created only after

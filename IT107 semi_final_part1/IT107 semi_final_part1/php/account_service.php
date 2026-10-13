@@ -58,8 +58,8 @@ function update_account(int $userId, array $data): void
         throw new InvalidArgumentException('Username is required.');
     }
     $email = trim((string)($data['email'] ?? ''));
-    if (!is_institutional_email($email)) {
-        throw new InvalidArgumentException(institutional_email_error_message());
+    if (!is_email_allowed_for_role($email, (string)$oldValues['role'])) {
+        throw new InvalidArgumentException(email_role_error_message((string)$oldValues['role']));
     }
     $usernameCheck = $conn->prepare('SELECT id FROM users WHERE username = ? AND id <> ? LIMIT 1');
     $usernameCheck->bind_param('si', $username, $userId);
@@ -86,8 +86,8 @@ function reset_account_password(int $userId): void
     if ($oldValues['role'] === 'super_admin') {
         throw new RuntimeException('Super Administrator accounts cannot be reset here.');
     }
-    if (!is_institutional_email((string)$oldValues['email'])) {
-        throw new RuntimeException('This account has no valid institutional email on file. Update its email before resetting the password.');
+    if (!is_email_allowed_for_role((string)$oldValues['email'], (string)$oldValues['role'])) {
+        throw new RuntimeException('This account has no valid email on file for its role. Update its email before resetting the password.');
     }
 
     $defaultPassword = 'Abcde12345';
@@ -159,10 +159,68 @@ function request_account_deletion(int $requesterId, int $targetUserId, string $r
     if ($requesterId === $targetUserId || trim($reason) === '') {
         throw new InvalidArgumentException('A valid deletion reason and target account are required.');
     }
-    $stmt = $conn->prepare('INSERT INTO admin_delete_requests (requested_by, target_user_id, reason) SELECT ?, id, ? FROM users WHERE id = ? AND role <> "super_admin" AND account_status <> "blocked"');
-    $stmt->bind_param('isi', $requesterId, $reason, $targetUserId);
+    $stmt = $conn->prepare('INSERT INTO admin_delete_requests (requested_by, target_user_id, reason) SELECT ?, id, ? FROM users WHERE id = ? AND role <> "super_admin" AND account_status <> "blocked" AND NOT EXISTS (SELECT 1 FROM admin_delete_requests WHERE target_user_id = ? AND status = "pending")');
+    $stmt->bind_param('isii', $requesterId, $reason, $targetUserId, $targetUserId);
     if (!$stmt->execute() || $stmt->affected_rows < 1) {
-        throw new RuntimeException('Deletion request could not be created for this account.');
+        throw new RuntimeException('A deletion request for this account is already pending, or the account can\'t be deleted.');
     }
     audit('accounts.delete.request', $targetUserId, ['reason' => $reason]);
+}
+
+// Shared by password login (login.php) and Google login (google_callback.php):
+// everything that happens once the person has proven who they are. Returns the
+// JSON-style result ['status', 'message', 'redirect'?] for the caller to deliver.
+function complete_login(array $user, bool $isEmergencyLogin = false, string $method = 'password'): array
+{
+    global $conn;
+    $details = $method === 'password' ? [] : ['method' => $method];
+
+    if ($user['account_status'] === 'blocked') {
+        return ['status' => 'error', 'message' => 'This account is blocked.'];
+    }
+
+    if ($user['registration_status'] === 'incomplete') {
+        // Managed accounts must finish onboarding before entering their dashboard.
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
+        audit('auth.login.success', (int)$user['id'], $details);
+        $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW(), is_online = 1 WHERE id = ?');
+        $touchStmt->bind_param('i', $user['id']);
+        $touchStmt->execute();
+        return ['status' => 'success', 'message' => 'Complete your account setup.', 'redirect' => '../html/onboarding.html'];
+    }
+
+    if ($user['role'] !== 'user' && $user['account_status'] !== 'approved') {
+        return ['status' => 'error', 'message' => 'This administrator account is awaiting approval.'];
+    }
+
+    if (!$isEmergencyLogin && $user['role'] === 'user' && $user['account_status'] === 'pending') {
+        audit('auth.login.failed', (int)$user['id'], $details, null, null, false, 'Account pending approval.');
+        return ['status' => 'pending', 'message' => 'This account is waiting for administrator approval.'];
+    }
+
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['role'] = $user['role'];
+    $_SESSION['privileges'] = json_decode($user['privileges'] ?: '{}', true) ?: [];
+    $_SESSION['is_emergency_admin'] = $isEmergencyLogin;
+    audit('auth.login.success', (int)$user['id'], $details);
+    if (!$isEmergencyLogin) {
+        $touchStmt = $conn->prepare('UPDATE users SET last_login_at = NOW(), is_online = 1 WHERE id = ?');
+        $touchStmt->bind_param('i', $user['id']);
+        $touchStmt->execute();
+    }
+
+    $redirect = match ($user['role']) {
+        'super_admin' => '../html/super-admin.html',
+        'admin', 'data_administrator' => '../html/admin.html',
+        default => '../html/dashboard.html'
+    };
+    if (!empty($user['must_change_password'])) {
+        $redirect = '../html/change-password.html';
+    }
+    return ['status' => 'success', 'message' => 'Login successful!', 'redirect' => $redirect];
 }

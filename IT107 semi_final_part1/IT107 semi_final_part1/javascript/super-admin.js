@@ -552,7 +552,7 @@ editForm.addEventListener('submit', async event => {
 
 document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
   if (!editTargetId) return;
-  if (!await confirmAction('Reset password', "Generate a new temporary password and email it to this account's institutional address? The current password will stop working immediately.")) return;
+  if (!await confirmAction('Reset password', "Generate a new temporary password and email it to the address on file for this account? The current password will stop working immediately.")) return;
   try {
     const result = await request('reset-password', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_id: editTargetId }) });
     showEditMessage(result.message);

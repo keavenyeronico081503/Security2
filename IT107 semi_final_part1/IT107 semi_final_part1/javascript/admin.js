@@ -314,7 +314,7 @@ function render(users) {
       if (user.account_status === 'pending') actions.appendChild(actionButton('Approve', 'approve', user.id));
       actions.appendChild(actionButton(user.account_status === 'blocked' ? 'Unblock' : 'Block', user.account_status === 'blocked' ? 'unblock' : 'block', user.id));
       actions.appendChild(actionButton('Edit', 'update', user.id, user));
-      actions.appendChild(actionButton('Request delete', 'request-delete', user.id));
+      if (user.account_status !== 'blocked') actions.appendChild(actionButton('Request delete', 'request-delete', user.id));
     } else actions.textContent = 'Protected';
     row.appendChild(actions); table.appendChild(row);
   });
@@ -382,7 +382,7 @@ editForm.addEventListener('submit', async event => {
 
 document.getElementById('resetPasswordBtn').addEventListener('click', async () => {
   if (!editTargetId) return;
-  if (!await confirmAction('Reset password', "Generate a new temporary password and email it to this account's institutional address? The current password will stop working immediately.")) return;
+  if (!await confirmAction('Reset password', "Generate a new temporary password and email it to the address on file for this account? The current password will stop working immediately.")) return;
   try {
     const result = await request('reset-password', { user_id: editTargetId });
     showEditMessage(result.message);
