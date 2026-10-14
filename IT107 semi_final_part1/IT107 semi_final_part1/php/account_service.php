@@ -155,8 +155,8 @@ function request_account_deletion(int $requesterId, int $targetUserId, string $r
     if ($requesterId === $targetUserId || trim($reason) === '') {
         throw new InvalidArgumentException('A valid deletion reason and target account are required.');
     }
-    $stmt = $conn->prepare('INSERT INTO admin_delete_requests (requested_by, target_user_id, reason) SELECT ?, id, ? FROM users WHERE id = ? AND role <> "super_admin" AND account_status <> "blocked" AND NOT EXISTS (SELECT 1 FROM admin_delete_requests WHERE target_user_id = ? AND status = "pending")');
-    $stmt->bind_param('isii', $requesterId, $reason, $targetUserId, $targetUserId);
+    $stmt = $conn->prepare('INSERT INTO admin_delete_requests (requested_by, requester_username, target_user_id, target_name, target_id_number, reason) SELECT ?, (SELECT username FROM users WHERE id = ?), id, TRIM(CONCAT(COALESCE(first_name, ""), " ", COALESCE(last_name, ""))), id_number, ? FROM users WHERE id = ? AND role <> "super_admin" AND account_status <> "blocked" AND NOT EXISTS (SELECT 1 FROM admin_delete_requests WHERE target_user_id = ? AND status = "pending")');
+    $stmt->bind_param('iisii', $requesterId, $requesterId, $reason, $targetUserId, $targetUserId);
     if (!$stmt->execute() || $stmt->affected_rows < 1) {
         throw new RuntimeException('A deletion request for this account is already pending, or the account can\'t be deleted.');
     }

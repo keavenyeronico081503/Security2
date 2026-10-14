@@ -287,7 +287,7 @@ function renderStatistics(data) {
     ['Super administrators', summary.super_admins]
   ].map(([label, value]) => `<article class="stat-card"><strong>${value}</strong><span>${label}</span></article>`).join('');
   const required = data.action_required;
-  actionRequired.innerHTML = `<h3>Action required</h3><div class="required-items"><a href="#accounts" data-view="accounts"><strong>${required.pending_users}</strong><span>Pending registrations</span></a><a href="#requests-panel" data-view="requests"><strong>${required.pending_deletions}</strong><span>Deletion requests</span></a><a href="#audit" data-view="audit"><strong>${required.failed_actions}</strong><span>Failed actions, last 30 days</span></a></div>`;
+  actionRequired.innerHTML = `<h3>Action required</h3><div class="required-items"><a href="#accounts" data-view="accounts"><strong>${required.pending_users}</strong><span>Pending registrations</span></a><a href="#requests" data-view="requests"><strong>${required.pending_deletions}</strong><span>Deletion requests</span></a><a href="#audit" data-view="audit"><strong>${required.failed_actions}</strong><span>Failed actions, last 30 days</span></a></div>`;
   actionRequired.querySelectorAll('[data-view]').forEach(link => link.addEventListener('click', () => window.dispatchEvent(new HashChangeEvent('hashchange'))));
   drawChart('statusChart', chartConfig('doughnut', data.status_breakdown.map(item => item.label), data.status_breakdown.map(item => item.count), ['#176b52', '#a46616', '#a63d32']));
   drawChart('roleChart', chartConfig('bar', data.role_breakdown.map(item => item.label), data.role_breakdown.map(item => item.count), ['#176b52', '#5b8f79', '#a46616']));
@@ -648,7 +648,9 @@ async function loadRequests() {
   requests.replaceChildren();
   data.requests.forEach(item => {
     const row = document.createElement('tr');
-    [item.first_name ? `${item.first_name} ${item.last_name}` : 'Account deleted', item.id_number || '-', item.requested_by, item.reason, item.status].forEach(value => {
+    // A deleted account (approved request) keeps the name it had when the request was made.
+    const name = item.target_id ? `${item.first_name} ${item.last_name}` : `${item.target_name || 'Unknown account'} (account deleted)`;
+    [name, item.id_number || '-', item.requested_by || '—', item.reason, item.status].forEach(value => {
       const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell);
     });
     const review = document.createElement('td');

@@ -39,7 +39,7 @@ if ($action === 'list') {
 
 if ($action === 'delete-requests') {
     require_permission('accounts.delete.approve');
-    $result = $conn->query('SELECT r.id, r.reason, r.status, r.decision_reason, r.created_at, r.reviewed_at, requester.username AS requested_by, target.id AS target_id, target.first_name, target.last_name, target.id_number, target.email, target.username FROM admin_delete_requests r LEFT JOIN users requester ON requester.id = r.requested_by LEFT JOIN users target ON target.id = r.target_user_id WHERE requester.username <> "Keavenyadmin1" AND target.username <> "Keavenyadmin1" ORDER BY r.created_at DESC');
+    $result = $conn->query('SELECT r.id, r.reason, r.status, r.decision_reason, r.created_at, r.reviewed_at, COALESCE(requester.username, r.requester_username) AS requested_by, target.id AS target_id, target.first_name, target.last_name, COALESCE(target.id_number, r.target_id_number) AS id_number, target.email, target.username, r.target_name FROM admin_delete_requests r LEFT JOIN users requester ON requester.id = r.requested_by LEFT JOIN users target ON target.id = r.target_user_id WHERE COALESCE(requester.username, r.requester_username, "") <> "Keavenyadmin1" AND COALESCE(target.username, "") <> "Keavenyadmin1" ORDER BY r.created_at DESC');
     $requests = [];
     while ($request = $result->fetch_assoc()) $requests[] = $request;
     echo json_encode(['status' => 'success', 'requests' => $requests]);
