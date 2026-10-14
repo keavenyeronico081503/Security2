@@ -138,7 +138,7 @@ try {
         }
         $problem = validate_name_fields(['first_name' => $data['first_name'], 'last_name' => $data['last_name'], 'username' => $data['username']])
             ?? password_rule_problem($data['password'], $data['password'])
-            ?? password_problem($data['password']);
+            ?? password_problem_on_submit($data['password'], 'admin_create_user');
         if ($problem !== null) {
             throw new InvalidArgumentException($problem);
         }

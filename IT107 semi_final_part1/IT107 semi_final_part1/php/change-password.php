@@ -106,7 +106,7 @@ try {
         ]);
         exit;
     }
-    $passwordIssue = password_problem($newPassword);
+    $passwordIssue = password_problem_on_submit($newPassword, 'password_change');
     if ($passwordIssue !== null) {
         echo json_encode(['success' => false, 'message' => $passwordIssue]);
         exit;

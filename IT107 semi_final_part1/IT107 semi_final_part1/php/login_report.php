@@ -24,8 +24,16 @@ $userId = (int)$account['id'];
 
 // Pull this one account's full sign-in history (login/logout/failed attempts) — capped
 // generously since this is a per-account report, not a system-wide feed.
-$stmt = $conn->prepare('SELECT action_code, success, failure_reason, ip_address, created_at FROM audit_logs WHERE actor_user_id = ? AND action_code IN ("auth.login.success", "auth.login.failed", "auth.logout") ORDER BY created_at ASC LIMIT 3000');
-$stmt->bind_param('i', $userId);
+// A failed login happens before anyone is signed in, so it is audited with the
+// account as the *target* (wrong password) or, when it was refused before the
+// account was looked up (lockout), with only the typed username in details.
+$stmt = $conn->prepare('SELECT action_code, success, failure_reason, ip_address, created_at FROM audit_logs
+    WHERE action_code IN ("auth.login.success", "auth.login.failed", "auth.logout")
+      AND (actor_user_id = ?
+           OR (action_code = "auth.login.failed"
+               AND (target_user_id = ? OR LOWER(JSON_UNQUOTE(JSON_EXTRACT(details, "$.username"))) = LOWER(?))))
+    ORDER BY created_at ASC LIMIT 3000');
+$stmt->bind_param('iis', $userId, $userId, $account['username']);
 $stmt->execute();
 $events = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 

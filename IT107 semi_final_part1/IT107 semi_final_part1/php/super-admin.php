@@ -259,7 +259,7 @@ if ($action === 'create') {
     $temporaryPassword = (string)($data['password'] ?? '');
     $problem = validate_name_fields(['username' => $username])
         ?? password_rule_problem($temporaryPassword, $temporaryPassword)
-        ?? password_problem($temporaryPassword);
+        ?? password_problem_on_submit($temporaryPassword, 'create_administrator');
     if ($problem !== null) {
         http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => $problem]);

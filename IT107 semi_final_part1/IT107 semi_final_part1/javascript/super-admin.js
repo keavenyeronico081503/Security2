@@ -273,7 +273,7 @@ function renderStatistics(data) {
     const preparedBy = document.getElementById('sidebarBrandName')?.textContent || '';
     const preparedByRole = document.getElementById('sidebarBrandRole')?.textContent || '';
     printMeta.innerHTML = `
-      <div><strong>Report period:</strong> Registrations shown for the ${periodLabels[data.registrations_period] || 'selected period'}</div>
+      <div><strong>Report period:</strong> Security and sign-up figures for the ${periodLabels[data.registrations_period] || 'selected period'}</div>
       <div><strong>Prepared by:</strong> ${escapeHtml(preparedBy)}${preparedByRole ? ` (${escapeHtml(preparedByRole)})` : ''}</div>
       <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
     `;
@@ -293,6 +293,81 @@ function renderStatistics(data) {
   drawChart('roleChart', chartConfig('bar', data.role_breakdown.map(item => item.label), data.role_breakdown.map(item => item.count), ['#176b52', '#5b8f79', '#a46616']));
   drawChart('deletionChart', chartConfig('bar', data.deletion_requests.map(item => item.label), data.deletion_requests.map(item => item.count), ['#a46616', '#176b52', '#a63d32']));
   drawChart('registrationChart', chartConfig('line', data.registrations.map(item => item.date), data.registrations.map(item => item.count), '#176b52'));
+  renderSecurityMonitor(data.security, data.registrations_period);
+  renderFunnel(data.funnel, data.registrations_period);
+}
+
+// Small KPI cards. Values are numbers or text set with textContent (usernames and
+// IPs in the Security monitor come from login attempts and must never be HTML).
+function renderMiniCards(targetId, cards) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  target.replaceChildren(...cards.map(({ value, label, note, tone }) => {
+    const card = document.createElement('article');
+    card.className = `mini-card${tone ? ` ${tone}` : ''}`;
+    const strong = document.createElement('strong'); strong.textContent = value;
+    const span = document.createElement('span'); span.textContent = label;
+    card.append(strong, span);
+    if (note) { const small = document.createElement('small'); small.textContent = note; card.appendChild(small); }
+    return card;
+  }));
+}
+
+function renderRows(targetId, rows, columns, emptyText) {
+  const body = document.getElementById(targetId);
+  if (!body) return;
+  body.replaceChildren();
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    columns.forEach(column => { const td = document.createElement('td'); td.textContent = column(row); tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  if (!rows.length) {
+    const tr = document.createElement('tr'); const td = document.createElement('td');
+    td.colSpan = columns.length; td.className = 'empty'; td.textContent = emptyText;
+    tr.appendChild(td); body.appendChild(tr);
+  }
+}
+
+function renderSecurityMonitor(security, period) {
+  if (!security) return;
+  document.querySelectorAll('[data-period-label]').forEach(el => { el.textContent = periodLabels[period] ? `Showing the ${periodLabels[period]}` : ''; });
+  renderMiniCards('securityCards', [
+    { value: security.failed_today, label: 'Failed logins today', tone: security.failed_today >= 10 ? 'alert' : (security.failed_today ? 'warn' : '') },
+    { value: security.failed_period, label: 'Failed logins in period' },
+    { value: security.lockouts, label: 'Login lockouts', note: '5 wrong passwords in 15 min', tone: security.lockouts ? 'warn' : '' },
+    { value: security.recovery_lockouts, label: 'Recovery lockouts', note: '5 wrong security answers', tone: security.recovery_lockouts ? 'alert' : '' },
+    { value: security.breached_refused, label: 'Breached passwords refused', note: 'Found in public data breaches' },
+  ]);
+  const labels = security.logins.map(item => item.date);
+  drawChart('loginChart', {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: 'Successful', data: security.logins.map(item => item.successful), backgroundColor: '#176b52', borderRadius: 3, stack: 'logins' },
+      { label: 'Failed', data: security.logins.map(item => item.failed), backgroundColor: '#a63d32', borderRadius: 3, stack: 'logins' },
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#17211b', usePointStyle: true } } },
+      scales: { x: { stacked: true, ticks: { color: '#68736c' }, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: '#68736c' }, grid: { color: '#d9ded7' } } } },
+  });
+  const when = value => value ? new Date(value.replace(' ', 'T')).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+  renderRows('topTargets', security.top_targets, [r => r.username, r => r.attempts, r => when(r.last_attempt)], 'No failed logins in this period.');
+  renderRows('topIps', security.top_ips, [r => r.ip, r => r.attempts, r => r.accounts], 'No failed logins in this period.');
+}
+
+function renderFunnel(funnel, period) {
+  if (!funnel) return;
+  const oldest = funnel.oldest_waiting;
+  const waitedDays = oldest ? oldest.hours / 24 : 0;
+  const age = oldest ? (oldest.hours >= 48 ? `${Math.floor(waitedDays)} days` : `${oldest.hours} hours`) : '';
+  renderMiniCards('funnelCards', [
+    { value: funnel.signed_up, label: 'Signed up' },
+    { value: funnel.approved, label: 'Approved' },
+    { value: funnel.rejected, label: 'Rejected', tone: funnel.rejected ? 'warn' : '' },
+    { value: funnel.average_wait_hours === null ? '—' : `${funnel.average_wait_hours} h`, label: 'Average wait to approval' },
+    oldest
+      ? { value: age, label: 'Oldest still waiting', note: `${oldest.name} (${oldest.username})`, tone: oldest.hours > 72 ? 'alert' : '' }
+      : { value: '—', label: 'Oldest still waiting', note: 'Nobody is waiting' },
+  ]);
 }
 
 async function loadStatistics() {

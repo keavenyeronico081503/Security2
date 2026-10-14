@@ -42,7 +42,7 @@ if (!preg_match('/^[A-Za-z][A-Za-z0-9_]{5,24}$/', $username)) {
     finish(['status' => 'error', 'step' => 1, 'message' => 'Username must be 6-25 letters, numbers or underscores, starting with a letter.']);
 }
 $password = (string)($_POST['password'] ?? '');
-$problem = password_rule_problem($password, (string)($_POST['confirm_password'] ?? '')) ?? password_problem($password);
+$problem = password_rule_problem($password, (string)($_POST['confirm_password'] ?? '')) ?? password_problem_on_submit($password, 'registration');
 if ($problem !== null) {
     finish(['status' => 'error', 'step' => 1, 'message' => $problem]);
 }

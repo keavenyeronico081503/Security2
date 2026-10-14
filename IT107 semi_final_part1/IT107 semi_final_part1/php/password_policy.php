@@ -87,3 +87,16 @@ function password_recently_used(int $userId, string $password): bool
     }
     return false;
 }
+
+// Same as password_problem(), for final submits (signup, setup, password change,
+// account creation): a refused breached password is also recorded in the audit
+// log (never the password itself) so the Security monitor can count them.
+// The live check while typing (password_check.php) is not logged.
+function password_problem_on_submit(string $password, string $context): ?string
+{
+    $problem = password_problem($password);
+    if ($problem !== null && function_exists('audit')) {
+        audit('security.password.breached', null, ['context' => $context], null, null, false, 'Breached password refused.');
+    }
+    return $problem;
+}

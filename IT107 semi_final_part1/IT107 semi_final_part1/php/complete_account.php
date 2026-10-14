@@ -6,6 +6,7 @@ require_once 'db.php';
 require_once 'email_policy.php';
 require_once 'otp.php';
 require_once 'password_policy.php';
+require_once 'audit_service.php';
 require_once 'profile_validation.php';
 require_once 'security_questions.php';
 
@@ -52,7 +53,7 @@ if ($emailCheck->get_result()->fetch_row()) {
 $newPassword = (string)($_POST['new_password'] ?? '');
 $problem = password_rule_problem($newPassword, (string)($_POST['confirm_password'] ?? ''))
     ?? (password_recently_used($userId, $newPassword) ? 'Choose a new password, not your temporary one.' : null)
-    ?? password_problem($newPassword);
+    ?? password_problem_on_submit($newPassword, 'account_setup');
 if ($problem !== null) {
     finish(['status' => 'error', 'step' => 1, 'message' => $problem]);
 }

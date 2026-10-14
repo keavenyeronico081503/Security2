@@ -334,6 +334,10 @@ function approve_pending_registration_locked(int $pendingId): void
                 : 'Account could not be created: ' . $conn->error);
         }
         $userId = (int)$conn->insert_id;
+        // Keep the real sign-up time (the users row itself is created at approval).
+        $registered = $conn->prepare('UPDATE users SET registered_at = ? WHERE id = ?');
+        $registered->bind_param('si', $pending['submitted_at'], $userId);
+        $registered->execute();
         record_password_history($userId, $pending['password']);
 
         $role = $conn->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE code = "user"');
@@ -370,7 +374,7 @@ function reject_pending_registration(int $pendingId, string $reason): void
     if ($reason === '') {
         throw new InvalidArgumentException('A reason is required to reject a registration.');
     }
-    $stmt = $conn->prepare('SELECT id, first_name, last_name, email, username FROM pending_registrations WHERE id = ?');
+    $stmt = $conn->prepare('SELECT id, first_name, last_name, email, username, submitted_at FROM pending_registrations WHERE id = ?');
     $stmt->bind_param('i', $pendingId);
     $stmt->execute();
     $pending = $stmt->get_result()->fetch_assoc();
@@ -383,7 +387,7 @@ function reject_pending_registration(int $pendingId, string $reason): void
     if ($remove->affected_rows < 1) {
         throw new RuntimeException('This registration is no longer waiting for approval.');
     }
-    audit('accounts.registration.reject', null, ['username' => $pending['username'], 'email' => $pending['email'], 'reason' => $reason]);
+    audit('accounts.registration.reject', null, ['username' => $pending['username'], 'email' => $pending['email'], 'reason' => $reason, 'submitted_at' => $pending['submitted_at']]);
     notify_account($pending, 'rejected', ['reason' => $reason]);
 }
 
@@ -420,6 +424,7 @@ function create_pending_registration(array $data, array $questions, array $answe
             error_log('Pending registration insert failed: ' . $stmt->error);
             return ['status' => 'error', 'message' => 'Your registration could not be saved. Please try again.'];
         }
+        audit('accounts.registration.submit', null, ['username' => $data['username'], 'id_number' => $idNumber]);
         return [
             'status' => 'success',
             'message' => "Registration submitted. Your ID number is $idNumber. You can log in once an administrator approves your account.",
