@@ -32,8 +32,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Username: letters and numbers only
     usernameInputLive.addEventListener("input", function(){
         const value = usernameInputLive.value;
-        const pattern = /^[A-Za-z0-9]*$/;
-        const maxU = 16;
+        const pattern = /^[A-Za-z0-9_]*$/;
+        const maxU = 25;
         
         // Save input value every time user types
         saveInputValues();
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!hasInteracted) {
             // Just enforce restrictions silently
             if (!pattern.test(value)){
-                usernameInputLive.value = value.replace(/[^A-Za-z0-9]/g, "");
+                usernameInputLive.value = value.replace(/[^A-Za-z0-9_]/g, "");
             }
             if (value.length >= maxU){
                 usernameInputLive.value = value.substring(0, maxU);
@@ -61,8 +61,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         
         if (value.length > 0 && !pattern.test(value)){
-            showFieldError(usernameErrorLive, "Only letters and numbers are allowed.");
-            usernameInputLive.value = value.replace(/[^A-Za-z0-9]/g, "");
+            showFieldError(usernameErrorLive, "Only letters, numbers and underscores are allowed.");
+            usernameInputLive.value = value.replace(/[^A-Za-z0-9_]/g, "");
         } else if (value.length >= maxU){
             usernameInputLive.value = value.substring(0, maxU);
             showFieldError(usernameErrorLive, `Maximum ${maxU} characters reached.`);
@@ -159,38 +159,17 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!username) {
             showFieldError(usernameErrorLive, "Username is required.");
             hasError = true;
-        } else if (!/^[A-Za-z0-9]+$/.test(username)){
-            showFieldError(usernameErrorLive, "Only letters and numbers are allowed.");
+        } else if (!/^[A-Za-z0-9_]+$/.test(username)){
+            showFieldError(usernameErrorLive, "Only letters, numbers and underscores are allowed.");
             hasError = true;
-        } else if (username.length > 16) {
-            showFieldError(usernameErrorLive, "Maximum 16 characters allowed.");
+        } else if (username.length > 25) {
+            showFieldError(usernameErrorLive, "Maximum 25 characters allowed.");
             hasError = true;
         } else {
-            // ✅ Validate username format matches register format: Sachin123
-            // Must start with capital letter, rest lowercase, at least 6 letters, ends with number
-            const letterCount = (username.match(/[a-zA-Z]/g) || []).length;
-            const startsWithCapital = /^[A-Z]/.test(username);
-            const hasUppercaseAfterFirst = /[A-Z]/.test(username.substring(1));
-            const endsWithNumber = /\d$/.test(username);
-            const hasAtLeast6Letters = letterCount >= 6;
-            
-            // Check if format matches register requirements
-            // ✅ Only show "Invalid password or username" if password is also valid
-            if (!startsWithCapital || hasUppercaseAfterFirst || !endsWithNumber || !hasAtLeast6Letters) {
-                // Only trigger error if password is valid (not empty and correct length)
-                if (password && password.length >= 8 && password.length <= 20) {
-                    showMessage("Invalid password or username.", "error");
-                    hasError = true;
-                    // ✅ Trigger lockout timer for invalid username format
-                    registerFailure();
-                    applyLockoutIfNeeded();
-                } else {
-                    // Password is invalid, so don't show format error yet
-                    hasError = true;
-                }
-            } else {
-                clearFieldError(usernameErrorLive);
-            }
+            // Whether the username exists and matches the password is the server's
+            // decision. (An old check here only allowed names like "Sachin123" and
+            // rejected valid accounts such as "MariaAdmin1" before asking the server.)
+            clearFieldError(usernameErrorLive);
         }
 
         // Stop if validation errors
