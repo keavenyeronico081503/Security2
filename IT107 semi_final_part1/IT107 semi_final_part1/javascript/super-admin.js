@@ -21,18 +21,35 @@ function trackModuleOpen() {
 }
 window.addEventListener('hashchange', trackModuleOpen);
 trackModuleOpen();
-function confirmAction(title, messageText) {
+// Optional: items (bullet list of what will happen), tone 'warning', and custom
+// confirmLabel / cancelLabel. The dialog is shared, so every call resets them.
+function confirmAction(title, messageText, options = {}) {
+  const { items = [], tone = '', confirmLabel = 'Confirm', cancelLabel = 'Cancel' } = options;
   return new Promise(resolve => {
     let dialog = document.getElementById('actionConfirmDialog');
     if (!dialog) {
       dialog = document.createElement('dialog');
       dialog.id = 'actionConfirmDialog';
-      dialog.innerHTML = '<form method="dialog" class="action-confirm-form"><h2></h2><p></p><div><button value="cancel" class="confirm-cancel">Cancel</button><button value="confirm" class="confirm-accept">Confirm</button></div></form>';
+      dialog.innerHTML = '<form method="dialog" class="action-confirm-form"><h2></h2><p></p><ul class="confirm-items"></ul><div><button value="cancel" class="confirm-cancel">Cancel</button><button value="confirm" class="confirm-accept">Confirm</button></div></form>';
       document.body.appendChild(dialog);
     }
-    dialog.onclose = () => resolve(dialog.returnValue === 'confirm');
-    dialog.querySelector('h2').textContent = title;
+    const form = dialog.querySelector('form');
+    form.classList.toggle('is-warning', tone === 'warning');
+    const heading = dialog.querySelector('h2');
+    heading.textContent = title;
+    if (tone === 'warning') heading.insertAdjacentHTML('afterbegin', '<i class="fas fa-exclamation-triangle" aria-hidden="true"></i> ');
     dialog.querySelector('p').textContent = messageText;
+    const list = dialog.querySelector('.confirm-items');
+    list.replaceChildren(...items.map(text => { const li = document.createElement('li'); li.textContent = text; return li; }));
+    list.hidden = !items.length;
+    dialog.querySelector('.confirm-accept').textContent = confirmLabel;
+    dialog.querySelector('.confirm-cancel').textContent = cancelLabel;
+    // The answer comes from the button that submitted the form. Esc closes without a
+    // button and counts as "no"; a late close event from an earlier confirm (while
+    // this one is open) is ignored.
+    dialog.returnValue = '';
+    form.onsubmit = event => resolve(event.submitter?.value === 'confirm');
+    dialog.onclose = () => { if (!dialog.open) resolve(false); };
     dialog.showModal();
   });
 }
@@ -1367,8 +1384,29 @@ accessAccounts.addEventListener('click', event => {
 document.getElementById('accessSearch').addEventListener('input', renderAccessList);
 document.getElementById('accessRole').addEventListener('change', renderAccessList);
 document.getElementById('accessGroups').addEventListener('change', updateAccessState);
-document.getElementById('accessReset').addEventListener('click', () => {
-  document.querySelectorAll('#accessGroups .access-toggle').forEach(toggle => { if (!toggle.disabled) toggle.checked = access.roleDefaults.has(toggle.value); });
+// Reset asks first and spells out exactly which switches it will flip.
+document.getElementById('accessReset').addEventListener('click', async () => {
+  const toggles = [...document.querySelectorAll('#accessGroups .access-toggle')].filter(toggle => !toggle.disabled);
+  const turnOff = toggles.filter(toggle => toggle.checked && !access.roleDefaults.has(toggle.value)).map(toggle => permissionName(toggle.value));
+  const turnOn = toggles.filter(toggle => !toggle.checked && access.roleDefaults.has(toggle.value)).map(toggle => permissionName(toggle.value));
+  const roleName = ROLE_NAMES[access.account.role];
+  if (!turnOff.length && !turnOn.length) {
+    const summary = document.getElementById('accessSummary');
+    summary.replaceChildren(reviewEl('span', 'access-muted', `Already using the standard ${roleName} permissions.`));
+    setTimeout(updateAccessState, 3500);
+    return;
+  }
+  const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+  const items = [
+    ...(turnOff.length ? [`Turns off ${plural(turnOff.length, 'extra permission')}: ${turnOff.join(', ')}`] : []),
+    ...(turnOn.length ? [`Turns back on ${plural(turnOn.length, 'removed permission')}: ${turnOn.join(', ')}`] : []),
+    'Nothing is saved yet. Review the changes, add a reason, then press Save changes.',
+  ];
+  const ok = await confirmAction('Reset to role defaults?',
+    `This puts ${access.account.first_name} ${access.account.last_name} back to the standard ${roleName} permissions.`,
+    { tone: 'warning', items, confirmLabel: 'Yes, reset', cancelLabel: 'No, keep current' });
+  if (!ok) return;
+  toggles.forEach(toggle => { toggle.checked = access.roleDefaults.has(toggle.value); });
   updateAccessState();
 });
 document.getElementById('openRoleChange').addEventListener('click', () => showAccessMode('role'));
