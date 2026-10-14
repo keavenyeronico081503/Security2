@@ -7,7 +7,7 @@ function format_action_label(array $row): string
     $details = $row['details'] ?? [];
     $moduleNames = [
         'overview' => 'Overview', 'accounts' => 'Accounts', 'create-account' => 'Create account',
-        'requests' => 'Deletion requests', 'audit' => 'Audit log', 'privileges' => 'Assign privileges',
+        'requests' => 'Deletion requests', 'audit' => 'Audit log', 'privileges' => 'Manage access',
         'dashboard' => 'Dashboard', 'calendar' => 'Calendar & Events', 'profile' => 'Profile',
         'notifications' => 'Notifications', 'block-requests' => 'Block requests',
         'posts' => 'Announcements', 'events' => 'Events'
@@ -51,7 +51,7 @@ function format_action_label(array $row): string
         'accounts.block.rejected' => 'Rejected block request',
         'accounts.password_reset' => 'Reset account password',
         'accounts.role_change' => 'Changed account role',
-        'permissions.assign' => 'Updated account privileges',
+        'permissions.assign' => 'Changed account access',
         'profile.update' => 'Updated profile',
         'password.change' => 'Changed password',
         'content.post.create' => 'Published a post',

@@ -16,7 +16,7 @@
 <body class="has-sidebar app-superadmin">
   <button class="sidebar-menu-button" aria-label="Open navigation" aria-expanded="false">Menu</button>
   <div class="sidebar-scrim"></div>
-  <aside class="app-sidebar" aria-label="Super Administrator navigation"><div class="sidebar-brand"><strong id="sidebarBrandName">Security2</strong><span id="sidebarBrandRole">Super Administrator</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" data-view="overview" href="#overview">Overview</a><button class="sidebar-toggle" aria-expanded="true" aria-controls="super-account-menu">Account Management <span class="chevron">&#9662;</span></button><div id="super-account-menu" class="sidebar-submenu"><a class="sidebar-link" data-view="accounts" href="#accounts">All accounts <span class="notification-badge" data-notification="pending_users" hidden>0</span></a><a class="sidebar-link" data-view="create-account" href="#create-account">Create account</a><a class="sidebar-link" data-view="requests" href="#requests">Deletion requests <span class="notification-badge" data-notification="deletion_requests" hidden>0</span></a><a class="sidebar-link" data-view="block-requests" href="#block-requests">Block requests <span class="notification-badge" data-notification="block_requests" hidden>0</span></a></div><button class="sidebar-toggle" aria-expanded="false" aria-controls="super-security-menu">Security &amp; Access <span class="chevron">&#9662;</span></button><div id="super-security-menu" class="sidebar-submenu" hidden><a class="sidebar-link" data-view="privileges" href="#privileges">Assign privileges</a><a class="sidebar-link" data-view="audit" href="#audit">Audit log</a><a class="sidebar-link" data-view="login-report" href="#login-report">Login report</a></div><button class="sidebar-toggle" aria-expanded="false" aria-controls="super-content-menu">Content <span class="chevron">&#9662;</span></button><div id="super-content-menu" class="sidebar-submenu" hidden><a class="sidebar-link" data-view="posts" href="#posts">Announcements</a><a class="sidebar-link" data-view="events" href="#events">Events</a></div></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
+  <aside class="app-sidebar" aria-label="Super Administrator navigation"><div class="sidebar-brand"><strong id="sidebarBrandName">Security2</strong><span id="sidebarBrandRole">Super Administrator</span><button class="sidebar-close" aria-label="Close navigation">Close</button></div><nav class="sidebar-nav"><a class="sidebar-link" data-view="overview" href="#overview">Overview</a><button class="sidebar-toggle" aria-expanded="true" aria-controls="super-account-menu">Account Management <span class="chevron">&#9662;</span></button><div id="super-account-menu" class="sidebar-submenu"><a class="sidebar-link" data-view="accounts" href="#accounts">All accounts <span class="notification-badge" data-notification="pending_users" hidden>0</span></a><a class="sidebar-link" data-view="create-account" href="#create-account">Create account</a><a class="sidebar-link" data-view="requests" href="#requests">Deletion requests <span class="notification-badge" data-notification="deletion_requests" hidden>0</span></a><a class="sidebar-link" data-view="block-requests" href="#block-requests">Block requests <span class="notification-badge" data-notification="block_requests" hidden>0</span></a></div><button class="sidebar-toggle" aria-expanded="false" aria-controls="super-security-menu">Security &amp; Access <span class="chevron">&#9662;</span></button><div id="super-security-menu" class="sidebar-submenu" hidden><a class="sidebar-link" data-view="privileges" href="#privileges">Manage access</a><a class="sidebar-link" data-view="audit" href="#audit">Audit log</a><a class="sidebar-link" data-view="login-report" href="#login-report">Login report</a></div><button class="sidebar-toggle" aria-expanded="false" aria-controls="super-content-menu">Content <span class="chevron">&#9662;</span></button><div id="super-content-menu" class="sidebar-submenu" hidden><a class="sidebar-link" data-view="posts" href="#posts">Announcements</a><a class="sidebar-link" data-view="events" href="#events">Events</a></div></nav><div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php">Log out</a></div></aside>
   <main>
     <section id="overview" class="overview-panel" data-module-view="overview"><div class="section-heading no-print"><div><p class="eyebrow">System snapshot</p><h2>Overview</h2><p>Monitor account health, requests, and recent registration activity.</p></div><div class="overview-controls"><label class="period-label no-print" for="registrationsPeriod">Period</label><select id="registrationsPeriod" class="period-select no-print"><option value="days">Last 30 days</option><option value="weeks">Last 12 weeks</option><option value="months">Last 12 months</option></select><button type="button" id="refreshStatistics" class="secondary">Refresh</button><button type="button" id="printOverview" class="secondary">Print report</button></div></div><div class="print-report-header print-only"><div class="print-report-brand">Security2 <span>Internal Systems</span></div><h1>Account &amp; Registration Analytics Report</h1><p class="print-report-subtitle">Super Administrator Overview</p><div id="overviewPrintMeta" class="print-report-meta"></div></div><div id="statCards" class="stat-cards"></div><div id="actionRequired" class="action-required"></div><section class="ov-panel" id="securityMonitor"><div class="ov-panel-heading"><div><p class="eyebrow">Security monitor</p><h3>Sign-in security</h3></div><span class="ov-period" data-period-label></span></div><div id="securityCards" class="mini-cards"></div><div class="ov-split"><div class="ov-chart"><h4>Successful vs failed logins</h4><div class="chart-wrap"><canvas id="loginChart"></canvas></div></div><div class="ov-tables"><div><h4>Most targeted usernames</h4><table class="ov-table"><thead><tr><th>Username</th><th>Failed</th><th>Last try</th></tr></thead><tbody id="topTargets"></tbody></table></div><div><h4>Sources with the most failures</h4><table class="ov-table"><thead><tr><th>IP address</th><th>Failed</th><th>Accounts tried</th></tr></thead><tbody id="topIps"></tbody></table></div></div></div></section><section class="ov-panel" id="registrationFunnel"><div class="ov-panel-heading"><div><p class="eyebrow">Registration funnel</p><h3>What happened to sign-ups</h3></div><span class="ov-period" data-period-label></span></div><div id="funnelCards" class="mini-cards"></div></section><div class="chart-grid"><section class="chart-panel"><h3>Account status</h3><div class="chart-wrap"><canvas id="statusChart"></canvas></div></section><section class="chart-panel"><h3>Accounts by role</h3><div class="chart-wrap"><canvas id="roleChart"></canvas></div></section><section class="chart-panel chart-wide"><h3>Deletion requests</h3><div class="chart-wrap"><canvas id="deletionChart"></canvas></div></section><section class="chart-panel chart-wide"><div class="chart-panel-heading"><h3>Sign-ups <span class="chart-note">by the date people submitted their registration</span></h3></div><div class="chart-wrap"><canvas id="registrationChart"></canvas></div></section></div><div class="print-report-footer print-only">This report was generated automatically by Security2 and reflects system data at the time shown above. Confidential — for internal management review only.</div></section>
     <section id="pending-registrations" class="create-panel"><div class="section-heading"><div><p class="eyebrow">Approval queue</p><h2>Pending registrations</h2><p>These sign-ups are not accounts yet and are kept outside the users list. Approve to create the account, or reject with a reason.</p></div><button type="button" id="refreshPending" class="secondary">Refresh</button></div><div class="table-wrap"><table><thead><tr><th>Name</th><th>ID number</th><th>Username</th><th>Email</th><th>Submitted</th><th>Review</th></tr></thead><tbody id="pendingRegistrations"></tbody></table></div></section>
@@ -87,7 +87,14 @@
     </section>
     <section id="posts" class="create-panel"><div class="section-heading"><div><p class="eyebrow">Community</p><h2>Announcements</h2><p>Publish updates for all users to see on their dashboard.</p></div></div><form id="createPostForm" class="profile-form"><label>Title<input name="title" required></label><label>Body<textarea name="body" rows="4" required></textarea></label><p id="postMessage" class="form-message" role="status"></p><button type="submit">Publish post</button></form><div class="table-wrap"><table><thead><tr><th>Title</th><th>Posted</th><th>Actions</th></tr></thead><tbody id="postsList"></tbody></table></div></section>
     <section id="events" class="create-panel"><div class="section-heading"><div><p class="eyebrow">Community</p><h2>Events</h2><p>Add dates to the shared calendar users see on their dashboard.</p></div></div><form id="createEventForm" class="profile-form"><label>Title<input name="title" required></label><label>Date<input name="event_date" type="date" required></label><label>Description<textarea name="description" rows="3"></textarea></label><p id="eventMessage" class="form-message" role="status"></p><button type="submit">Add event</button></form><div class="table-wrap"><table><thead><tr><th>Title</th><th>Date</th><th>Actions</th></tr></thead><tbody id="eventsList"></tbody></table></div></section>
-    <section id="privileges" class="create-panel"><div class="section-heading"><h2>Assign privileges</h2><p>Select an account to manage its module access.</p></div><div class="table-wrap"><table><thead><tr><th>Account</th><th>Employee ID</th><th>Role</th><th>Action</th></tr></thead><tbody id="privilegeAccounts"></tbody></table></div></section>
+    <section id="privileges" class="create-panel">
+      <div class="section-heading"><div><p class="eyebrow">Security &amp; access</p><h2>Manage access</h2><p>See what each account can do, adjust an Administrator's permissions, or promote / demote between User and Administrator.</p></div></div>
+      <div class="access-toolbar">
+        <label class="access-search"><i class="fas fa-search"></i><input id="accessSearch" type="search" placeholder="Search name, ID number or username" aria-label="Search accounts"></label>
+        <select id="accessRole" aria-label="Filter by role"><option value="">All roles</option><option value="admin">Administrators</option><option value="user">Users</option></select>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Account</th><th>ID number</th><th>Role</th><th>Access</th><th>Last changed</th><th></th></tr></thead><tbody id="accessAccounts"></tbody></table></div>
+    </section>
     <section id="profile" class="profile-section" data-module-view="profile" hidden aria-labelledby="profilePageTitle">
       <header class="profile-header"><div><p class="eyebrow">Manage Account</p><h1 id="profilePageTitle">My Profile</h1><p class="section-intro">Keep your display name, contact details, and password up to date.</p></div><span id="profileRole" class="role-badge">Loading...</span></header>
       <section class="profile-card"><div class="card-heading"><div><p class="eyebrow">Account details</p><h2>Personal information</h2><p>Your account identity and contact details.</p></div><span class="lock-note"><i class="fas fa-lock" aria-hidden="true"></i> Self-service only</span></div><form id="profileForm" class="profile-form"><label>First name<input name="first_name" required></label><label>Middle name<input name="middle_name"></label><label>Last name<input name="last_name" required></label><label>Suffix<input name="suffix"></label><label>Email<input type="email" name="email" required></label><label>Contact number<input name="contact_number" inputmode="tel" placeholder="e.g. +63 912 345 6789"></label><label>Username<input name="username" readonly></label><label>Employee ID<input name="id_number" readonly></label><p id="profileMessage" class="form-message" role="status"></p><button type="submit">Save profile</button></form></section>
@@ -164,12 +171,49 @@
       <div class="review-outcome" id="reviewOutcome" hidden></div>
     </div>
   </dialog>
-  <dialog id="privilegeDialog" class="privilege-dialog">
-    <form method="dialog" id="privilegeForm">
-      <div class="section-heading"><div><p class="eyebrow">Access control</p><h2>Assign privileges</h2><p id="privilegeAccount"></p></div><button type="button" id="closePrivileges" class="secondary">Close</button></div>
-      <div id="privilegeModules" class="privilege-modules"></div>
-      <div class="dialog-actions"><button type="button" id="cancelPrivileges" class="secondary">Cancel</button><button type="submit">Save privileges</button></div>
-    </form>
+  <dialog id="accessDialog" class="review-dialog access-dialog" aria-labelledby="accessName">
+    <div class="review-shell">
+      <div class="review-head">
+        <div class="review-id">
+          <p class="eyebrow">Manage access</p>
+          <h2 id="accessName">Loading…</h2>
+          <p class="review-meta" id="accessMeta"></p>
+        </div>
+        <button type="button" class="review-close" id="closeAccess" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="review-body" id="accessBody">
+        <section class="access-role-card">
+          <div><span class="review-stat-label">Role</span><strong id="accessRoleName"></strong><small id="accessRoleNote"></small></div>
+          <button type="button" class="secondary" id="openRoleChange"><i class="fas fa-exchange-alt"></i> <span>Change role…</span></button>
+        </section>
+        <div id="accessPermissionsPanel">
+          <p class="access-intro" id="accessIntro"></p>
+          <p class="access-legend"><span class="access-chip chip-role">From role</span><span class="access-chip chip-extra">Extra</span><span class="access-chip chip-removed">Removed</span><span class="access-chip chip-locked">Always on</span></p>
+          <p class="review-flag warn" id="accessUnsupported" hidden></p>
+          <div id="accessGroups"></div>
+        </div>
+        <section class="access-role-panel" id="accessRolePanel" hidden>
+          <h3 id="roleChangeTitle"></h3>
+          <label for="roleEmail" id="roleEmailLabel">Email for the new role</label>
+          <input id="roleEmail" type="email" autocomplete="off">
+          <p class="access-hint" id="roleEmailHint"></p>
+          <p class="access-effects-title">What will happen</p>
+          <ul class="access-effects" id="roleEffects"></ul>
+        </section>
+      </div>
+      <div class="review-decision" id="accessFooter">
+        <div class="access-summary" id="accessSummary"></div>
+        <label for="accessReason">Reason <span id="accessReasonCount">0/500</span></label>
+        <textarea id="accessReason" rows="2" maxlength="500" placeholder="Why are you making this change?"></textarea>
+        <p class="review-error" id="accessError" role="alert"></p>
+        <div class="review-buttons">
+          <button type="button" class="secondary" id="accessCancel">Cancel</button>
+          <button type="button" class="access-reset" id="accessReset"><i class="fas fa-undo"></i> Reset to role defaults</button>
+          <span class="spacer"></span>
+          <button type="button" class="access-save" id="accessSave"><i class="fas fa-save"></i> <span>Save changes</span></button>
+        </div>
+      </div>
+    </div>
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="../javascript/super-admin.js"></script>

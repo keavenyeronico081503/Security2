@@ -162,3 +162,66 @@ body .profile-password-toggle{width:30px!important;min-width:30px!important;heig
   .review-buttons #reviewCancel{order:3;flex-basis:100%;justify-content:center}
   .review-buttons .review-reject,.review-buttons .review-approve{flex:1;justify-content:center;padding:9px 10px;white-space:nowrap;font-size:14px}
 }
+
+/* ---- Manage access ---- */
+.access-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 12px}
+.access-search{position:relative;flex:1 1 280px}
+.access-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+.access-search input{width:100%;padding-left:34px}
+.access-toolbar select{flex:0 0 190px}
+.access-sub{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+.access-muted{color:var(--muted);font-size:13px}
+.access-role{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.access-role.role-admin{background:#e8f4ee;color:var(--accent)}.access-role.role-user{background:#eef1ec;color:#4d5a52}
+.access-open{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;font-size:12px;white-space:nowrap}
+.access-chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;background:#eef1ec;color:var(--muted)}
+.access-chip.chip-role{background:#e8f4ee;color:var(--accent)}
+.access-chip.chip-extra,.access-chip.chip-custom{background:#fff3dc;color:#8a5a12}
+.access-chip.chip-removed{background:#fbe9e6;color:var(--danger)}
+.access-chip.chip-locked{background:#eef2f6;color:#3f5263}
+.access-role-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;background:#fff}
+.access-role-card strong{display:block;font:700 19px 'Space Grotesk',sans-serif}
+.access-role-card small{color:var(--muted);font-size:12.5px}
+.access-role-card button{display:inline-flex;align-items:center;gap:7px;width:auto;flex:0 0 auto;padding:9px 14px;border-radius:8px}
+.access-intro{margin:0 0 8px;color:var(--muted);font-size:13.5px}
+.access-legend{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.access-group{margin-bottom:12px;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}
+.access-group h3{margin:0;padding:9px 14px;background:#f0f2eb;font:700 12px 'DM Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.access-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid #eef1ec;cursor:pointer}
+.access-row:first-of-type{border-top:0}
+.access-row:hover{background:#fafbf7}
+.access-row.is-locked{cursor:default}
+.access-text strong{display:flex;align-items:center;gap:8px;font-size:14px}
+.access-text small{display:block;margin-top:1px;font-size:12.5px;color:var(--muted)}
+.access-sensitive{font-style:normal;padding:1px 7px;border-radius:999px;background:#fbe9e6;color:var(--danger);font-size:10.5px;font-weight:700}
+/* Switch-style checkbox */
+.access-toggle{appearance:none;-webkit-appearance:none;position:relative;width:40px;height:22px;min-width:40px;margin:0;padding:0;border:0;border-radius:999px;background:#cfd6d0;cursor:pointer;transition:background .15s ease}
+.access-toggle::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s ease}
+.access-toggle:checked{background:var(--accent)}
+.access-toggle:checked::after{transform:translateX(18px)}
+.access-toggle:disabled{opacity:.55;cursor:not-allowed}
+.access-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.access-summary{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:22px}
+.access-summary[hidden],.review-decision [hidden]{display:none!important}
+.summary-add,.summary-remove{padding:2px 9px;border-radius:6px;font-size:12px;font-weight:700}
+.summary-add{background:#e8f4ee;color:var(--accent)}.summary-remove{background:#fbe9e6;color:var(--danger)}
+.access-reset{display:inline-flex;align-items:center;gap:6px;width:auto;background:none!important;border:0!important;color:var(--accent)!important;font-weight:700;padding:6px 4px!important;min-height:0!important}
+.access-reset[hidden]{display:none}
+.access-save{display:inline-flex;align-items:center;gap:7px}
+.access-save:disabled{opacity:.5;cursor:not-allowed}
+.access-save.is-role{background:#a46616;border-color:#a46616}
+.access-role-panel{padding:14px 16px;border:1px solid #ecd29c;border-radius:8px;background:#fffaf0}
+.access-role-panel h3{margin:0 0 12px;font:700 17px 'Space Grotesk',sans-serif}
+.access-role-panel label{display:block;margin-bottom:6px;font-size:13px;font-weight:700}
+.access-role-panel input{width:100%;background:#fff}
+.access-hint{margin:6px 0 12px;font-size:12.5px;color:var(--muted)}
+.access-hint.is-error{color:var(--danger);font-weight:700}
+.access-effects-title{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a5a12}
+.access-effects{margin:0;padding-left:18px;font-size:13.5px;line-height:1.5}
+@media(max-width:760px){
+  .access-role-card{flex-direction:column;align-items:stretch}
+  .access-row{grid-template-columns:auto 1fr;}
+  .access-row .access-chip{grid-column:2;justify-self:start}
+  .access-toolbar select{flex:1 1 100%}
+  .review-buttons .access-save{flex:1 1 100%;justify-content:center}
+}

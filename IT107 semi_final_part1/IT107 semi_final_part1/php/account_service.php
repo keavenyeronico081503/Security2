@@ -432,3 +432,160 @@ function create_pending_registration(array $data, array $questions, array $answe
         ];
     });
 }
+
+// ---- Manage access (Super Administrator) ----
+
+// Needed just to use any page; always on and never removable.
+const ACCESS_LOCKED = ['dashboard.view', 'profile.view', 'profile.update', 'password.change'];
+// Everything the Administrator pages can actually use. Super-Administrator-only
+// permissions (assign permissions, approve deletion, audit log) have no
+// Administrator screen, so granting them would do nothing.
+const ADMIN_GRANTABLE = [
+    'accounts.view', 'accounts.create', 'accounts.approve', 'accounts.update', 'accounts.block',
+    'accounts.block.request', 'accounts.block.review', 'accounts.delete.request', 'content.manage',
+    'dashboard.view', 'profile.view', 'profile.update', 'password.change',
+];
+
+function role_permission_codes(string $role): array
+{
+    global $conn;
+    $stmt = $conn->prepare('SELECT p.code FROM role_permissions rp JOIN roles r ON r.id = rp.role_id JOIN permissions p ON p.id = rp.permission_id WHERE r.code = ? ORDER BY p.code');
+    $stmt->bind_param('s', $role);
+    $stmt->execute();
+    return array_column($stmt->get_result()->fetch_all(MYSQLI_ASSOC), 'code');
+}
+
+function permission_labels(array $codes): array
+{
+    global $conn;
+    $labels = [];
+    foreach ($conn->query('SELECT code, label FROM permissions')->fetch_all(MYSQLI_ASSOC) as $row) $labels[$row['code']] = $row['label'];
+    return array_map(fn($code) => $labels[$code] ?? $code, array_values($codes));
+}
+
+function access_reason(string $reason): string
+{
+    $reason = trim($reason);
+    if ($reason === '') throw new InvalidArgumentException('Please give a reason for this change.');
+    if (mb_strlen($reason) > 500) throw new InvalidArgumentException('Keep the reason under 500 characters.');
+    return $reason;
+}
+
+// Sets exactly which permissions an Administrator has. Anything the role gives that
+// is not in $enabled becomes a "deny" override; anything extra becomes an "allow".
+// Returns the added and removed permission codes.
+function set_account_access(int $userId, array $enabled, string $reason): array
+{
+    global $conn;
+    $reason = access_reason($reason);
+    $account = account_snapshot($userId);
+    if (!$account || strcasecmp($account['username'], 'Keavenyadmin1') === 0) throw new RuntimeException('Account was not found.');
+    if ($account['role'] !== 'admin') throw new RuntimeException('Only Administrator accounts have adjustable access. Promote this account first.');
+
+    $enabled = array_values(array_unique(array_filter(array_map('strval', $enabled))));
+    foreach ($enabled as $code) {
+        if (!in_array($code, ADMIN_GRANTABLE, true)) throw new InvalidArgumentException('One or more selected permissions can\'t be given to an Administrator.');
+    }
+    $enabled = array_values(array_unique(array_merge($enabled, ACCESS_LOCKED)));
+    $role = role_permission_codes('admin');
+    $allow = array_values(array_diff($enabled, $role));
+    $deny = array_values(array_diff(array_intersect($role, ADMIN_GRANTABLE), $enabled));
+
+    $before = array_column(effective_permissions($userId), 'code');
+    $after = array_values(array_unique(array_merge(array_diff($role, $deny), $allow)));
+    sort($after);
+    $added = array_values(array_diff($after, $before));
+    $removed = array_values(array_diff($before, $after));
+    if (!$added && !$removed) throw new InvalidArgumentException('Nothing changed, so there is nothing to save.');
+
+    $conn->begin_transaction();
+    try {
+        $clear = $conn->prepare('DELETE FROM user_permission_overrides WHERE user_id = ?');
+        $clear->bind_param('i', $userId);
+        $clear->execute();
+        $insert = $conn->prepare('INSERT INTO user_permission_overrides (user_id, permission_id, effect) SELECT ?, id, ? FROM permissions WHERE code = ?');
+        foreach ([['allow', $allow], ['deny', $deny]] as [$effect, $codes]) {
+            foreach ($codes as $code) {
+                $insert->bind_param('iss', $userId, $effect, $code);
+                $insert->execute();
+            }
+        }
+        // The legacy JSON column is no longer read; overrides are the source of truth.
+        $legacy = $conn->prepare('UPDATE users SET privileges = "{}" WHERE id = ?');
+        $legacy->bind_param('i', $userId);
+        $legacy->execute();
+        audit('permissions.assign', $userId, ['added' => $added, 'removed' => $removed, 'reason' => $reason], ['permissions' => $before], ['permissions' => $after]);
+        $conn->commit();
+    } catch (Throwable $error) {
+        $conn->rollback();
+        throw $error;
+    }
+    notify_account($account, 'access_changed', ['added' => permission_labels($added), 'removed' => permission_labels($removed), 'reason' => $reason]);
+    return ['added' => $added, 'removed' => $removed];
+}
+
+// Promote a User to Administrator or demote an Administrator to User. The email must
+// fit the new role, and a temporary password is sent to it first: receiving it proves
+// the address works, and the person picks a new password at their next login.
+function change_account_role(int $userId, string $newRole, string $newEmail, string $reason, int $actorId): array
+{
+    global $conn;
+    $reason = access_reason($reason);
+    if (!in_array($newRole, ['admin', 'user'], true)) throw new InvalidArgumentException('Choose Administrator or User.');
+    $account = account_snapshot($userId);
+    if (!$account || strcasecmp($account['username'], 'Keavenyadmin1') === 0) throw new RuntimeException('Account was not found.');
+    if ($userId === $actorId) throw new RuntimeException('You cannot change your own role.');
+    if (!in_array($account['role'], ['admin', 'user'], true)) throw new RuntimeException('Only Administrator and User accounts can change role here.');
+    if ($account['role'] === $newRole) throw new InvalidArgumentException('The account already has this role.');
+    if ($account['account_status'] !== 'approved') throw new RuntimeException('Only an active (approved) account can change role. Unblock or approve it first.');
+
+    $newEmail = strtolower(trim($newEmail));
+    if (!is_email_allowed_for_role($newEmail, $newRole)) throw new InvalidArgumentException(email_role_error_message($newRole));
+    $emailChanged = strcasecmp($newEmail, (string)$account['email']) !== 0;
+    if ($emailChanged && ($field = identity_taken($newEmail, '', ''))) throw new InvalidArgumentException(identity_taken_message($field));
+
+    foreach (['admin_delete_requests' => 'deletion', 'admin_block_requests' => 'block'] as $table => $kind) {
+        $pending = $conn->prepare("SELECT 1 FROM $table WHERE target_user_id = ? AND status = 'pending' LIMIT 1");
+        $pending->bind_param('i', $userId);
+        $pending->execute();
+        if ($pending->get_result()->fetch_row()) throw new RuntimeException("This account has a pending $kind request. Review it before changing the role.");
+    }
+
+    $roleName = $newRole === 'admin' ? 'Administrator' : 'User';
+    $temporaryPassword = generate_temporary_password();
+    $body = "Hello {$account['first_name']},\n\n"
+        . "Your Security2 account ({$account['username']}) is now a $roleName account.\n\n"
+        . "Your temporary password is: $temporaryPassword\n\n"
+        . "Log in with this password; you will be asked to choose your own password right away.\n"
+        . "\nReason: $reason\n\nIf you did not expect this, contact your administrator.";
+    // Send before persisting: if the email fails, nothing changes.
+    if (!send_email($newEmail, trim($account['first_name'] . ' ' . $account['last_name']), "Your Security2 account is now a $roleName account", $body)) {
+        throw new RuntimeException('Could not send the email to the new address, so the role was not changed. Check the address and try again.');
+    }
+
+    $conn->begin_transaction();
+    try {
+        $hash = password_hash($temporaryPassword, PASSWORD_DEFAULT);
+        $update = $conn->prepare('UPDATE users SET role = ?, email = ?, password = ?, must_change_password = 1, privileges = "{}" WHERE id = ? AND role IN ("admin", "user")');
+        $update->bind_param('sssi', $newRole, $newEmail, $hash, $userId);
+        $update->execute();
+        if ($update->affected_rows < 1) throw new RuntimeException('The role was not changed.');
+        foreach (['DELETE FROM user_roles WHERE user_id = ?', 'DELETE FROM user_permission_overrides WHERE user_id = ?'] as $sql) {
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('i', $userId);
+            $stmt->execute();
+        }
+        $assign = $conn->prepare('INSERT INTO user_roles (user_id, role_id) SELECT ?, id FROM roles WHERE code = ?');
+        $assign->bind_param('is', $userId, $newRole);
+        $assign->execute();
+        audit('accounts.role_change', $userId, ['from' => $account['role'], 'to' => $newRole, 'reason' => $reason],
+            ['role' => $account['role'], 'email' => $account['email']], ['role' => $newRole, 'email' => $newEmail]);
+        $conn->commit();
+    } catch (Throwable $error) {
+        $conn->rollback();
+        throw $error;
+    }
+    // Tell the old address too, so an unexpected change doesn't go unnoticed.
+    if ($emailChanged) notify_account($account, 'role_changed', ['role' => $roleName, 'new_email' => $newEmail, 'reason' => $reason]);
+    return ['role' => $newRole, 'email' => $newEmail];
+}

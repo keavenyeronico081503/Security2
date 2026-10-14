@@ -26,3 +26,6 @@
 
 /* Role filter next to the Employee ID search (same as the Super Administrator page). */
 .filter-row{flex-wrap:wrap}.filter-row select{flex:0 0 190px;padding:11px 12px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--ink);font:inherit}
+
+/* Hidden because the Super Administrator turned this permission off (see admin.js). */
+.no-permission{display:none!important}

@@ -53,6 +53,18 @@ function notify_account(?array $account, string $event, array $extra = []): void
             "The email address on your account ({$account['username']}) was changed to "
                 . mask_email((string)($extra['new_email'] ?? '')) . ". Future emails will go to the new address.\n",
         ],
+        'access_changed' => [
+            'Your Security2 access was changed',
+            "A Super Administrator changed what your account ({$account['username']}) can do.\n"
+                . (!empty($extra['added']) ? "\nAdded:\n- " . implode("\n- ", (array)$extra['added']) . "\n" : '')
+                . (!empty($extra['removed']) ? "\nRemoved:\n- " . implode("\n- ", (array)$extra['removed']) . "\n" : '')
+                . $reasonLine,
+        ],
+        'role_changed' => [
+            'Your Security2 account role was changed',
+            "Your account ({$account['username']}) is now a " . ($extra['role'] ?? 'different') . " account. "
+                . "Login details were sent to your new address, " . mask_email((string)($extra['new_email'] ?? '')) . ".\n$reasonLine",
+        ],
     ];
     if (!isset($messages[$event])) {
         return;

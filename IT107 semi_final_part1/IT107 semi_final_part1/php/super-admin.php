@@ -9,15 +9,6 @@ require_super_admin();
 
 $action = $_GET['action'] ?? 'list';
 
-if ($action === 'permission-catalog') {
-    require_permission('permissions.assign');
-    $result = $conn->query('SELECT code, label FROM permissions ORDER BY code');
-    $permissions = [];
-    while ($permission = $result->fetch_assoc()) $permissions[] = $permission;
-    echo json_encode(['status' => 'success', 'permissions' => $permissions]);
-    exit;
-}
-
 if ($action === 'list') {
     require_permission('accounts.view');
     deactivate_inactive_accounts();
@@ -164,6 +155,50 @@ if ($action === 'review-account') {
     exit;
 }
 
+// ---- Manage access ----
+// Administrators and Users with how far their access differs from their role, and
+// who last changed it.
+if ($action === 'access-list') {
+    require_permission('permissions.assign');
+    $rows = $conn->query('SELECT u.id, u.first_name, u.last_name, u.id_number, u.username, u.email, u.role, u.account_status,
+            (SELECT COUNT(*) FROM user_permission_overrides o WHERE o.user_id = u.id AND o.effect = "allow") AS extra_count,
+            (SELECT COUNT(*) FROM user_permission_overrides o WHERE o.user_id = u.id AND o.effect = "deny") AS removed_count,
+            last.actor_username AS changed_by, last.created_at AS changed_at
+        FROM users u
+        LEFT JOIN audit_logs last ON last.id = (SELECT a.id FROM audit_logs a WHERE a.target_user_id = u.id AND a.action_code IN ("permissions.assign", "accounts.role_change") ORDER BY a.id DESC LIMIT 1)
+        WHERE u.role IN ("admin", "user") AND u.username <> "Keavenyadmin1"
+        ORDER BY FIELD(u.role, "admin", "user"), u.first_name, u.last_name')->fetch_all(MYSQLI_ASSOC);
+    foreach ($rows as &$row) {
+        // Changes made by the emergency account show as the role, not the hidden username.
+        if ($row['changed_by'] !== null && strcasecmp($row['changed_by'], 'Keavenyadmin1') === 0) $row['changed_by'] = 'Super Administrator';
+    }
+    echo json_encode(['status' => 'success', 'accounts' => $rows]);
+    exit;
+}
+
+// One account's access: role defaults, extras, removals, and what may be changed.
+if ($action === 'access-detail') {
+    require_permission('permissions.assign');
+    $targetId = (int)($_GET['user_id'] ?? 0);
+    $account = account_snapshot($targetId);
+    if (!$account || !in_array($account['role'], ['admin', 'user'], true) || strcasecmp($account['username'], 'Keavenyadmin1') === 0) {
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'Account not found.']);
+        exit;
+    }
+    $catalog = $conn->query('SELECT code, label FROM permissions ORDER BY code')->fetch_all(MYSQLI_ASSOC);
+    echo json_encode([
+        'status' => 'success',
+        'account' => $account,
+        'permissions' => account_permissions($targetId),
+        'role_defaults' => role_permission_codes($account['role']),
+        'catalog' => $catalog,
+        'grantable' => $account['role'] === 'admin' ? ADMIN_GRANTABLE : [],
+        'locked' => ACCESS_LOCKED,
+    ]);
+    exit;
+}
+
 $data = request_json();
 $userId = (int)($data['user_id'] ?? 0);
 
@@ -221,38 +256,29 @@ if ($action === 'reactivate') {
 
 if ($action === 'privileges') {
     require_permission('permissions.assign');
-    $privileges = array_keys(array_filter($data['privileges'] ?? [], fn ($value) => $value === true || $value === 1 || $value === '1'));
-    foreach ($privileges as $privilege) {
-        $validation = $conn->prepare('SELECT id FROM permissions WHERE code = ?');
-        $validation->bind_param('s', $privilege);
-        $validation->execute();
-        if (!$validation->get_result()->fetch_assoc()) {
-            http_response_code(400);
-            echo json_encode(['status' => 'error', 'message' => 'One or more selected permissions are invalid.']);
-            exit;
-        }
-    }
-    $privilegeJson = json_encode(array_fill_keys($privileges, true));
-    $conn->begin_transaction();
     try {
-        $clear = $conn->prepare('DELETE FROM user_permission_overrides WHERE user_id = ?');
-        $clear->bind_param('i', $userId);
-        $clear->execute();
-        $permissionStmt = $conn->prepare('INSERT INTO user_permission_overrides (user_id, permission_id, effect) SELECT ?, id, "allow" FROM permissions WHERE code = ?');
-        foreach ($privileges as $privilege) {
-            $permissionStmt->bind_param('is', $userId, $privilege);
-            $permissionStmt->execute();
-        }
-        $stmt = $conn->prepare('UPDATE users SET privileges = ? WHERE id = ? AND role <> "super_admin"');
-        $stmt->bind_param('si', $privilegeJson, $userId);
-        $stmt->execute();
-        $conn->commit();
+        $result = set_account_access($userId, (array)($data['enabled'] ?? []), (string)($data['reason'] ?? ''));
+        $parts = [];
+        if ($result['added']) $parts[] = count($result['added']) . ' added';
+        if ($result['removed']) $parts[] = count($result['removed']) . ' removed';
+        echo json_encode(['status' => 'success', 'message' => 'Access updated (' . implode(', ', $parts) . '). The account holder was notified by email.']);
     } catch (Throwable $error) {
-        $conn->rollback();
-        throw $error;
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $error->getMessage()]);
     }
-    audit('permissions.assign', $userId, ['privileges' => $privileges]);
-    echo json_encode(['status' => 'success', 'message' => 'Privileges updated.']);
+    exit;
+}
+
+if ($action === 'change-role') {
+    require_permission('permissions.assign');
+    try {
+        $result = change_account_role($userId, (string)($data['role'] ?? ''), (string)($data['email'] ?? ''), (string)($data['reason'] ?? ''), (int)($_SESSION['user_id'] ?? 0));
+        $roleName = $result['role'] === 'admin' ? 'Administrator' : 'User';
+        echo json_encode(['status' => 'success', 'message' => "Role changed to $roleName. A temporary password was emailed to {$result['email']}."]);
+    } catch (Throwable $error) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => $error->getMessage()]);
+    }
     exit;
 }
 

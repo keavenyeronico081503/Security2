@@ -2,14 +2,9 @@ const accounts = document.getElementById('accounts');
 const message = document.getElementById('message');
 const requests = document.getElementById('requests');
 const auditLogs = document.getElementById('auditLogs');
-const privilegeAccounts = document.getElementById('privilegeAccounts');
 const auditPage = document.getElementById('auditPage');
 const previousAudit = document.getElementById('previousAudit');
 const nextAudit = document.getElementById('nextAudit');
-const privilegeDialog = document.getElementById('privilegeDialog');
-const privilegeForm = document.getElementById('privilegeForm');
-const privilegeModules = document.getElementById('privilegeModules');
-const privilegeAccount = document.getElementById('privilegeAccount');
 const editDialog = document.getElementById('editDialog');
 const editForm = document.getElementById('editForm');
 let editTargetId = null;
@@ -111,17 +106,6 @@ toggleSuperAdminCurrentPassword?.addEventListener('click', () => {
 });
 let auditCurrentPage = 1;
 let auditTotalPages = 1;
-let privilegeTargetId = 0;
-
-const moduleNames = {
-  accounts: 'Accounts',
-  dashboard: 'Dashboard',
-  profile: 'Profile',
-  password: 'Password',
-  roles: 'Roles',
-  permissions: 'Permissions',
-  audit: 'Audit log'
-};
 
 function setInlineError(input, message, errorId) {
   const field = input;
@@ -425,14 +409,6 @@ function renderUsers(users) {
     const presence = user.account_status === 'approved' ? (user.is_online ? 'Online' : 'Offline') : '—';
     return `<tr><td>${e(user.first_name)} ${e(user.last_name)}</td><td>${e(user.id_number)}</td><td>${e(user.username)}</td><td class="role">${role}</td><td class="status status-${status}">${status}</td><td class="status status-${presence.toLowerCase()}">${presence}</td><td class="actions">${controls}</td></tr>`;
   }).join('') || '<tr><td colspan="7">No accounts found.</td></tr>';
-  if (privilegeAccounts) {
-    privilegeAccounts.replaceChildren();
-    users.filter(user => user.role !== 'super_admin').forEach(user => {
-      const row = document.createElement('tr');
-      [user.first_name + ' ' + user.last_name, user.id_number, user.role.replace('_', ' ')].forEach(value => { const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell); });
-      const cell = document.createElement('td'); const button = document.createElement('button'); button.textContent = 'Manage privileges'; button.dataset.action = 'privileges'; button.dataset.id = user.id; button.dataset.user = encodeURIComponent(JSON.stringify(user)); cell.appendChild(button); row.appendChild(cell); privilegeAccounts.appendChild(row);
-    });
-  }
 }
 
 async function loadUsers() {
@@ -560,36 +536,6 @@ document.getElementById('printLoginReport')?.addEventListener('click', async () 
   });
   window.print();
 });
-
-async function openPrivilegeDialog(user) {
-  const catalog = (await request('permission-catalog')).permissions;
-  const grouped = {};
-  catalog.forEach(permission => {
-    const module = permission.code.split('.')[0];
-    (grouped[module] ||= []).push(permission);
-  });
-  privilegeTargetId = user.id;
-  privilegeAccount.textContent = `${user.first_name} ${user.last_name} (${user.role.replace('_', ' ')})`;
-  privilegeModules.replaceChildren();
-  Object.entries(grouped).forEach(([module, permissions]) => {
-    const section = document.createElement('section'); section.className = 'privilege-module';
-    const parentLabel = document.createElement('label');
-    const parent = document.createElement('input'); parent.type = 'checkbox'; parent.dataset.module = module;
-    parentLabel.append(parent, document.createTextNode(moduleNames[module] || module)); section.appendChild(parentLabel);
-    const children = document.createElement('div'); children.className = 'privilege-children';
-    permissions.forEach(permission => {
-      const label = document.createElement('label'); const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox'; checkbox.value = permission.code; checkbox.dataset.module = module;
-      checkbox.checked = Boolean(user.privileges && user.privileges[permission.code]);
-      label.append(checkbox, document.createTextNode(permission.label)); children.appendChild(label);
-    });
-    parent.checked = [...children.querySelectorAll('input')].every(input => input.checked);
-    parent.indeterminate = [...children.querySelectorAll('input')].some(input => input.checked) && !parent.checked;
-    privilegeModules.append(section, children);
-    section.appendChild(children);
-  });
-  privilegeDialog.showModal();
-}
 
 function showEditMessage(text, error = false) {
   const el = document.getElementById('editMessage');
@@ -951,10 +897,6 @@ async function handleAccountAction(event) {
   if (!button) return;
   const action = button.dataset.action;
   let body = { user_id: Number(button.dataset.id) };
-  if (action === 'privileges') {
-    try { await openPrivilegeDialog(JSON.parse(decodeURIComponent(button.dataset.user))); } catch (error) { showMessage(error.message, true); }
-    return;
-  }
   if (action === 'login-report') {
     location.hash = '#login-report';
     const input = document.getElementById('loginReportEmployeeId');
@@ -991,31 +933,6 @@ async function handleAccountAction(event) {
 }
 
 accounts.addEventListener('click', handleAccountAction);
-privilegeAccounts?.addEventListener('click', handleAccountAction);
-
-privilegeModules.addEventListener('change', event => {
-  const input = event.target;
-  if (input.dataset.module && !input.value.includes('.')) {
-    privilegeModules.querySelectorAll(`input[data-module="${input.dataset.module}"]`).forEach(child => { child.checked = input.checked; });
-  } else if (input.value) {
-    const children = [...privilegeModules.querySelectorAll(`input[data-module="${input.dataset.module}"][value]`)];
-    const parent = privilegeModules.querySelector(`input[data-module="${input.dataset.module}"]:not([value])`);
-    parent.checked = children.every(child => child.checked); parent.indeterminate = children.some(child => child.checked) && !parent.checked;
-  }
-});
-
-privilegeForm.addEventListener('submit', async event => {
-  event.preventDefault();
-  if (!await confirmAction('Save privileges', 'Save these privilege changes now?')) return;
-  const privileges = {};
-  privilegeModules.querySelectorAll('input[type="checkbox"][value]:checked').forEach(input => { privileges[input.value] = true; });
-  try { showMessage((await request('privileges', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({user_id: privilegeTargetId, privileges})})).message); privilegeDialog.close(); await loadUsers(); await loadAuditLogs(); }
-  catch (error) { showMessage(error.message, true); }
-});
-
-document.getElementById('closePrivileges').addEventListener('click', () => privilegeDialog.close());
-document.getElementById('cancelPrivileges').addEventListener('click', () => privilegeDialog.close());
-
 
 document.getElementById('filterForm').addEventListener('submit', event => { event.preventDefault(); loadUsers(); });
 document.getElementById('clearFilter').addEventListener('click', () => { document.getElementById('employeeId').value = ''; document.getElementById('roleFilter').value = ''; loadUsers(); });
@@ -1194,3 +1111,275 @@ loadAuditLogs().catch(error => showMessage(error.message, true));
 loadNextEmployeeId();
 loadPosts();
 loadEvents();
+
+// ---- Manage access ----
+// Plain-language name, explanation and group for every permission an account can see here.
+const PERMISSION_INFO = {
+  'accounts.view': { group: 'Accounts', name: 'View accounts', desc: 'Open the Accounts list and search for accounts.' },
+  'accounts.create': { group: 'Accounts', name: 'Create accounts', desc: 'Add new accounts; the owner finishes setup with a temporary password.' },
+  'accounts.approve': { group: 'Accounts', name: 'Approve registrations', desc: 'Approve or reject people who signed up and are waiting.' },
+  'accounts.update': { group: 'Accounts', name: 'Edit account details', desc: 'Change names and contact details, and reset passwords.', sensitive: true },
+  'accounts.block': { group: 'Accounts', name: 'Unblock accounts', desc: 'Unblock accounts that are blocked.', sensitive: true },
+  'accounts.block.request': { group: 'Requests', name: 'Request a block', desc: 'Ask the Super Administrator to block an account.' },
+  'accounts.block.review': { group: 'Requests', name: 'Review block requests', desc: 'Approve or reject block requests sent by other Administrators.', sensitive: true },
+  'accounts.delete.request': { group: 'Requests', name: 'Request a deletion', desc: 'Ask the Super Administrator to delete an account.', sensitive: true },
+  'content.manage': { group: 'Content', name: 'Manage posts & events', desc: 'Publish, edit and delete announcements and calendar events.' },
+  'account.status.view': { group: 'My account', name: 'Approval status', desc: 'See whether their own account is approved.' },
+  'dashboard.view': { group: 'My account', name: 'Dashboard', desc: 'Open their home page.' },
+  'profile.view': { group: 'My account', name: 'View own profile', desc: 'See their own profile details.' },
+  'profile.update': { group: 'My account', name: 'Update own profile', desc: 'Edit their own name and contact details.' },
+  'password.change': { group: 'My account', name: 'Change own password', desc: 'Change their own password.' },
+};
+const ACCESS_GROUPS = ['Accounts', 'Requests', 'Content', 'My account'];
+const ROLE_NAMES = { admin: 'Administrator', user: 'User' };
+const accessAccounts = document.getElementById('accessAccounts');
+const accessDialog = document.getElementById('accessDialog');
+const accessReason = document.getElementById('accessReason');
+const accessError = document.getElementById('accessError');
+let accessList = [];
+let access = null; // the account open in the dialog
+let accessMode = 'permissions'; // or 'role'
+
+const permissionName = code => PERMISSION_INFO[code]?.name || code;
+
+async function loadAccess() {
+  accessList = (await request('access-list')).accounts;
+  renderAccessList();
+}
+
+function renderAccessList() {
+  const search = document.getElementById('accessSearch').value.trim().toLowerCase();
+  const role = document.getElementById('accessRole').value;
+  const rows = accessList.filter(item => (!role || item.role === role)
+    && (!search || `${item.first_name} ${item.last_name} ${item.id_number} ${item.username}`.toLowerCase().includes(search)));
+  accessAccounts.replaceChildren();
+  if (!rows.length) {
+    const row = reviewEl('tr'); const cell = reviewEl('td', 'review-empty', 'No accounts match.'); cell.colSpan = 6; row.appendChild(cell); accessAccounts.appendChild(row);
+    return;
+  }
+  rows.forEach(item => {
+    const row = reviewEl('tr');
+    const name = reviewEl('td'); name.append(reviewEl('strong', '', `${item.first_name} ${item.last_name}`), reviewEl('small', 'access-sub', `@${item.username}`));
+    const roleCell = reviewEl('td'); roleCell.appendChild(reviewEl('span', `access-role role-${item.role}`, ROLE_NAMES[item.role]));
+    const accessCell = reviewEl('td');
+    const extra = Number(item.extra_count), removed = Number(item.removed_count);
+    if (extra || removed) {
+      accessCell.appendChild(reviewEl('span', 'access-chip chip-custom', 'Custom'));
+      accessCell.appendChild(reviewEl('small', 'access-sub', [extra ? `+${extra} extra` : '', removed ? `−${removed} removed` : ''].filter(Boolean).join(' · ')));
+    } else accessCell.appendChild(reviewEl('span', 'access-muted', 'Role default'));
+    const changed = reviewEl('td');
+    if (item.changed_at) changed.append(reviewEl('span', '', reviewDate(item.changed_at)), reviewEl('small', 'access-sub', `by ${item.changed_by || 'Super Administrator'}`));
+    else changed.appendChild(reviewEl('span', 'access-muted', 'Never'));
+    const manage = reviewEl('td');
+    const button = reviewEl('button', 'access-open'); button.type = 'button'; button.dataset.access = item.id;
+    button.innerHTML = '<i class="fas fa-user-shield"></i> Manage';
+    manage.appendChild(button);
+    row.append(name, reviewEl('td', '', item.id_number || '—'), roleCell, accessCell, changed, manage);
+    accessAccounts.appendChild(row);
+  });
+}
+
+async function openAccess(userId) {
+  accessError.textContent = '';
+  accessReason.value = '';
+  document.getElementById('accessReasonCount').textContent = '0/500';
+  document.getElementById('accessName').textContent = 'Loading…';
+  document.getElementById('accessGroups').replaceChildren();
+  accessDialog.showModal();
+  try {
+    const response = await fetch(`${api}?action=access-detail&user_id=${userId}`);
+    const data = await response.json();
+    if (!response.ok || data.status === 'error') throw new Error(data.message || 'Could not load this account.');
+    const p = data.permissions;
+    const denied = new Set(p.denied.map(item => item.code));
+    const effective = new Set([...p.role.map(item => item.code).filter(code => !denied.has(code)), ...p.extra.map(item => item.code)]);
+    access = { ...data, roleDefaults: new Set(data.role_defaults), effective, grantable: new Set(data.grantable), locked: new Set(data.locked) };
+    renderAccess();
+  } catch (error) {
+    accessDialog.close();
+    showMessage(error.message, true);
+  }
+}
+
+function renderAccess() {
+  const { account } = access;
+  const isAdmin = account.role === 'admin';
+  document.getElementById('accessName').textContent = `${account.first_name} ${account.last_name}`;
+  const meta = document.getElementById('accessMeta');
+  meta.replaceChildren(reviewEl('span', '', `@${account.username}`), reviewEl('span', '', account.id_number || '—'),
+    reviewEl('span', 'review-pill', ROLE_NAMES[account.role]), reviewEl('span', `review-pill status-${account.account_status}`, account.account_status));
+  document.getElementById('accessRoleName').textContent = ROLE_NAMES[account.role];
+  document.getElementById('accessRoleNote').textContent = isAdmin
+    ? 'Uses the Administrator page. You can turn individual permissions on or off below.'
+    : 'Uses the student dashboard. Users have a fixed set of permissions.';
+  document.querySelector('#openRoleChange span').textContent = isAdmin ? 'Demote to User…' : 'Promote to Administrator…';
+  document.getElementById('accessIntro').textContent = isAdmin
+    ? 'Switch permissions on or off. Changes are listed at the bottom and only apply when you save.'
+    : 'Users have a fixed set of permissions. Promote this account to Administrator to give it more access.';
+
+  // Permissions this account has that no Administrator screen uses are dropped on save.
+  const unsupported = isAdmin ? [...access.effective].filter(code => !access.grantable.has(code)) : [];
+  access.unsupported = unsupported;
+  const warning = document.getElementById('accessUnsupported');
+  warning.hidden = !unsupported.length;
+  warning.textContent = unsupported.length ? `Will be removed when you save, because no Administrator screen uses ${unsupported.length === 1 ? 'it' : 'them'}: ${unsupported.map(code => access.catalog.find(item => item.code === code)?.label || code).join(', ')}.` : '';
+
+  const codes = isAdmin ? [...access.grantable] : [...access.effective];
+  const groups = document.getElementById('accessGroups');
+  groups.replaceChildren();
+  ACCESS_GROUPS.forEach(groupName => {
+    const inGroup = codes.filter(code => (PERMISSION_INFO[code]?.group || 'My account') === groupName);
+    if (!inGroup.length) return;
+    const section = reviewEl('section', 'access-group');
+    section.appendChild(reviewEl('h3', '', groupName));
+    inGroup.forEach(code => {
+      const info = PERMISSION_INFO[code] || { name: code, desc: '' };
+      const locked = access.locked.has(code) || !isAdmin;
+      const row = reviewEl('label', `access-row${locked ? ' is-locked' : ''}`);
+      const toggle = reviewEl('input'); toggle.type = 'checkbox'; toggle.className = 'access-toggle'; toggle.value = code;
+      toggle.checked = access.effective.has(code) || access.locked.has(code); toggle.disabled = locked;
+      const text = reviewEl('span', 'access-text');
+      const title = reviewEl('strong', '', info.name);
+      if (info.sensitive) title.appendChild(reviewEl('em', 'access-sensitive', 'Sensitive'));
+      text.append(title, reviewEl('small', '', info.desc));
+      row.append(toggle, text, reviewEl('span', 'access-chip'));
+      section.appendChild(row);
+    });
+    groups.appendChild(section);
+  });
+  showAccessMode('permissions');
+  updateAccessState();
+}
+
+function accessSelection() {
+  return new Set([...document.querySelectorAll('#accessGroups .access-toggle')].filter(toggle => toggle.checked).map(toggle => toggle.value));
+}
+
+// Recomputes each row's chip and the change summary from the current toggles.
+function updateAccessState() {
+  const isAdmin = access.account.role === 'admin';
+  document.querySelectorAll('#accessGroups .access-row').forEach(row => {
+    const toggle = row.querySelector('.access-toggle'), chip = row.querySelector('.access-chip');
+    const fromRole = access.roleDefaults.has(toggle.value);
+    const [label, kind] = access.locked.has(toggle.value) ? ['Always on', 'locked']
+      : toggle.checked ? (fromRole ? ['From role', 'role'] : ['Extra', 'extra'])
+      : (fromRole ? ['Removed', 'removed'] : ['Off', 'off']);
+    chip.className = `access-chip chip-${kind}`; chip.textContent = isAdmin ? label : 'From role';
+  });
+  if (accessMode !== 'permissions') return;
+  const selected = accessSelection();
+  const added = [...selected].filter(code => !access.effective.has(code) && !access.locked.has(code));
+  const removed = [...access.effective].filter(code => !selected.has(code) && !access.locked.has(code));
+  const summary = document.getElementById('accessSummary');
+  summary.replaceChildren();
+  if (!added.length && !removed.length) summary.appendChild(reviewEl('span', 'access-muted', isAdmin ? 'No changes yet.' : 'Nothing to change here. Use “Promote to Administrator” to give more access.'));
+  added.forEach(code => summary.appendChild(reviewEl('span', 'summary-add', `+ ${permissionName(code)}`)));
+  removed.forEach(code => summary.appendChild(reviewEl('span', 'summary-remove', `− ${access.grantable.has(code) ? permissionName(code) : (access.catalog.find(item => item.code === code)?.label || code)}`)));
+  access.changeCount = added.length + removed.length;
+  document.getElementById('accessReset').hidden = !isAdmin;
+  document.getElementById('accessSave').hidden = !isAdmin;
+  document.querySelector('#accessFooter label').hidden = !isAdmin;
+  accessReason.hidden = !isAdmin;
+  document.getElementById('accessSave').disabled = !access.changeCount || !accessReason.value.trim();
+}
+
+function showAccessMode(mode) {
+  accessMode = mode;
+  const roleMode = mode === 'role';
+  document.getElementById('accessPermissionsPanel').hidden = roleMode;
+  document.getElementById('accessRolePanel').hidden = !roleMode;
+  document.getElementById('accessSummary').hidden = roleMode;
+  document.querySelector('.access-role-card').hidden = roleMode;
+  document.getElementById('accessCancel').textContent = roleMode ? 'Back' : 'Cancel';
+  document.querySelector('#accessSave span').textContent = roleMode ? (access.account.role === 'admin' ? 'Demote to User' : 'Promote to Administrator') : 'Save changes';
+  document.getElementById('accessSave').classList.toggle('is-role', roleMode);
+  accessError.textContent = '';
+  if (roleMode) {
+    accessReason.hidden = false;
+    document.querySelector('#accessFooter label').hidden = false;
+    document.getElementById('accessSave').hidden = false;
+    document.getElementById('accessReset').hidden = true;
+    renderRoleChange();
+  } else updateAccessState();
+}
+
+const isSchoolEmail = email => /@csucc\.edu\.ph$/i.test(email);
+
+function renderRoleChange() {
+  const { account } = access;
+  const newRole = account.role === 'admin' ? 'user' : 'admin';
+  const emailInput = document.getElementById('roleEmail');
+  document.getElementById('roleChangeTitle').textContent = newRole === 'admin'
+    ? `Promote ${account.first_name} to Administrator` : `Demote ${account.first_name} to User`;
+  document.getElementById('roleEmailLabel').textContent = newRole === 'admin'
+    ? 'Personal email for the Administrator account' : 'School email (@csucc.edu.ph) for the User account';
+  const fits = newRole === 'admin' ? !isSchoolEmail(account.email) : isSchoolEmail(account.email);
+  emailInput.value = fits ? account.email : '';
+  emailInput.placeholder = newRole === 'admin' ? 'name@gmail.com' : 'name@csucc.edu.ph';
+  updateRoleChange();
+}
+
+function updateRoleChange() {
+  const { account } = access;
+  const newRole = account.role === 'admin' ? 'user' : 'admin';
+  const email = document.getElementById('roleEmail').value.trim();
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (newRole === 'admin' ? !isSchoolEmail(email) : isSchoolEmail(email));
+  const hint = document.getElementById('roleEmailHint');
+  hint.className = `access-hint${email && !valid ? ' is-error' : ''}`;
+  hint.textContent = !email ? (newRole === 'admin' ? 'Administrators must use a personal email (not a school address).' : 'Users must use their @csucc.edu.ph school email.')
+    : !valid ? (newRole === 'admin' ? 'This must be a personal email, not a school address.' : 'This must be an @csucc.edu.ph school email.')
+    : 'A temporary password will be sent to this address.';
+  const effects = document.getElementById('roleEffects');
+  effects.replaceChildren(...[
+    `The role changes from ${ROLE_NAMES[account.role]} to ${ROLE_NAMES[newRole]}, and the account opens the ${newRole === 'admin' ? 'Administrator page' : 'student dashboard'}.`,
+    `Any custom access is cleared; the account gets the standard ${ROLE_NAMES[newRole]} permissions.`,
+    `A temporary password is emailed to ${valid ? email : 'the address above'}. Getting it proves the address works, and they choose a new password when they log in.`,
+    ...(valid && email.toLowerCase() !== String(account.email).toLowerCase() ? [`The current address (${account.email}) is told about the change.`] : []),
+  ].map(text => reviewEl('li', '', text)));
+  document.getElementById('accessSave').disabled = !valid || !accessReason.value.trim();
+}
+
+async function saveAccess() {
+  const reason = accessReason.value.trim();
+  if (!reason) { accessError.textContent = 'Please give a reason for this change.'; accessReason.focus(); return; }
+  const { account } = access;
+  try {
+    let result;
+    if (accessMode === 'role') {
+      const newRole = account.role === 'admin' ? 'user' : 'admin';
+      const label = newRole === 'admin' ? 'Promote to Administrator' : 'Demote to User';
+      if (!await confirmAction(label, `${account.first_name} ${account.last_name} will become a ${ROLE_NAMES[newRole]} and receive a temporary password by email.`)) return;
+      result = await request('change-role', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: account.id, role: newRole, email: document.getElementById('roleEmail').value.trim(), reason }) });
+    } else {
+      if (!await confirmAction('Save access changes', `Apply ${access.changeCount} change${access.changeCount === 1 ? '' : 's'} to ${account.first_name}'s access? They will be notified by email.`)) return;
+      result = await request('privileges', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: account.id, enabled: [...accessSelection()], reason }) });
+    }
+    accessDialog.close();
+    showMessage(result.message);
+    await loadAccess(); await loadUsers();
+  } catch (error) { accessError.textContent = error.message; }
+}
+
+accessAccounts.addEventListener('click', event => {
+  const button = event.target.closest('button[data-access]');
+  if (button) openAccess(Number(button.dataset.access));
+});
+document.getElementById('accessSearch').addEventListener('input', renderAccessList);
+document.getElementById('accessRole').addEventListener('change', renderAccessList);
+document.getElementById('accessGroups').addEventListener('change', updateAccessState);
+document.getElementById('accessReset').addEventListener('click', () => {
+  document.querySelectorAll('#accessGroups .access-toggle').forEach(toggle => { if (!toggle.disabled) toggle.checked = access.roleDefaults.has(toggle.value); });
+  updateAccessState();
+});
+document.getElementById('openRoleChange').addEventListener('click', () => showAccessMode('role'));
+document.getElementById('roleEmail').addEventListener('input', updateRoleChange);
+document.getElementById('accessSave').addEventListener('click', saveAccess);
+document.getElementById('accessCancel').addEventListener('click', () => { if (accessMode === 'role') showAccessMode('permissions'); else accessDialog.close(); });
+document.getElementById('closeAccess').addEventListener('click', () => accessDialog.close());
+accessDialog.addEventListener('click', event => { if (event.target === accessDialog) accessDialog.close(); });
+accessReason.addEventListener('input', () => {
+  document.getElementById('accessReasonCount').textContent = `${accessReason.value.length}/500`;
+  if (accessReason.value.trim()) accessError.textContent = '';
+  if (accessMode === 'role') updateRoleChange(); else updateAccessState();
+});
+loadAccess().catch(error => showMessage(error.message, true));

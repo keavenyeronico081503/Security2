@@ -20,6 +20,10 @@ const statCards = document.getElementById('adminStatCards');
 const actionRequired = document.getElementById('adminActionRequired');
 const charts = {};
 let adminRole = '';
+// This admin's effective permissions (null until loaded). The Super Administrator can
+// turn individual ones off, so buttons for missing permissions are hidden.
+let adminPermissions = null;
+const adminCan = code => adminPermissions === null || adminPermissions.includes(code);
 // Create Account is handled by javascript/create-account.js.
 function setInlineError(input, message, errorId) {
   const field = input;
@@ -241,6 +245,12 @@ async function loadAdminAccess() {
     const data = await response.json();
     const allowed = response.ok && data.status === 'success' && data.user.permissions.includes('accounts.create');
     adminRole = data.user.role || '';
+    adminPermissions = Array.isArray(data.user.permissions) ? data.user.permissions : [];
+    // Modules this admin can't use stay hidden even when sidebar.js shows the module.
+    document.querySelectorAll('[data-view="accounts"], .app-admin main > .toolbar, .app-admin main > .table-wrap')
+      .forEach(element => element.classList.toggle('no-permission', !adminCan('accounts.view')));
+    document.getElementById('pending-registrations')?.classList.toggle('no-permission', !adminCan('accounts.approve'));
+    if (adminCan('accounts.view')) load();
     // Only reveal the sidebar links here. Which sections are visible is decided by
     // the current module (sidebar.js), so a section never shows up inside another
     // module's view (e.g. Create account appearing on the Accounts page).
@@ -306,9 +316,13 @@ function render(users) {
     row.append(textCell(`${user.first_name} ${user.last_name}`), textCell(user.id_number), textCell(user.username), textCell(user.role.replace('_', ' '), 'role'), textCell(user.account_status, `status status-${user.account_status}`), textCell(presence, `status status-${presence.toLowerCase()}`));
     const actions = document.createElement('td'); actions.className = 'actions';
     if (user.role !== 'super_admin') {
-      actions.appendChild(actionButton(user.account_status === 'blocked' ? 'Unblock' : 'Block', user.account_status === 'blocked' ? 'unblock' : 'block', user.id));
-      actions.appendChild(actionButton('Edit', 'update', user.id, user));
-      if (user.account_status !== 'blocked') actions.appendChild(actionButton('Request delete', 'request-delete', user.id));
+      // An Administrator's Block is a request; Unblock is direct.
+      if (user.account_status === 'blocked' ? adminCan('accounts.block') : adminCan('accounts.block.request')) {
+        actions.appendChild(actionButton(user.account_status === 'blocked' ? 'Unblock' : 'Block', user.account_status === 'blocked' ? 'unblock' : 'block', user.id));
+      }
+      if (adminCan('accounts.update')) actions.appendChild(actionButton('Edit', 'update', user.id, user));
+      if (user.account_status !== 'blocked' && adminCan('accounts.delete.request')) actions.appendChild(actionButton('Request delete', 'request-delete', user.id));
+      if (!actions.childElementCount) actions.textContent = 'View only';
     } else actions.textContent = 'Protected';
     row.appendChild(actions); table.appendChild(row);
   });

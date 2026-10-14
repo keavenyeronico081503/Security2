@@ -92,7 +92,10 @@ try {
     }
 
     if (in_array($action, ['approve', 'block', 'unblock'], true)) {
-        $user = require_permission($action === 'unblock' ? 'accounts.block' : "accounts.$action");
+        $needed = $action === 'unblock' ? 'accounts.block' : "accounts.$action";
+        // An Administrator's block is only a request to the Super Administrator.
+        if ($action === 'block' && (current_user()['role_code'] ?? '') === 'admin') $needed = 'accounts.block.request';
+        $user = require_permission($needed);
         $targetId = (int)($data['user_id'] ?? 0);
         if ($action === 'block' && $user['role_code'] === 'admin') {
             $reason = trim((string)($data['reason'] ?? ''));
