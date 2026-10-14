@@ -93,7 +93,8 @@
   // ---- Wizard ----
   function createWizard(form, options) {
     const steps = [...form.querySelectorAll('.wizard-step')];
-    const stepperItems = [...form.querySelectorAll('.stepper li')];
+    // The step list may live outside the form (the setup page puts it in the sidebar).
+    const stepperItems = [...(options.stepperRoot || form).querySelectorAll('.stepper li')];
     const compact = form.querySelector('.stepper-compact');
     const back = form.querySelector('[data-wizard="back"]');
     const next = form.querySelector('[data-wizard="next"]');

@@ -34,10 +34,15 @@
         return;
       }
       $('username').value = status.username || '';
+      // Sidebar and header card say who is setting up which kind of account.
+      const roleName = { super_admin: 'Super Administrator', admin: 'Administrator', user: 'Player' }[status.role] || 'New account';
+      $('setupBrandName').textContent = status.username || 'Account setup';
+      $('setupBrandRole').textContent = `${roleName} · setting up`;
+      $('setupTitle').textContent = status.role === 'user' ? 'Complete your account' : `Complete your ${roleName} account`;
       // Regular users (created by an Administrator) verify their school email;
       // administrators use a personal one.
       if (status.role === 'user') {
-        document.querySelector('.wizard-intro').textContent = 'An administrator created your account. Complete the steps below to start using it.';
+        $('setupIntro').textContent = 'An administrator created your account. Verify your school email, choose your own password and finish your profile.';
         form.querySelector('label[for="email"]').textContent = 'School email';
         email.placeholder = 'yourname@csucc.edu.ph';
         form.querySelector('[data-step="1"] .step-hint').textContent = 'Verify your school email, then replace your temporary password.';
@@ -93,8 +98,26 @@
     return true;
   }
 
+  // Phones: the step list sits in a slide-out sidebar behind the menu button.
+  const sidebar = document.querySelector('.app-sidebar');
+  const scrim = document.querySelector('.sidebar-scrim');
+  const menuButton = document.querySelector('.sidebar-menu-button');
+  const setMenu = open => {
+    sidebar.classList.toggle('open', open);
+    scrim?.classList.toggle('open', open);
+    menuButton?.setAttribute('aria-expanded', String(open));
+  };
+  menuButton?.addEventListener('click', () => setMenu(true));
+  document.querySelector('.sidebar-close')?.addEventListener('click', () => setMenu(false));
+  scrim?.addEventListener('click', () => setMenu(false));
+
   const wizard = createWizard(form, {
     validateStep,
+    stepperRoot: sidebar,
+    onEnterStep(step) {
+      $('setupStepBadge').textContent = `Step ${step} of 5`;
+      setMenu(false);
+    },
     async onSubmit() {
       const response = await fetch('../php/complete_account.php', { method: 'POST', body: new FormData(form) });
       return response.json();

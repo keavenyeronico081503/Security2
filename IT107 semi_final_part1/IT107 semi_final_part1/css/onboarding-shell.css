@@ -1,0 +1,59 @@
+/* Account setup page in the same look as the Super Admin / Admin pages: dark
+   sidebar (css/sidebar.css) holding the setup steps, and a green header card like
+   Create Account. Loaded after wizard.css and fit-screen.css. */
+body.fit-screen.setup-shell {
+  padding-left: 252px !important;
+  background: linear-gradient(135deg, #eef2e9, #f8f1e5);
+}
+
+/* ---- Sidebar: the steps as a vertical menu ---- */
+.setup-nav-label { margin: 4px 12px 8px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #8fb5a0; }
+.app-sidebar .setup-steps { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.app-sidebar .setup-steps li { flex: none; text-align: left; }
+.app-sidebar .setup-steps li::before { display: none; }
+.app-sidebar .setup-steps button {
+  width: 100%; min-height: 46px; display: flex; flex-direction: row; align-items: center; gap: 12px;
+  padding: 8px 12px; border-radius: 8px; color: #cfe0d6; font: 600 14px 'DM Sans', sans-serif; text-align: left; cursor: default;
+}
+.app-sidebar .setup-steps .step-dot {
+  flex: 0 0 28px; width: 28px; height: 28px; border: 2px solid rgba(255, 255, 255, .28); background: transparent; color: #cfe0d6; font-size: 13px; box-shadow: none;
+}
+.app-sidebar .setup-steps li[data-state="current"] button { background: #176b52; color: #fff; }
+.app-sidebar .setup-steps li[data-state="current"] .step-dot { border-color: #fff; background: #fff; color: #176b52; box-shadow: none; }
+.app-sidebar .setup-steps li[data-state="done"] button { color: #fff; cursor: pointer; }
+.app-sidebar .setup-steps li[data-state="done"] button:hover { background: rgba(255, 255, 255, .08); }
+.app-sidebar .setup-steps li[data-state="done"] .step-dot { border-color: #4cd18f; background: #4cd18f; color: #17211b; }
+.app-sidebar .setup-steps li[data-state="todo"] button { opacity: .65; }
+.setup-locked { display: flex; align-items: center; gap: 8px; margin: 18px 12px 0; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .12); font-size: 12px; color: #8fb5a0; }
+
+/* ---- Main card: green header on top, wizard below ---- */
+body.fit-screen.setup-shell .wizard.setup-main {
+  width: min(1000px, calc(100vw - 252px - clamp(16px, 4vw, 48px)));
+  padding: 0;
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(23, 33, 27, .08);
+}
+.setup-header {
+  display: flex; align-items: center; gap: 16px; flex: 0 0 auto;
+  padding: clamp(14px, 2.6dvh, 24px) clamp(16px, 2.6vw, 28px);
+  background: linear-gradient(120deg, #173f35 0%, #176b52 65%, #2f8064 100%); color: #fff;
+}
+.setup-icon { display: grid; place-items: center; flex: 0 0 clamp(40px, 6dvh, 52px); height: clamp(40px, 6dvh, 52px); border-radius: 14px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); font-size: 20px; }
+.setup-heading { flex: 1; min-width: 0; }
+.setup-header .eyebrow { margin: 0 0 2px; color: #b9dfc9; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+body.fit-screen .setup-header h1 { display: block; margin: 0; color: #fff; font: 700 clamp(19px, 3.2dvh, 24px) 'Space Grotesk', sans-serif; }
+.setup-sub { margin: 4px 0 0; color: #dcefe5; font-size: clamp(12.5px, 1.8dvh, 14px); }
+.setup-badge { flex: 0 0 auto; padding: 7px 12px; border: 1px solid rgba(255, 255, 255, .28); border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+body.fit-screen.setup-shell .wizard.setup-main > form {
+  flex: 1 1 auto; min-height: 0;
+  padding: clamp(12px, 2.4dvh, 24px) clamp(16px, 2.6vw, 28px) clamp(12px, 2.2dvh, 22px);
+}
+
+/* ---- Phones: sidebar slides out from the menu button; compact step line shows ---- */
+@media (max-width: 760px) {
+  body.fit-screen.setup-shell { padding-left: 0 !important; }
+  body.fit-screen.setup-shell .wizard.setup-main { width: calc(100vw - 16px); margin-top: 60px !important; }
+  body.fit-screen.setup-shell .stepper-compact { display: block; }
+  .setup-sub, .setup-badge { display: none; }
+  .sidebar-menu-button { top: 10px; left: 10px; border-radius: 8px; }
+}
