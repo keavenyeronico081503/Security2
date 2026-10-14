@@ -62,16 +62,13 @@ async function loadFeed() {
     const response = await fetch('../php/content.php?action=list-posts');
     const data = await response.json();
     if (!response.ok || data.status !== 'success' || !data.posts.length) return;
-    list.replaceChildren();
-    data.posts.forEach(post => {
-      const article = document.createElement('article');
-      article.className = 'feed-post';
-      const title = document.createElement('h3'); title.textContent = post.title;
-      const body = document.createElement('p'); body.textContent = post.body;
-      const meta = document.createElement('span'); meta.className = 'post-meta'; meta.textContent = `${post.author} — ${post.created_at}`;
-      article.append(title, body, meta);
-      list.appendChild(article);
-    });
+    list.replaceChildren(...data.posts.map(post => window.PostCard.build(post)));
+    // The "New" tags stay for this visit; the sidebar count clears now.
+    if (data.posts.some(post => post.is_new)) {
+      document.body.dataset.postsSeen = '1';
+      fetch('../php/content.php?action=mark-posts-seen', { method: 'POST' }).catch(() => {});
+      document.querySelectorAll('[data-notification="new_posts"]').forEach(badge => { badge.hidden = true; badge.textContent = '0'; });
+    }
   } catch (error) {
     return;
   }
@@ -85,7 +82,7 @@ async function loadTodayBanner() {
     const data = await response.json();
     if (!response.ok || data.status !== 'success' || !data.events.length) { banner.hidden = true; return; }
     const event = data.events[0];
-    document.getElementById('todayBannerTitle').textContent = `Today: ${event.title}`;
+    document.getElementById('todayBannerTitle').textContent = `Today: ${event.title} · ${window.PostCard.eventTimeRange(event)}`;
     document.getElementById('todayBannerBody').textContent = event.description || 'Come and join!';
     banner.hidden = false;
   } catch (error) {
@@ -98,7 +95,7 @@ function buildNotificationItem(eventItem, isToday) {
   item.className = isToday ? 'notification-item notification-today' : 'notification-item';
   const icon = document.createElement('i'); icon.className = 'fas fa-bell'; icon.setAttribute('aria-hidden', 'true');
   const wrap = document.createElement('div');
-  const heading = document.createElement('strong'); heading.textContent = isToday ? `Today: ${eventItem.title}` : eventItem.title;
+  const heading = document.createElement('strong'); heading.textContent = `${isToday ? `Today: ${eventItem.title}` : eventItem.title} · ${window.PostCard.eventTimeRange(eventItem)}`;
   const body = document.createElement('p');
   body.textContent = isToday
     ? (eventItem.description || 'Come and join!')
@@ -194,7 +191,8 @@ function showEventDetail(dayEvents) {
     const icon = document.createElement('i'); icon.className = 'far fa-calendar-check'; icon.setAttribute('aria-hidden', 'true');
     const wrap = document.createElement('div');
     const heading = document.createElement('h2'); heading.textContent = eventItem.title;
-    const paragraph = document.createElement('p'); paragraph.textContent = eventItem.description ? `${eventItem.event_date} — ${eventItem.description}` : eventItem.event_date;
+    const when = `${eventItem.event_date} · ${window.PostCard.eventTimeRange(eventItem)}`;
+    const paragraph = document.createElement('p'); paragraph.textContent = eventItem.description ? `${when} — ${eventItem.description}` : when;
     wrap.append(heading, paragraph);
     detail.append(icon, wrap);
   });

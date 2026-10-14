@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="../css/audit.css">
   <link rel="stylesheet" href="../css/sidebar.css">
   <link rel="stylesheet" href="../css/profile.css">
+  <link rel="stylesheet" href="../css/post-card.css">
+  <link rel="stylesheet" href="../css/content.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="has-sidebar app-superadmin">
@@ -85,8 +87,65 @@
         <p class="ca-once">The temporary password is not shown again after you leave this card.</p>
       </div>
     </section>
-    <section id="posts" class="create-panel"><div class="section-heading"><div><p class="eyebrow">Community</p><h2>Announcements</h2><p>Publish updates for all users to see on their dashboard.</p></div></div><form id="createPostForm" class="profile-form"><label>Title<input name="title" required></label><label>Body<textarea name="body" rows="4" required></textarea></label><p id="postMessage" class="form-message" role="status"></p><button type="submit">Publish post</button></form><div class="table-wrap"><table><thead><tr><th>Title</th><th>Posted</th><th>Actions</th></tr></thead><tbody id="postsList"></tbody></table></div></section>
-    <section id="events" class="create-panel"><div class="section-heading"><div><p class="eyebrow">Community</p><h2>Events</h2><p>Add dates to the shared calendar users see on their dashboard.</p></div></div><form id="createEventForm" class="profile-form"><label>Title<input name="title" required></label><label>Date<input name="event_date" type="date" required></label><label>Description<textarea name="description" rows="3"></textarea></label><p id="eventMessage" class="form-message" role="status"></p><button type="submit">Add event</button></form><div class="table-wrap"><table><thead><tr><th>Title</th><th>Date</th><th>Actions</th></tr></thead><tbody id="eventsList"></tbody></table></div></section>
+    <section id="posts" class="create-panel">
+      <div class="section-heading"><div><p class="eyebrow">Community</p><h2>Announcements</h2><p>Write, schedule and pin updates for everyone's dashboard.</p></div></div>
+      <div class="cm-composer">
+        <form class="cm-form" id="postForm" novalidate>
+          <div class="cm-editing" id="postEditing" hidden><i class="fas fa-pen" aria-hidden="true"></i><span>Editing an announcement</span><button type="button" class="cm-link" id="postCancelEdit">Cancel editing</button></div>
+          <div class="cm-field"><label for="postTitle">Title <span class="cm-count" data-count-for="postTitle">0/200</span></label><input id="postTitle" maxlength="200" placeholder="e.g. Practice moved to the covered court" autocomplete="off"></div>
+          <div class="cm-field"><label for="postBody">Message <span class="cm-count" data-count-for="postBody">0/5000</span></label><textarea id="postBody" rows="5" maxlength="5000" placeholder="What should everyone know?"></textarea></div>
+          <div class="cm-row">
+            <div class="cm-field"><span class="cm-label">Priority</span>
+              <div class="cm-segmented" role="radiogroup" aria-label="Priority">
+                <label><input type="radio" name="postPriority" value="normal" checked><span>Normal</span></label>
+                <label><input type="radio" name="postPriority" value="important"><span>Important</span></label>
+                <label><input type="radio" name="postPriority" value="urgent"><span>Urgent</span></label>
+              </div>
+            </div>
+            <label class="cm-switch"><input type="checkbox" id="postPinned"><span class="cm-switch-ui" aria-hidden="true"></span><span><strong>Pin to top</strong><small>Stays above other announcements</small></span></label>
+          </div>
+          <fieldset class="cm-when">
+            <legend>When to publish</legend>
+            <div class="cm-segmented" role="radiogroup" aria-label="When to publish">
+              <label><input type="radio" name="postPublishMode" value="now" checked><span><i class="fas fa-bolt" aria-hidden="true"></i> Now</span></label>
+              <label><input type="radio" name="postPublishMode" value="schedule"><span><i class="far fa-clock" aria-hidden="true"></i> Schedule</span></label>
+            </div>
+            <div class="cm-datetime" id="postScheduleFields" hidden><input type="date" id="postPublishDate" aria-label="Publish date"><select id="postPublishTime" aria-label="Publish time"></select></div>
+          </fieldset>
+          <fieldset class="cm-when">
+            <legend>Show until</legend>
+            <label class="cm-switch"><input type="checkbox" id="postNoEnd" checked><span class="cm-switch-ui" aria-hidden="true"></span><span><strong>No end date</strong><small>Turn off to hide it automatically later</small></span></label>
+            <div class="cm-datetime" id="postExpiryFields" hidden><input type="date" id="postExpireDate" aria-label="Hide after date"><select id="postExpireTime" aria-label="Hide after time"></select></div>
+          </fieldset>
+          <p class="cm-summary" id="postSummary"></p>
+          <p class="cm-message" id="postMessage" role="status"></p>
+          <div class="cm-actions"><button type="submit" id="postSubmit"><i class="fas fa-paper-plane" aria-hidden="true"></i><span> Publish now</span></button></div>
+        </form>
+        <aside class="cm-preview" aria-label="Preview"><p class="cm-preview-label"><i class="far fa-eye" aria-hidden="true"></i> Preview — how users will see it</p><div id="postPreview"></div></aside>
+      </div>
+      <h3 class="cm-list-title">All announcements</h3>
+      <div class="cm-list" id="postsList"></div>
+    </section>
+    <section id="events" class="create-panel">
+      <div class="section-heading"><div><p class="eyebrow">Community</p><h2>Events</h2><p>Add dates and times to the shared calendar users see on their dashboard.</p></div></div>
+      <form class="cm-form cm-event-form" id="eventForm" novalidate>
+        <div class="cm-editing" id="eventEditing" hidden><i class="fas fa-pen" aria-hidden="true"></i><span>Editing an event</span><button type="button" class="cm-link" id="eventCancelEdit">Cancel editing</button></div>
+        <div class="cm-event-grid">
+          <div class="cm-field cm-wide"><label for="eventTitle">Title <span class="cm-count" data-count-for="eventTitle">0/200</span></label><input id="eventTitle" maxlength="200" placeholder="e.g. Inter-college tryouts" autocomplete="off"></div>
+          <div class="cm-field"><label for="eventDate">Date</label><input id="eventDate" type="date"></div>
+          <label class="cm-switch cm-allday"><input type="checkbox" id="eventAllDay"><span class="cm-switch-ui" aria-hidden="true"></span><span><strong>All day</strong><small>No specific time</small></span></label>
+          <div class="cm-times" id="eventTimes">
+            <div class="cm-field"><label for="eventStart">Starts</label><select id="eventStart"></select></div>
+            <div class="cm-field"><label for="eventEnd">Ends</label><select id="eventEnd"></select></div>
+          </div>
+          <div class="cm-field cm-wide"><label for="eventDescription">Description <span class="optional">(optional)</span></label><textarea id="eventDescription" rows="3" placeholder="Where, what to bring, who should come…"></textarea></div>
+        </div>
+        <p class="cm-message" id="eventMessage" role="status"></p>
+        <div class="cm-actions"><button type="submit" id="eventSubmit"><i class="far fa-calendar-plus" aria-hidden="true"></i><span> Add event</span></button></div>
+      </form>
+      <h3 class="cm-list-title">Upcoming and recent events</h3>
+      <div class="cm-list" id="eventsList"></div>
+    </section>
     <section id="privileges" class="create-panel">
       <div class="section-heading"><div><p class="eyebrow">Security &amp; access</p><h2>Manage access</h2><p>See what each account can do, adjust an Administrator's permissions, or promote / demote between User and Administrator.</p></div></div>
       <div class="access-toolbar">
@@ -115,22 +174,6 @@
       </div>
       <p id="editMessage" class="form-message" role="status"></p>
       <div class="dialog-actions"><button type="button" id="resetPasswordBtn" class="secondary">Reset password</button><button type="button" id="cancelEdit" class="secondary">Cancel</button><button type="submit">Save changes</button></div>
-    </form>
-  </dialog>
-  <dialog id="postEditDialog" class="privilege-dialog">
-    <form id="postEditForm">
-      <div class="section-heading"><div><p class="eyebrow">Announcements</p><h2>Edit post</h2></div><button type="button" id="closePostEdit" class="secondary">Close</button></div>
-      <div class="profile-form"><label>Title<input name="title" required></label><label>Body<textarea name="body" rows="4" required></textarea></label></div>
-      <p id="postEditMessage" class="form-message" role="status"></p>
-      <div class="dialog-actions"><button type="button" id="cancelPostEdit" class="secondary">Cancel</button><button type="submit">Save changes</button></div>
-    </form>
-  </dialog>
-  <dialog id="eventEditDialog" class="privilege-dialog">
-    <form id="eventEditForm">
-      <div class="section-heading"><div><p class="eyebrow">Events</p><h2>Edit event</h2></div><button type="button" id="closeEventEdit" class="secondary">Close</button></div>
-      <div class="profile-form"><label>Title<input name="title" required></label><label>Date<input name="event_date" type="date" required></label><label>Description<textarea name="description" rows="3"></textarea></label></div>
-      <p id="eventEditMessage" class="form-message" role="status"></p>
-      <div class="dialog-actions"><button type="button" id="cancelEventEdit" class="secondary">Cancel</button><button type="submit">Save changes</button></div>
     </form>
   </dialog>
   <dialog id="reviewDialog" class="review-dialog" aria-labelledby="reviewName">
@@ -220,6 +263,8 @@
   <script src="../javascript/pending-registrations.js"></script>
   <script src="../javascript/password-meter.js"></script>
   <script src="../javascript/create-account.js"></script>
+  <script src="../javascript/post-card.js"></script>
+  <script src="../javascript/content-manager.js"></script>
   <script src="../javascript/sidebar.js"></script>
   <script src="../javascript/profile.js"></script>
 </body>

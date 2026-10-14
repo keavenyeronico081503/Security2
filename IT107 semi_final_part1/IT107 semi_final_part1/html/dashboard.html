@@ -6,6 +6,7 @@
   <title>Volleyball Club Dashboard</title>
   <link rel="stylesheet" href="../css/common.css">
   <link rel="stylesheet" href="../css/user-dashboard.css">
+  <link rel="stylesheet" href="../css/post-card.css">
   <link rel="stylesheet" href="../css/sidebar.css">
   <link rel="stylesheet" href="../css/privilege.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -20,7 +21,7 @@
       <button class="sidebar-close" aria-label="Close navigation">Close</button>
     </div>
     <nav class="sidebar-nav">
-      <a class="sidebar-link active" data-view="dashboard" href="#dashboard"><i class="fas fa-home" aria-hidden="true"></i> Dashboard</a>
+      <a class="sidebar-link active" data-view="dashboard" href="#dashboard"><i class="fas fa-home" aria-hidden="true"></i> Dashboard <span class="notification-badge" data-notification="new_posts" hidden>0</span></a>
       <a class="sidebar-link" data-view="notifications" href="#notifications"><i class="fas fa-bell" aria-hidden="true"></i> Notifications <span class="notification-badge" data-notification="today_events" hidden>0</span></a>
       <a class="sidebar-link" data-view="calendar" href="#calendar"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar &amp; Events</a>
       <a class="sidebar-link" data-view="profile" href="#profile"><i class="fas fa-id-card" aria-hidden="true"></i> My Profile</a>
@@ -78,6 +79,7 @@
     </section>
   </main>
 
+  <script src="../javascript/post-card.js"></script>
   <script src="../javascript/user-dashboard.js"></script>
   <script src="../javascript/profile.js"></script>
   <script src="../javascript/sidebar.js"></script>

@@ -46,7 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) return;
       const data = await response.json();
       sidebar.querySelectorAll('[data-notification]').forEach(badge => {
-        const count = Number(data.notifications?.[badge.dataset.notification] || 0);
+        // The dashboard feed already showed the new announcements on this page.
+        const seen = badge.dataset.notification === 'new_posts' && document.body.dataset.postsSeen === '1';
+        const count = seen ? 0 : Number(data.notifications?.[badge.dataset.notification] || 0);
         badge.textContent = count > 99 ? '99+' : String(count);
         badge.hidden = count < 1;
         badge.setAttribute('aria-label', `${count} pending`);

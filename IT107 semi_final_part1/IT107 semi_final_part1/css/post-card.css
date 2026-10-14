@@ -1,0 +1,15 @@
+/* Announcement card shared by the user dashboard and the Admin / Super Admin preview. */
+.post-card{position:relative;padding:18px 20px;margin-bottom:14px;background:#fffdf8;border:1px solid #d9ded7;border-left:4px solid #d9ded7;border-radius:8px;color:#17211b}
+.post-card.priority-important{border-left-color:#a46616}
+.post-card.priority-urgent{border-left-color:#a63d32;background:#fffaf9}
+.post-card.is-pinned{box-shadow:0 6px 16px rgba(23,33,27,.07)}
+.post-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.post-tag{padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.02em;background:#eef1ec;color:#4d5a52}
+.post-tag.tag-pinned{background:#e8f4ee;color:#176b52}
+.post-tag.tag-important{background:#fff3dc;color:#8a5a12}
+.post-tag.tag-urgent{background:#fbe9e6;color:#a63d32}
+.post-tag.tag-new{background:#176b52;color:#fff}
+.post-card .post-title{margin:0 0 6px;font:700 18px 'Space Grotesk',sans-serif;color:#17211b;overflow-wrap:anywhere}
+.post-card .post-body{margin:0 0 10px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;color:#17211b}
+.post-card .post-meta{margin:0;font-size:12px;font-weight:700;color:#68736c}
+.event-time{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#176b52}
