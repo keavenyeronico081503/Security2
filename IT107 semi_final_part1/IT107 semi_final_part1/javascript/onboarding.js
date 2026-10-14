@@ -5,6 +5,14 @@
 (function () {
   const { createWizard, setError, validators, ageFrom, togglePasswordButtons, loadQuestionOptions } = window.Wizard;
   const form = document.getElementById('onboardingWizard');
+  // The mint note under the header explains the current step (Create Account style).
+  const stepNotes = {
+    1: 'Verify your personal email with the code we send (administrators can\'t use a school address), then replace your temporary password.',
+    2: 'Your name and details for your profile.',
+    3: 'Pick from the lists. Each list only shows places inside the one above it.',
+    4: 'Used to recover your account if you forget your password. Pick three different questions.',
+    5: 'Check everything below. Use Edit to change anything, then press Finish setup.',
+  };
   const $ = id => document.getElementById(id);
 
   const email = $('email');
@@ -43,12 +51,13 @@
       // administrators use a personal one.
       if (status.role === 'user') {
         $('setupIntro').textContent = 'An administrator created your account. Verify your school email, choose your own password and finish your profile.';
-        form.querySelector('label[for="email"]').textContent = 'School email';
+        $('emailLabel').textContent = 'School email';
+        $('emailHint').textContent = 'Your @csucc.edu.ph address';
         email.placeholder = 'yourname@csucc.edu.ph';
-        form.querySelector('[data-step="1"] .step-hint').textContent = 'Verify your school email, then replace your temporary password.';
         email.dataset.review = 'School email';
-        form.querySelector('[data-wizard="submit"]').textContent = 'Finish setup';
+        stepNotes[1] = 'Verify your school email with the code we send, then replace your temporary password.';
       }
+      $('setupNote').textContent = stepNotes[wizard.current()];
     },
   });
 
@@ -116,6 +125,7 @@
     stepperRoot: sidebar,
     onEnterStep(step) {
       $('setupStepBadge').textContent = `Step ${step} of 5`;
+      $('setupNote').textContent = stepNotes[step];
       setMenu(false);
     },
     async onSubmit() {

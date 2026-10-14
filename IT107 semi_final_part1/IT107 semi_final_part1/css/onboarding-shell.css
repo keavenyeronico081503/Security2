@@ -1,6 +1,8 @@
-/* Account setup page in the same look as the Super Admin / Admin pages: dark
-   sidebar (css/sidebar.css) holding the setup steps, and a green header card like
-   Create Account. Loaded after wizard.css and fit-screen.css. */
+/* Account setup page, styled exactly like the Super Admin "Create account" card:
+   dark sidebar (css/sidebar.css) with the setup steps, and the .ca-panel card from
+   css/create-account.css (header, mint note, labels with grey hints, buttons,
+   footer). Loaded after wizard.css / fit-screen.css / create-account.css, so the
+   rules here settle the overlaps and keep the page on one screen. */
 body.fit-screen.setup-shell {
   padding-left: 252px !important;
   background: linear-gradient(135deg, #eef2e9, #f8f1e5);
@@ -15,9 +17,7 @@ body.fit-screen.setup-shell {
   width: 100%; min-height: 46px; display: flex; flex-direction: row; align-items: center; gap: 12px;
   padding: 8px 12px; border-radius: 8px; color: #cfe0d6; font: 600 14px 'DM Sans', sans-serif; text-align: left; cursor: default;
 }
-.app-sidebar .setup-steps .step-dot {
-  flex: 0 0 28px; width: 28px; height: 28px; border: 2px solid rgba(255, 255, 255, .28); background: transparent; color: #cfe0d6; font-size: 13px; box-shadow: none;
-}
+.app-sidebar .setup-steps .step-dot { flex: 0 0 28px; width: 28px; height: 28px; border: 2px solid rgba(255, 255, 255, .28); background: transparent; color: #cfe0d6; font-size: 13px; box-shadow: none; }
 .app-sidebar .setup-steps li[data-state="current"] button { background: #176b52; color: #fff; }
 .app-sidebar .setup-steps li[data-state="current"] .step-dot { border-color: #fff; background: #fff; color: #176b52; box-shadow: none; }
 .app-sidebar .setup-steps li[data-state="done"] button { color: #fff; cursor: pointer; }
@@ -26,34 +26,77 @@ body.fit-screen.setup-shell {
 .app-sidebar .setup-steps li[data-state="todo"] button { opacity: .65; }
 .setup-locked { display: flex; align-items: center; gap: 8px; margin: 18px 12px 0; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .12); font-size: 12px; color: #8fb5a0; }
 
-/* ---- Main card: green header on top, wizard below ---- */
+/* ---- The card: same size and parts as Create Account ---- */
 body.fit-screen.setup-shell .wizard.setup-main {
-  width: min(1000px, calc(100vw - 252px - clamp(16px, 4vw, 48px)));
-  padding: 0;
+  width: min(1400px, calc(100vw - 252px - clamp(24px, 4vw, 64px)));
   border-radius: 12px;
-  box-shadow: 0 14px 34px rgba(23, 33, 27, .08);
 }
-.setup-header {
-  display: flex; align-items: center; gap: 16px; flex: 0 0 auto;
-  padding: clamp(14px, 2.6dvh, 24px) clamp(16px, 2.6vw, 28px);
-  background: linear-gradient(120deg, #173f35 0%, #176b52 65%, #2f8064 100%); color: #fff;
-}
-.setup-icon { display: grid; place-items: center; flex: 0 0 clamp(40px, 6dvh, 52px); height: clamp(40px, 6dvh, 52px); border-radius: 14px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .25); font-size: 20px; }
-.setup-heading { flex: 1; min-width: 0; }
-.setup-header .eyebrow { margin: 0 0 2px; color: #b9dfc9; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-body.fit-screen .setup-header h1 { display: block; margin: 0; color: #fff; font: 700 clamp(19px, 3.2dvh, 24px) 'Space Grotesk', sans-serif; }
-.setup-sub { margin: 4px 0 0; color: #dcefe5; font-size: clamp(12.5px, 1.8dvh, 14px); }
+body.setup-shell .ca-header { flex: 0 0 auto; padding-top: clamp(14px, 2.6dvh, 24px); padding-bottom: clamp(14px, 2.6dvh, 24px); }
+body.setup-shell .ca-icon { flex-basis: clamp(42px, 6dvh, 52px); height: clamp(42px, 6dvh, 52px); }
+body.setup-shell .setup-heading { flex: 1; min-width: 0; }
+body.fit-screen.setup-shell .ca-header h1 { display: block; margin: 0; color: #fff !important; font: 700 clamp(20px, 3.2dvh, 24px) 'Space Grotesk', sans-serif; }
+body.setup-shell .ca-header .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .setup-badge { flex: 0 0 auto; padding: 7px 12px; border: 1px solid rgba(255, 255, 255, .28); border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-body.fit-screen.setup-shell .wizard.setup-main > form {
+body.setup-shell .ca-note { flex: 0 0 auto; margin-top: clamp(10px, 2dvh, 20px); }
+body.fit-screen.setup-shell .wizard.setup-main > .ca-form {
   flex: 1 1 auto; min-height: 0;
-  padding: clamp(12px, 2.4dvh, 24px) clamp(16px, 2.6vw, 28px) clamp(12px, 2.2dvh, 22px);
+  padding: clamp(12px, 2.2dvh, 22px) 28px clamp(12px, 2.4dvh, 26px);
 }
+
+/* Fields: Create Account look, one-screen heights. */
+body.setup-shell .ca-grid { gap: clamp(8px, 1.4dvh, 16px) 18px; }
+body.setup-shell .ca-panel .field > label .setup-label { margin-left: 0; color: inherit; font-size: inherit; font-weight: inherit; }
+body.setup-shell .ca-panel .field select,
+body.setup-shell .ca-panel .question-row input {
+  width: 100%; padding: 0 12px; border: 1px solid #cbd8ce; border-radius: 8px; background: #fff;
+  color: #17211b; font: 15px 'DM Sans', sans-serif; box-sizing: border-box;
+}
+body.setup-shell .ca-panel .field select:focus,
+body.setup-shell .ca-panel .question-row input:focus { outline: none; border-color: #176b52; box-shadow: 0 0 0 3px rgba(23, 107, 82, .14); }
+body.setup-shell .ca-panel .field.invalid select { border-color: #a63d32; box-shadow: 0 0 0 3px rgba(166, 61, 50, .1); }
+body.setup-shell .ca-panel .input-row { display: flex; gap: 8px; }
+body.setup-shell .ca-panel .input-row input { flex: 1 1 auto; }
+body.fit-screen.setup-shell .ca-panel .ca-btn { height: clamp(36px, 5.4dvh, 44px); }
+body.setup-shell .ca-panel .pw-toggle { top: 50%; margin-top: -16px; min-height: 0; }
+body.setup-shell .setup-questions { display: grid; gap: clamp(8px, 1.4dvh, 14px); }
+body.setup-shell .setup-questions .question-row { margin: 0; }
+
+/* Footer: lock note left, Back / Next / Finish right (icons drawn here so they
+   survive wizard.js resetting the button text). */
+body.setup-shell .ca-footer { margin-top: clamp(10px, 1.8dvh, 20px); padding-top: clamp(10px, 1.6dvh, 16px); flex: 0 0 auto; }
+body.setup-shell .ca-footer .spacer { flex: 1; }
+body.setup-shell .setup-footnote { display: inline-flex; align-items: center; gap: 6px; }
+body.setup-shell .ca-footer .ca-btn { min-width: 132px; }
+body.setup-shell .setup-back::before,
+body.setup-shell .setup-next::after,
+body.setup-shell .setup-finish::before { font-family: 'Font Awesome 5 Free'; font-weight: 900; font-size: 13px; }
+body.setup-shell .setup-back::before { content: "\f060"; }
+body.setup-shell .setup-next::after { content: "\f061"; }
+body.setup-shell .setup-finish::before { content: "\f00c"; }
+
+/* Error / success messages in the Create Account alert style. */
+body.setup-shell .wizard-notice { margin: 0 0 12px; padding: 11px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; background: #fdf0ee; border: 1px solid #ecc6c0; color: #a63d32; }
+body.setup-shell .wizard-notice.success { background: #f0faf4; border-color: #b9d9c7; color: #176b52; }
+
+/* Review: the Create Account credentials-card look. */
+body.setup-shell .review { margin: 0; padding: 14px; border: 1px solid #b9d9c7; border-radius: 12px; background: #f3fbf6; }
+body.setup-shell .review-group { background: #fff; border: 1px dashed #b9d9c7; }
+body.setup-shell .review-group h4 { color: #176b52; }
 
 /* ---- Phones: sidebar slides out from the menu button; compact step line shows ---- */
 @media (max-width: 760px) {
   body.fit-screen.setup-shell { padding-left: 0 !important; }
   body.fit-screen.setup-shell .wizard.setup-main { width: calc(100vw - 16px); margin-top: 60px !important; }
+  body.fit-screen.setup-shell .wizard.setup-main > .ca-form { padding-left: 16px; padding-right: 16px; }
   body.fit-screen.setup-shell .stepper-compact { display: block; }
-  .setup-sub, .setup-badge { display: none; }
+  body.setup-shell .ca-header p:last-child, body.setup-shell .setup-badge { display: none; }
+  body.setup-shell .ca-note { margin-left: 16px; margin-right: 16px; }
+  body.setup-shell .setup-footnote { display: none; }
+  body.setup-shell .ca-footer { flex-direction: row; }
+  body.setup-shell .ca-footer .ca-btn { flex: 1; min-width: 0; }
   .sidebar-menu-button { top: 10px; left: 10px; border-radius: 8px; }
+}
+/* Short screens: the note and the subtitle go first (the sidebar names the step). */
+@media (max-height: 760px) and (min-width: 761px) {
+  body.setup-shell .ca-header p:last-child { display: none; }
 }

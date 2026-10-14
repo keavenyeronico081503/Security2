@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/wizard.css">
     <link rel="stylesheet" href="../css/fit-screen.css">
     <link rel="stylesheet" href="../css/sidebar.css">
+    <link rel="stylesheet" href="../css/create-account.css">
     <link rel="stylesheet" href="../css/onboarding-shell.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
@@ -29,27 +30,26 @@
       </nav>
       <div class="sidebar-footer"><a class="sidebar-link" href="../php/logout.php"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log out</a></div>
     </aside>
-    <main class="wizard setup-main">
-      <div class="setup-header">
-        <span class="setup-icon" aria-hidden="true"><i class="fas fa-user-shield"></i></span>
-        <div class="setup-heading"><p class="eyebrow">Account setup</p><h1 id="setupTitle">Complete your account</h1><p class="setup-sub" id="setupIntro">You signed in with a temporary password. Verify your email, choose your own password and finish your profile.</p></div>
+    <main class="wizard setup-main ca-panel">
+      <div class="ca-header">
+        <span class="ca-icon" aria-hidden="true"><i class="fas fa-user-shield"></i></span>
+        <div class="setup-heading"><p class="eyebrow">Account setup</p><h1 id="setupTitle">Complete your account</h1><p id="setupIntro">You signed in with a temporary password. Verify your email, choose your own password and finish your profile.</p></div>
         <span class="setup-badge" id="setupStepBadge">Step 1 of 5</span>
       </div>
+      <p class="ca-note"><i class="fas fa-info-circle" aria-hidden="true"></i><span id="setupNote">Verify your personal email with the code we send, then replace your temporary password.</span></p>
 
-      <form id="onboardingWizard" novalidate>
+      <form id="onboardingWizard" class="ca-form" novalidate>
         <p class="stepper-compact"></p>
-        <div class="wizard-notice" role="alert" hidden></div>
+        <div class="wizard-notice ca-alert" role="alert" hidden></div>
 
         <div class="wizard-body">
         <section class="wizard-step" data-step="1" data-title="Account">
-          <h2>Account</h2>
-          <p class="step-hint">Verify your <strong>personal</strong> email (administrators can't use a school address), then replace your temporary password.</p>
-          <div class="field-grid">
-            <div class="field wide">
-              <label for="email">Personal email</label>
+          <div class="ca-grid setup-grid">
+            <div class="field ca-wide">
+              <label for="email"><span class="setup-label" id="emailLabel">Personal email</span> <span id="emailHint">Not a school address</span></label>
               <div class="input-row">
                 <input id="email" name="email" type="email" autocomplete="email" placeholder="yourname@gmail.com" data-review="Personal email">
-                <button type="button" class="wz-btn secondary small" id="sendCode">Send code</button>
+                <button type="button" class="ca-btn secondary" id="sendCode">Send code</button>
               </div>
               <span class="verified-badge" id="emailVerified" hidden>✔ Email verified</span>
               <div class="code-panel" id="codePanel" hidden>
@@ -57,24 +57,24 @@
                 <div class="field">
                   <div class="input-row">
                     <input id="emailCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" data-no-persist>
-                    <button type="button" class="wz-btn small" id="verifyCode">Verify</button>
+                    <button type="button" class="ca-btn" id="verifyCode">Verify</button>
                   </div>
                 </div>
               </div>
             </div>
             <div class="field">
-              <label for="username">Username</label>
+              <label for="username">Username <span id="usernameHint">Can't be changed</span></label>
               <input id="username" type="text" readonly placeholder="Loading…">
             </div>
             <div class="field">
-              <label for="password">New password</label>
+              <label for="password">New password <span>Your own, 8–20 characters</span></label>
               <div class="pw-wrap">
                 <input id="password" name="new_password" type="password" autocomplete="new-password" maxlength="20" data-review="New password">
                 <button type="button" class="pw-toggle" aria-label="Show password">👁</button>
               </div>
             </div>
             <div class="field">
-              <label for="confirmPassword">Confirm new password</label>
+              <label for="confirmPassword">Confirm new password <span>Type it again</span></label>
               <div class="pw-wrap">
                 <input id="confirmPassword" name="confirm_password" type="password" autocomplete="new-password" maxlength="20">
                 <button type="button" class="pw-toggle" aria-label="Show password">👁</button>
@@ -84,53 +84,48 @@
         </section>
 
         <section class="wizard-step" data-step="2" data-title="Personal" hidden>
-          <h2>Personal information</h2>
-          <p class="step-hint">Your name and details for the administrator profile.</p>
-          <div class="field-grid">
-            <div class="field"><label for="firstName">First name</label><input id="firstName" name="first_name" autocomplete="given-name" maxlength="25" data-review="First name"></div>
-            <div class="field"><label for="middleName">Middle name <span class="optional">(optional)</span></label><input id="middleName" name="middle_name" autocomplete="additional-name" maxlength="25" data-review="Middle name"></div>
-            <div class="field"><label for="lastName">Last name</label><input id="lastName" name="last_name" autocomplete="family-name" maxlength="25" data-review="Last name"></div>
-            <div class="field"><label for="suffix">Suffix <span class="optional">(optional)</span></label><input id="suffix" name="suffix" maxlength="10" placeholder="Jr., Sr., III" data-review="Suffix"></div>
-            <div class="field"><label for="birthday">Birthday</label><input id="birthday" name="birthday" type="date" data-review="Birthday"></div>
-            <div class="field"><label for="age">Age</label><input id="age" type="text" readonly placeholder="Calculated from birthday"></div>
+          <div class="ca-grid setup-grid">
+            <div class="field"><label for="firstName">First name <span>As on your ID</span></label><input id="firstName" name="first_name" autocomplete="given-name" maxlength="25" data-review="First name"></div>
+            <div class="field"><label for="middleName">Middle name <span>Optional</span></label><input id="middleName" name="middle_name" autocomplete="additional-name" maxlength="25" data-review="Middle name"></div>
+            <div class="field"><label for="lastName">Last name <span>As on your ID</span></label><input id="lastName" name="last_name" autocomplete="family-name" maxlength="25" data-review="Last name"></div>
+            <div class="field"><label for="suffix">Suffix <span>Optional</span></label><input id="suffix" name="suffix" maxlength="10" placeholder="Jr., Sr., III" data-review="Suffix"></div>
+            <div class="field"><label for="birthday">Birthday <span>Age is calculated</span></label><input id="birthday" name="birthday" type="date" data-review="Birthday"></div>
+            <div class="field"><label for="age">Age <span>Automatic</span></label><input id="age" type="text" readonly placeholder="From your birthday"></div>
             <div class="field"><label for="gender">Sex</label><select id="gender" name="gender" data-review="Sex"><option value="">Select sex</option><option>Male</option><option>Female</option></select></div>
           </div>
         </section>
 
         <section class="wizard-step" data-step="3" data-title="Address" hidden>
-          <h2>Address</h2>
-          <p class="step-hint">Pick from the lists. Each list only shows places inside the one above it.</p>
-          <div class="field-grid" id="addressPicker">
+          <div class="ca-grid setup-grid" id="addressPicker">
             <div class="field"><label for="region">Region</label><select id="region" name="region_code" data-level="region" data-review="Region"></select></div>
             <div class="field"><label for="province">Province</label><select id="province" name="province_code" data-level="province" data-review="Province"></select></div>
             <div class="field"><label for="city">City / Municipality</label><select id="city" name="city_code" data-level="city" data-review="City / Municipality"></select></div>
             <div class="field"><label for="barangay">Barangay</label><select id="barangay" name="barangay_code" data-level="barangay" data-review="Barangay"></select></div>
-            <div class="field"><label for="street">Purok / Street / House no.</label><input id="street" name="street" list="purokList" maxlength="100" placeholder="e.g. Purok 3, Rizal St." data-review="Purok / Street"></div>
-            <div class="field"><label for="zipCode">ZIP code</label><input id="zipCode" name="zip_code" inputmode="numeric" maxlength="4" placeholder="e.g. 8605" data-review="ZIP code"></div>
+            <div class="field"><label for="street">Purok / Street / House no. <span>Pick or type</span></label><input id="street" name="street" list="purokList" maxlength="100" placeholder="e.g. Purok 3, Rizal St." data-review="Purok / Street"></div>
+            <div class="field"><label for="zipCode">ZIP code <span>4 digits</span></label><input id="zipCode" name="zip_code" inputmode="numeric" maxlength="4" placeholder="e.g. 8605" data-review="ZIP code"></div>
           </div>
           <datalist id="purokList"></datalist>
         </section>
 
         <section class="wizard-step" data-step="4" data-title="Security" hidden>
-          <h2>Security questions</h2>
-          <p class="step-hint">Used to recover your account if you forget your password. Pick three different questions.</p>
-          <div class="question-row field"><select name="question1" aria-label="Question 1"></select><input name="answer1" type="password" autocomplete="off" placeholder="Answer 1" data-no-persist></div>
-          <div class="question-row field"><select name="question2" aria-label="Question 2"></select><input name="answer2" type="password" autocomplete="off" placeholder="Answer 2" data-no-persist></div>
-          <div class="question-row field"><select name="question3" aria-label="Question 3"></select><input name="answer3" type="password" autocomplete="off" placeholder="Answer 3" data-no-persist></div>
+          <div class="setup-questions">
+            <div class="question-row field"><select name="question1" aria-label="Question 1"></select><input name="answer1" type="password" autocomplete="off" placeholder="Answer 1" data-no-persist></div>
+            <div class="question-row field"><select name="question2" aria-label="Question 2"></select><input name="answer2" type="password" autocomplete="off" placeholder="Answer 2" data-no-persist></div>
+            <div class="question-row field"><select name="question3" aria-label="Question 3"></select><input name="answer3" type="password" autocomplete="off" placeholder="Answer 3" data-no-persist></div>
+          </div>
         </section>
 
         <section class="wizard-step" data-step="5" data-title="Review" hidden>
-          <h2>Review</h2>
-          <p class="step-hint">Check your details. Use Edit to change anything before submitting.</p>
           <div class="review" data-review-target></div>
         </section>
         </div>
 
-        <div class="wizard-nav">
-          <button type="button" class="wz-btn secondary" data-wizard="back">Back</button>
+        <div class="wizard-nav ca-footer">
+          <span class="setup-footnote"><i class="fas fa-lock" aria-hidden="true"></i> Your details stay on this device until you finish.</span>
           <span class="spacer"></span>
-          <button type="button" class="wz-btn" data-wizard="next">Next</button>
-          <button type="submit" class="wz-btn" data-wizard="submit" hidden>Finish setup</button>
+          <button type="button" class="ca-btn secondary setup-back" data-wizard="back">Back</button>
+          <button type="button" class="ca-btn setup-next" data-wizard="next">Next</button>
+          <button type="submit" class="ca-btn setup-finish" data-wizard="submit" hidden>Finish setup</button>
         </div>
       </form>
     </main>
