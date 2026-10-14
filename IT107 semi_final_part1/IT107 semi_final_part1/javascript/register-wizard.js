@@ -40,34 +40,8 @@
     },
   });
 
-  // Live "is this username free?" check while typing (php/check_user.php).
-  let usernameTimer = null;
-  let usernameFree = null;
-  username.addEventListener('input', () => {
-    clearTimeout(usernameTimer);
-    usernameFree = null;
-    const problem = validators.username(username.value);
-    if (problem) { setError(username, username.value ? problem : ''); return; }
-    setInfo(username, 'Checking…', 'info');
-    usernameTimer = setTimeout(checkUsername, 400);
-  });
-  async function checkUsername() {
-    const value = username.value;
-    try {
-      const response = await fetch('../php/check_user.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `username=${encodeURIComponent(value)}`,
-      });
-      const data = await response.json();
-      if (username.value !== value) return usernameFree;
-      usernameFree = data.status !== 'username_exists';
-      if (usernameFree) setInfo(username, '✔ Username is available'); else setError(username, 'That username is already taken.');
-    } catch (error) {
-      usernameFree = true; // the server checks again on submit
-    }
-    return usernameFree;
-  }
+  // Live username rules + availability (javascript/username-rules.js).
+  const usernameRules = attachUsernameRules(username, { onChange: () => setError(username, '') });
 
   // Step 2 helpers: age from birthday, ID number preview.
   $('birthday').addEventListener('change', () => {
@@ -82,9 +56,9 @@
     if (step === 1) {
       let ok = true;
       if (!emailCode.isVerified()) ok = setError(email, 'Verify your school email with the code first.') && ok;
-      const nameProblem = validators.username(username.value);
+      const nameProblem = usernameRules.problem();
       if (nameProblem) ok = setError(username, nameProblem) && ok;
-      else if (usernameFree === null ? !(await checkUsername()) : !usernameFree) ok = setError(username, 'That username is already taken.') && ok;
+      else if (!(await usernameRules.ensureAvailable())) ok = setError(username, 'That username is already taken.') && ok;
       const passwordProblem = meter.problem();
       if (passwordProblem) {
         ok = setError(passwordProblem.includes('match') ? confirm : password, passwordProblem) && ok;

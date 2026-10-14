@@ -77,35 +77,11 @@
     if (passwordInput.value) copyText(passwordInput.value, event.currentTarget);
   });
 
-  // ---- Live username check ----
-  let usernameTimer = null;
-  let usernameFree = null;
-  function usernameProblem(value) {
-    if (!value) return 'Username is required.';
-    if (!/^[A-Za-z]/.test(value)) return 'Start with a letter.';
-    if (!/^[A-Za-z][A-Za-z0-9_]{5,24}$/.test(value)) return 'Use 6-25 letters, numbers or underscores (no spaces).';
-    return '';
-  }
-  async function checkUsername() {
-    const value = usernameInput.value;
-    try {
-      const response = await fetch('../php/check_user.php', {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `username=${encodeURIComponent(value)}`,
-      });
-      const data = await response.json();
-      if (usernameInput.value !== value) return usernameFree;
-      usernameFree = data.status !== 'username_exists';
-      if (usernameFree) msg(usernameInput, '✔ Username is available', 'ok'); else msg(usernameInput, 'That username is already taken.');
-    } catch (error) { usernameFree = true; }
-    return usernameFree;
-  }
-  usernameInput.addEventListener('input', () => {
-    clearTimeout(usernameTimer);
-    usernameFree = null;
-    const problem = usernameProblem(usernameInput.value);
-    if (problem) { msg(usernameInput, usernameInput.value ? problem : ''); return; }
-    msg(usernameInput, 'Checking…', 'info');
-    usernameTimer = setTimeout(checkUsername, 400);
+  // ---- Live username rules (javascript/username-rules.js) ----
+  // Typing clears an old submit error; the checklist shows what's still missing.
+  const usernameRules = attachUsernameRules(usernameInput, {
+    onChange: () => msg(usernameInput, ''),
+    suggestFrom: $('first_name') && $('last_name') ? [$('first_name'), $('last_name')] : null,
   });
 
   // ---- Validation ----
@@ -121,9 +97,9 @@
     if ($('email')) {
       ok = msg($('email'), /^[^\s@]+@csucc\.edu\.ph$/i.test($('email').value.trim()) ? '' : 'Use the person\'s school email (@csucc.edu.ph).') && ok;
     }
-    const nameProblem = usernameProblem(usernameInput.value);
+    const nameProblem = usernameRules.problem();
     if (nameProblem) ok = msg(usernameInput, nameProblem) && ok;
-    else if (usernameFree === null ? !(await checkUsername()) : !usernameFree) ok = msg(usernameInput, 'That username is already taken.') && ok;
+    else if (!(await usernameRules.ensureAvailable())) ok = msg(usernameInput, 'That username is already taken.') && ok;
     const passwordProblem = meter.problem();
     ok = msg(passwordInput, passwordProblem) && ok;
     return ok;
@@ -189,7 +165,7 @@
     passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
     form.querySelectorAll('.field-msg').forEach(el => { el.textContent = ''; });
     form.querySelectorAll('.field.invalid').forEach(el => el.classList.remove('invalid'));
-    usernameFree = null;
+    usernameRules.reset();
     result.querySelector('.ca-creds').replaceChildren(); // the password is no longer shown anywhere
     result.hidden = true;
     form.hidden = false;

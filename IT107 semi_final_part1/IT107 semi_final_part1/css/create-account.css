@@ -137,3 +137,13 @@
    stretched grid row; keep them at their own height and align fields to the top. */
 .ca-panel .field input { flex: none; }
 .ca-grid { align-items: start; }
+
+/* Username rules checklist (javascript/username-rules.js); the list itself reuses .pw-checklist. */
+.username-rules{margin-top:4px}
+.username-example{margin:0 0 3px;font-size:12px;color:#68736c}
+.username-example em{font-style:normal;font-weight:700;color:#17211b}
+.username-rules .pw-checklist li.bad{color:#a63d32}
+.username-rules .pw-checklist li.bad::before{content:"\2717";font-weight:700}
+.username-note{margin:3px 0 0;font-size:12px;font-weight:700;color:#8a5a12}
+.username-suggest{display:inline;width:auto;min-height:0;height:auto!important;margin:0;padding:0;border:0!important;background:none!important;box-shadow:none!important;color:#176b52!important;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+.username-suggest:disabled{opacity:.6;cursor:wait}
