@@ -1,0 +1,88 @@
+/* One-screen pages (register, admin setup, login): the page itself never scrolls.
+   - The body is exactly the visible screen height (dvh = real visible height on
+     phones, even while the address bar shows/hides) split into rows:
+     header / content / footer.
+   - Header and footer are normal rows (not position: fixed), so the content row is
+     precisely what is left on every device.
+   - Sizes use clamp(min, preferred, max) so spacing and controls shrink smoothly on
+     short screens and grow on big ones.
+   - If a screen is physically too small (tiny phones, landscape), only the inner
+     form area scrolls; titles and buttons stay on screen. */
+
+html:has(body.fit-screen) { height: 100%; overflow: hidden; }
+
+body.fit-screen {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0 !important;
+  margin: 0;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch !important;
+  align-items: stretch !important;
+}
+
+body.fit-screen > header,
+body.fit-screen > footer {
+  position: static !important;
+  width: auto !important;
+}
+body.fit-screen > header { grid-row: 1; padding: clamp(3px, 0.8dvh, 8px) 0 !important; }
+body.fit-screen > footer {
+  grid-row: 3;
+  padding: clamp(3px, 0.9dvh, 10px) !important;
+  font-size: clamp(11px, 1.6dvh, 15px);
+}
+body.fit-screen .brand-mark,
+body.fit-screen .brand-text { height: clamp(32px, 6.5dvh, 60px) !important; }
+body.fit-screen .brand-text { margin-left: calc(clamp(32px, 6.5dvh, 60px) * -0.66) !important; width: auto !important; }
+
+/* The content row: whatever card lives here is centered and never taller than it. */
+body.fit-screen > main {
+  grid-row: 2;
+  min-height: 0;
+  max-height: 100%;
+  align-self: center;
+  justify-self: center;
+  margin: clamp(6px, 1.8dvh, 22px) auto !important;
+}
+
+/* ---- Login card ---- */
+body.fit-screen .login-shell {
+  width: min(900px, calc(100vw - clamp(16px, 4vw, 48px)));
+  max-height: calc(100% - clamp(12px, 3.6dvh, 44px));
+  display: flex;
+  margin: clamp(6px, 1.8dvh, 22px) auto !important;
+}
+body.fit-screen .login {
+  padding: clamp(14px, 3.6dvh, 40px) clamp(16px, 3.4vw, 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+body.fit-screen .login-aside { padding: clamp(18px, 4.4dvh, 48px) clamp(18px, 3vw, 36px); }
+body.fit-screen .login-aside h2 { font-size: clamp(20px, 3.4dvh, 28px); }
+body.fit-screen .login-icon { width: clamp(32px, 5.2dvh, 44px); height: clamp(32px, 5.2dvh, 44px); margin-bottom: clamp(6px, 1.4dvh, 14px); }
+body.fit-screen .login h1 { margin: 0; font-size: clamp(22px, 4dvh, 32px); }
+body.fit-screen .login-sub { margin: clamp(2px, 0.6dvh, 6px) 0 clamp(10px, 2.4dvh, 22px); }
+body.fit-screen .login .input-row { margin-bottom: clamp(6px, 1.5dvh, 15px); }
+body.fit-screen .login input:not([type="checkbox"]),
+body.fit-screen .login button,
+body.fit-screen .login .google-button { height: clamp(36px, 5.4dvh, 44px); }
+body.fit-screen .login button { margin-top: clamp(8px, 1.6dvh, 14px); }
+body.fit-screen .login .or-divider { margin-top: clamp(8px, 1.8dvh, 18px); }
+body.fit-screen .login .google-button { margin-top: clamp(6px, 1.2dvh, 12px); padding-top: 0; padding-bottom: 0; }
+body.fit-screen .login .error-message { margin-top: 3px; font-size: 13px; line-height: 1.35; }
+body.fit-screen .login-footnote { margin-top: clamp(8px, 1.8dvh, 18px); }
+
+/* Narrow or short screens: drop the decorative image panel first. */
+@media (max-width: 800px), (max-height: 560px) {
+  body.fit-screen .login-aside { display: none; }
+  body.fit-screen .login-shell { width: min(480px, calc(100vw - 24px)); }
+}
+@media (max-height: 640px) {
+  body.fit-screen .login-icon { display: none; }
+  body.fit-screen .login-sub { display: none; }
+}

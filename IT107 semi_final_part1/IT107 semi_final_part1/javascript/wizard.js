@@ -183,9 +183,6 @@
       const target = form.querySelector('[data-review-target]');
       if (!target) return;
       target.replaceChildren();
-      const heading = document.createElement('h3');
-      heading.textContent = 'Review your details';
-      target.appendChild(heading);
       steps.slice(0, -1).forEach(step => {
         const group = document.createElement('div');
         group.className = 'review-group';
@@ -197,6 +194,12 @@
         edit.addEventListener('click', () => go(Number(step.dataset.step), false));
         h4.appendChild(edit);
         const dl = document.createElement('dl');
+        if (!step.querySelector('[data-review]')) {
+          // e.g. Security: the answers are private, so just confirm the step is done.
+          const dt = document.createElement('dt'); dt.textContent = 'Status';
+          const dd = document.createElement('dd'); dd.textContent = '✔ Completed';
+          dl.append(dt, dd);
+        }
         step.querySelectorAll('[data-review]').forEach(input => {
           let value = input.tagName === 'SELECT' ? (input.selectedOptions[0]?.value ? input.selectedOptions[0].text : '') : input.value.trim();
           if (input.type === 'password') value = value ? '•'.repeat(Math.min(value.length, 12)) : '';

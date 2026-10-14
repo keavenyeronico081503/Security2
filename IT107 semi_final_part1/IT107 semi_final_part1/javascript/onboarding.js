@@ -1,5 +1,5 @@
 // Administrator setup wizard (after logging in with the temporary password):
-// 1 Account (personal email + code, new password) -> 2 Personal -> 3 Address -> 4 Security.
+// 1 Account (personal email + code, new password) -> 2 Personal -> 3 Address -> 4 Security -> 5 Review.
 // Final submit goes to php/complete_account.php, which re-checks everything.
 
 (function () {
@@ -37,7 +37,7 @@
       // Regular users (created by an Administrator) verify their school email;
       // administrators use a personal one.
       if (status.role === 'user') {
-        document.querySelector('.wizard-intro').textContent = 'An administrator created your account. Finish these four steps to start using it.';
+        document.querySelector('.wizard-intro').textContent = 'An administrator created your account. Complete the steps below to start using it.';
         form.querySelector('label[for="email"]').textContent = 'School email';
         email.placeholder = 'yourname@csucc.edu.ph';
         form.querySelector('[data-step="1"] .step-hint').textContent = 'Verify your school email, then replace your temporary password.';

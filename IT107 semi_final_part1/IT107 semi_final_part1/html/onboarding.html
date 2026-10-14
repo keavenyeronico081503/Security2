@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complete Account Setup</title>
     <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/onboarding.css">
     <link rel="stylesheet" href="../css/wizard.css">
+    <link rel="stylesheet" href="../css/fit-screen.css">
 </head>
-<body class="wizard-page">
+<body class="wizard-page fit-screen">
     <main class="wizard">
       <h1>Complete your account</h1>
-      <p class="wizard-intro">You signed in with a temporary password. Finish these four steps to activate your administrator account.</p>
+      <p class="wizard-intro">You signed in with a temporary password. Complete the steps below to activate your administrator account.</p>
 
       <form id="onboardingWizard" novalidate>
         <ol class="stepper">
@@ -19,18 +19,16 @@
           <li data-step="2"><button type="button"><span class="step-dot"><span class="step-num">2</span></span>Personal</button></li>
           <li data-step="3"><button type="button"><span class="step-dot"><span class="step-num">3</span></span>Address</button></li>
           <li data-step="4"><button type="button"><span class="step-dot"><span class="step-num">4</span></span>Security</button></li>
+          <li data-step="5"><button type="button"><span class="step-dot"><span class="step-num">5</span></span>Review</button></li>
         </ol>
         <p class="stepper-compact"></p>
         <div class="wizard-notice" role="alert" hidden></div>
 
+        <div class="wizard-body">
         <section class="wizard-step" data-step="1" data-title="Account">
           <h2>Account</h2>
           <p class="step-hint">Verify your <strong>personal</strong> email (administrators can't use a school address), then replace your temporary password.</p>
           <div class="field-grid">
-            <div class="field wide">
-              <label for="username">Username</label>
-              <input id="username" type="text" readonly placeholder="Loading…">
-            </div>
             <div class="field wide">
               <label for="email">Personal email</label>
               <div class="input-row">
@@ -47,6 +45,10 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <div class="field">
+              <label for="username">Username</label>
+              <input id="username" type="text" readonly placeholder="Loading…">
             </div>
             <div class="field">
               <label for="password">New password</label>
@@ -99,8 +101,14 @@
           <div class="question-row field"><select name="question1" aria-label="Question 1"></select><input name="answer1" type="password" autocomplete="off" placeholder="Answer 1" data-no-persist></div>
           <div class="question-row field"><select name="question2" aria-label="Question 2"></select><input name="answer2" type="password" autocomplete="off" placeholder="Answer 2" data-no-persist></div>
           <div class="question-row field"><select name="question3" aria-label="Question 3"></select><input name="answer3" type="password" autocomplete="off" placeholder="Answer 3" data-no-persist></div>
+        </section>
+
+        <section class="wizard-step" data-step="5" data-title="Review" hidden>
+          <h2>Review</h2>
+          <p class="step-hint">Check your details. Use Edit to change anything before submitting.</p>
           <div class="review" data-review-target></div>
         </section>
+        </div>
 
         <div class="wizard-nav">
           <button type="button" class="wz-btn secondary" data-wizard="back">Back</button>
