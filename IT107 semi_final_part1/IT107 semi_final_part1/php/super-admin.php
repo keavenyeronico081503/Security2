@@ -46,6 +46,124 @@ if ($action === 'delete-requests') {
     exit;
 }
 
+// Review Account popup: everything a Super Administrator should see about an account
+// before deciding a deletion request (identity, login record, privileges, most-used
+// modules and recent activity). Opening it is itself audited.
+if ($action === 'review-account') {
+    require_permission('accounts.delete.approve');
+    require_once 'audit_format.php';
+    $requestId = (int)($_GET['request_id'] ?? 0);
+    $stmt = $conn->prepare('SELECT r.id, r.reason, r.status, r.decision_reason, r.created_at, r.reviewed_at, r.target_user_id, r.target_name, r.target_id_number,
+            COALESCE(requester.username, r.requester_username) AS requested_by, reviewer.username AS reviewed_by
+        FROM admin_delete_requests r
+        LEFT JOIN users requester ON requester.id = r.requested_by
+        LEFT JOIN users reviewer ON reviewer.id = r.reviewed_by
+        WHERE r.id = ?');
+    $stmt->bind_param('i', $requestId);
+    $stmt->execute();
+    $request = $stmt->get_result()->fetch_assoc();
+    if (!$request || strcasecmp((string)$request['requested_by'], 'Keavenyadmin1') === 0) {
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'Deletion request not found.']);
+        exit;
+    }
+    // A reviewed request with no reviewer row was decided by the emergency account.
+    if ($request['status'] !== 'pending' && !$request['reviewed_by']) $request['reviewed_by'] = 'Super Administrator';
+
+    $targetId = (int)$request['target_user_id'];
+    $account = null;
+    if ($targetId > 0) {
+        $stmt = $conn->prepare('SELECT id, first_name, middle_name, last_name, suffix, username, id_number, email, role, account_status, is_online, created_at, registered_at, last_login_at FROM users WHERE id = ?');
+        $stmt->bind_param('i', $targetId);
+        $stmt->execute();
+        $account = $stmt->get_result()->fetch_assoc();
+    }
+    if ($account && strcasecmp($account['username'], 'Keavenyadmin1') === 0) {
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'Deletion request not found.']);
+        exit;
+    }
+    audit('accounts.review', $targetId ?: null, ['request_id' => $requestId]);
+
+    $response = ['status' => 'success', 'request' => $request, 'account' => $account];
+    if (!$account) {
+        // The account was deleted: its activity is no longer linked to it.
+        echo json_encode($response);
+        exit;
+    }
+
+    $one = function (string $sql, string $types, ...$params) use ($conn) {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    };
+    $all = function (string $sql, string $types, ...$params) use ($conn) {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    };
+    // Failed logins are matched the same way as the login report: by target id, or by
+    // the typed username when the attempt never resolved to an account (e.g. a lockout).
+    $failedMatch = 'action_code = "auth.login.failed" AND (target_user_id = ? OR LOWER(JSON_UNQUOTE(JSON_EXTRACT(details, "$.username"))) = LOWER(?))';
+    $logins = $one('SELECT COUNT(*) AS total, SUM(created_at >= NOW() - INTERVAL 30 DAY) AS recent, MAX(created_at) AS last_at FROM audit_logs WHERE action_code = "auth.login.success" AND actor_user_id = ?', 'i', $targetId);
+    $failed = $one("SELECT COUNT(*) AS total, SUM(created_at >= NOW() - INTERVAL 30 DAY) AS recent FROM audit_logs WHERE $failedMatch", 'is', $targetId, $account['username']);
+    $failedRecent = $all("SELECT created_at, ip_address, failure_reason FROM audit_logs WHERE $failedMatch ORDER BY created_at DESC LIMIT 5", 'is', $targetId, $account['username']);
+
+    $modules = array_map(function ($row) {
+        $label = format_action_label(['action_code' => 'module.open', 'details' => ['module' => $row['module']]]);
+        return ['module' => $row['module'], 'label' => preg_replace('/^Opened /', '', $label), 'count' => (int)$row['opens']];
+    }, $all('SELECT JSON_UNQUOTE(JSON_EXTRACT(details, "$.module")) AS module, COUNT(*) AS opens FROM audit_logs WHERE action_code = "module.open" AND actor_user_id = ? GROUP BY module ORDER BY opens DESC LIMIT 5', 'i', $targetId));
+
+    // Module opens are summarized above, so the timeline shows real transactions only.
+    $activity = array_map(function ($row) use ($targetId) {
+        $row['details'] = json_decode((string)$row['details'], true) ?: [];
+        $byAccount = (int)$row['actor_user_id'] === $targetId;
+        return [
+            'created_at' => $row['created_at'],
+            'label' => format_action_label($row),
+            // A failed login has no actor: someone typed this username from an IP address.
+            'by' => $byAccount ? 'This account' : ($row['action_code'] === 'auth.login.failed' ? 'Attempt from ' . ($row['ip_address'] ?: 'unknown IP') : ($row['actor_username'] ?: 'System')),
+            'on' => $byAccount && $row['target_user_id'] && (int)$row['target_user_id'] !== $targetId ? format_action_target($row) : null,
+            'success' => (bool)$row['success'],
+            'failure_reason' => $row['failure_reason'],
+        ];
+    }, $all('SELECT action_code, actor_user_id, actor_username, target_user_id, target_username, target_employee_id, target_role, details, success, failure_reason, ip_address, created_at FROM audit_logs WHERE (actor_user_id = ? OR target_user_id = ?) AND action_code <> "module.open" AND COALESCE(actor_username, "") <> "Keavenyadmin1" ORDER BY created_at DESC, id DESC LIMIT 15', 'ii', $targetId, $targetId));
+
+    $privileges = account_permissions($targetId);
+    $pendingBlock = (int)$one('SELECT COUNT(*) AS n FROM admin_block_requests WHERE target_user_id = ? AND status = "pending"', 'i', $targetId)['n'];
+    $lastLogin = $logins['last_at'] ?: $account['last_login_at'];
+    $memberSince = $account['registered_at'] ?: $account['created_at'];
+    $inactiveDays = $lastLogin ? (int)floor((time() - strtotime($lastLogin)) / 86400) : null;
+
+    // Attention flags, most serious first; the popup only shows the ones that apply.
+    $flags = [];
+    if ((int)$failed['recent'] > 0) $flags[] = ['level' => (int)$failed['recent'] >= 5 ? 'danger' : 'warn', 'text' => $failed['recent'] . ' failed login' . ((int)$failed['recent'] === 1 ? '' : 's') . ' in the last 30 days'];
+    if ($account['is_online']) $flags[] = ['level' => 'warn', 'text' => 'Currently online'];
+    if ($privileges['extra']) $flags[] = ['level' => 'warn', 'text' => 'Has ' . count($privileges['extra']) . ' extra privilege' . (count($privileges['extra']) === 1 ? '' : 's') . ' beyond its role'];
+    if ($account['account_status'] === 'blocked') $flags[] = ['level' => 'info', 'text' => 'Account is blocked'];
+    if ($pendingBlock) $flags[] = ['level' => 'info', 'text' => 'Has a pending block request'];
+    if (!$lastLogin) $flags[] = ['level' => 'info', 'text' => 'Never logged in'];
+    elseif ($inactiveDays >= 14) $flags[] = ['level' => 'info', 'text' => "Inactive for $inactiveDays days"];
+
+    $response += [
+        'flags' => $flags,
+        'stats' => [
+            'logins_total' => (int)$logins['total'], 'logins_recent' => (int)$logins['recent'],
+            'failed_total' => (int)$failed['total'], 'failed_recent' => (int)$failed['recent'],
+            'last_login' => $lastLogin, 'member_since' => $memberSince,
+        ],
+        'role_label' => format_position($account['role']),
+        'privileges' => $privileges,
+        'modules' => $modules,
+        'failed_logins' => $failedRecent,
+        'activity' => $activity,
+    ];
+    echo json_encode($response);
+    exit;
+}
+
 $data = request_json();
 $userId = (int)($data['user_id'] ?? 0);
 

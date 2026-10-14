@@ -650,18 +650,221 @@ async function loadRequests() {
     const row = document.createElement('tr');
     // A deleted account (approved request) keeps the name it had when the request was made.
     const name = item.target_id ? `${item.first_name} ${item.last_name}` : `${item.target_name || 'Unknown account'} (account deleted)`;
-    [name, item.id_number || '-', item.requested_by || '—', item.reason, item.status].forEach(value => {
+    [name, item.id_number || '-', item.requested_by || '—', item.reason].forEach(value => {
       const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell);
     });
+    const statusCell = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = `request-badge request-${item.status}`; badge.textContent = item.status;
+    statusCell.appendChild(badge); row.appendChild(statusCell);
+    // Approve / Reject live inside the Review Account popup, next to the evidence.
     const review = document.createElement('td');
-    if (item.status === 'pending') {
-      ['approve', 'reject'].forEach(decision => {
-        const button = document.createElement('button'); button.textContent = decision === 'approve' ? 'Approve' : 'Reject'; button.dataset.request = item.id; button.dataset.decision = decision; review.appendChild(button);
-      });
-    } else review.textContent = 'Reviewed';
-    row.appendChild(review); requests.appendChild(row);
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = item.status === 'pending' ? 'review-open' : 'review-open secondary';
+    button.dataset.review = item.id;
+    button.innerHTML = `<i class="fas fa-search"></i> ${item.status === 'pending' ? 'Review account' : 'View review'}`;
+    review.appendChild(button); row.appendChild(review); requests.appendChild(row);
   });
 }
+
+// ---- Review Account popup ----
+const reviewDialog = document.getElementById('reviewDialog');
+const reviewReasonInput = document.getElementById('reviewDecisionReason');
+const reviewError = document.getElementById('reviewError');
+let reviewRequestId = null;
+
+const reviewDateTime = value => value ? new Date(value.replace(' ', 'T')).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Never';
+const reviewDate = value => value ? new Date(value.replace(' ', 'T')).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+function daysSince(value) {
+  if (!value) return '';
+  const days = Math.floor((Date.now() - new Date(value.replace(' ', 'T')).getTime()) / 86400000);
+  return days < 1 ? 'today' : days === 1 ? '1 day ago' : `${days} days ago`;
+}
+function reviewEl(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+function emptyNote(text) { return reviewEl('p', 'review-empty', text); }
+
+function renderReview(data) {
+  const { request: req, account } = data;
+  const name = account ? [account.first_name, account.middle_name, account.last_name, account.suffix].filter(Boolean).join(' ') : (req.target_name || 'Unknown account');
+  document.getElementById('reviewName').textContent = name;
+
+  const meta = document.getElementById('reviewMeta');
+  meta.replaceChildren();
+  if (account) {
+    meta.append(reviewEl('span', '', `@${account.username}`), reviewEl('span', '', account.id_number || '—'), reviewEl('span', 'review-pill', data.role_label),
+      reviewEl('span', `review-pill status-${account.account_status}`, account.account_status));
+    if (Number(account.is_online)) meta.append(reviewEl('span', 'review-online', 'Online now'));
+  } else {
+    meta.append(reviewEl('span', '', req.target_id_number || '—'), reviewEl('span', 'review-pill status-blocked', 'Account deleted'));
+  }
+
+  document.getElementById('reviewRequestLine').textContent = `Request #${req.id} · sent by ${req.requested_by || 'a deleted administrator'} · ${reviewDateTime(req.created_at)}`;
+  document.getElementById('reviewReason').textContent = req.reason;
+
+  const flags = document.getElementById('reviewFlags');
+  const stats = document.getElementById('reviewStats');
+  flags.replaceChildren(); stats.replaceChildren();
+  reviewDialog.querySelectorAll('.review-columns, .review-body > .review-card').forEach(section => { section.hidden = !account; });
+  if (!account) {
+    flags.append(reviewEl('p', 'review-flag info', 'This account has been deleted, so its activity is no longer linked to it. The saved name and ID number are shown above.'));
+  } else {
+    if (!data.flags.length) flags.append(reviewEl('p', 'review-flag ok', 'No warning signs found for this account.'));
+    data.flags.forEach(flag => flags.append(reviewEl('p', `review-flag ${flag.level}`, flag.text)));
+
+    const s = data.stats;
+    [
+      ['Successful logins', s.logins_total, `${s.logins_recent} in the last 30 days`, ''],
+      ['Failed logins', s.failed_total, `${s.failed_recent} in the last 30 days`, s.failed_recent > 0 ? 'is-danger' : ''],
+      ['Last login', s.last_login ? reviewDate(s.last_login) : 'Never', s.last_login ? daysSince(s.last_login) : 'has not logged in', s.last_login ? '' : 'is-muted'],
+      ['Member since', reviewDate(s.member_since), daysSince(s.member_since), ''],
+    ].forEach(([label, value, note, extra]) => {
+      const card = reviewEl('div', `review-stat ${extra}`);
+      card.append(reviewEl('span', 'review-stat-label', label), reviewEl('strong', '', String(value)), reviewEl('small', '', note));
+      stats.appendChild(card);
+    });
+
+    renderPrivileges(data.privileges);
+    renderModules(data.modules);
+    renderFailed(data.failed_logins);
+    renderActivity(data.activity);
+  }
+
+  const pending = req.status === 'pending';
+  const outcome = document.getElementById('reviewOutcome');
+  document.getElementById('reviewDecision').hidden = !pending;
+  outcome.hidden = pending;
+  if (!pending) {
+    outcome.replaceChildren(reviewEl('strong', `request-badge request-${req.status}`, req.status),
+      reviewEl('span', '', ` by ${req.reviewed_by || 'Super Administrator'} on ${reviewDateTime(req.reviewed_at)}`),
+      reviewEl('p', '', req.decision_reason ? `“${req.decision_reason}”` : 'No decision reason was recorded.'));
+  }
+}
+
+function renderPrivileges(privileges) {
+  const box = document.getElementById('reviewPrivileges');
+  box.replaceChildren();
+  const denied = new Set(privileges.denied.map(item => item.code));
+  // Unusual ones first: extra grants and removals are what a reviewer needs to notice.
+  const items = [
+    ...privileges.extra.map(item => ({ ...item, kind: 'extra' })),
+    ...privileges.denied.map(item => ({ ...item, kind: 'denied' })),
+    ...privileges.role.filter(item => !denied.has(item.code)).map(item => ({ ...item, kind: 'role' })),
+  ];
+  if (!items.length) { box.appendChild(emptyNote('No privileges assigned.')); return; }
+  const fromRole = privileges.role.filter(item => !denied.has(item.code)).length;
+  const summary = reviewEl('p', 'review-subtle', `${fromRole} from role` + (privileges.extra.length ? ` · ${privileges.extra.length} extra` : '') + (privileges.denied.length ? ` · ${privileges.denied.length} removed` : ''));
+  const list = reviewEl('ul', 'review-privileges');
+  items.forEach(item => {
+    const li = reviewEl('li', `priv-${item.kind}`);
+    li.append(reviewEl('span', '', item.label || item.code));
+    if (item.kind !== 'role') li.append(reviewEl('em', '', item.kind === 'extra' ? '+ extra' : '− removed'));
+    list.appendChild(li);
+  });
+  box.append(summary, list);
+}
+
+function renderModules(modules) {
+  const box = document.getElementById('reviewModules');
+  box.replaceChildren();
+  if (!modules.length) { box.appendChild(emptyNote('No module activity recorded.')); return; }
+  const max = Math.max(...modules.map(item => item.count));
+  modules.forEach(item => {
+    const row = reviewEl('div', 'review-bar');
+    const track = reviewEl('div', 'review-bar-track');
+    const fill = reviewEl('span'); fill.style.width = `${Math.max(6, Math.round(item.count / max * 100))}%`;
+    track.appendChild(fill);
+    row.append(reviewEl('span', 'review-bar-label', item.label), track, reviewEl('strong', '', String(item.count)));
+    box.appendChild(row);
+  });
+}
+
+function renderFailed(failed) {
+  const box = document.getElementById('reviewFailed');
+  box.replaceChildren();
+  if (!failed.length) { box.appendChild(emptyNote('No failed login attempts.')); return; }
+  const table = reviewEl('table', 'review-table');
+  table.innerHTML = '<thead><tr><th>When</th><th>IP address</th><th>Reason</th></tr></thead>';
+  const body = reviewEl('tbody');
+  failed.forEach(item => {
+    const row = reviewEl('tr');
+    row.append(reviewEl('td', '', reviewDateTime(item.created_at)), reviewEl('td', '', item.ip_address || '—'), reviewEl('td', '', item.failure_reason || '—'));
+    body.appendChild(row);
+  });
+  table.appendChild(body); box.appendChild(table);
+}
+
+function renderActivity(activity) {
+  const list = document.getElementById('reviewActivity');
+  list.replaceChildren();
+  if (!activity.length) { list.appendChild(emptyNote('No activity recorded.')); return; }
+  activity.forEach(item => {
+    const li = reviewEl('li', item.success ? '' : 'is-failed');
+    const text = reviewEl('div');
+    text.append(reviewEl('strong', '', item.label + (item.on ? ` — ${item.on}` : '')),
+      reviewEl('span', '', `${item.by} · ${reviewDateTime(item.created_at)}${item.success ? '' : ` · ${item.failure_reason || 'failed'}`}`));
+    li.appendChild(text); list.appendChild(li);
+  });
+}
+
+async function openReview(requestId) {
+  reviewRequestId = requestId;
+  reviewReasonInput.value = '';
+  document.getElementById('reviewReasonCount').textContent = '0/500';
+  reviewError.textContent = '';
+  document.getElementById('reviewName').textContent = 'Loading…';
+  ['reviewMeta', 'reviewFlags', 'reviewStats'].forEach(id => document.getElementById(id).replaceChildren());
+  reviewDialog.showModal();
+  document.getElementById('reviewBody').scrollTop = 0;
+  try {
+    const response = await fetch(`${api}?action=review-account&request_id=${requestId}`);
+    const data = await response.json();
+    if (!response.ok || data.status === 'error') throw new Error(data.message || 'Could not load this account.');
+    renderReview(data);
+  } catch (error) {
+    reviewDialog.close();
+    showMessage(error.message, true);
+  }
+}
+
+async function decideReview(decision) {
+  const reason = reviewReasonInput.value.trim();
+  if (!reason) {
+    reviewError.textContent = `Write a reason before you ${decision === 'approve' ? 'approve' : 'reject'} this request.`;
+    reviewReasonInput.focus();
+    return;
+  }
+  const label = decision === 'approve' ? 'Approve & delete' : 'Reject request';
+  const question = decision === 'approve'
+    ? 'This permanently deletes the account and emails the account holder. This cannot be undone.'
+    : 'The account stays active and the request is closed.';
+  if (!await confirmAction(label, question)) return;
+  reviewError.textContent = '';
+  try {
+    const result = await request('review-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request_id: reviewRequestId, decision, reason }) });
+    reviewDialog.close();
+    showMessage(result.message);
+    await loadRequests(); await loadUsers();
+  } catch (error) { reviewError.textContent = error.message; }
+}
+
+requests.addEventListener('click', event => {
+  const button = event.target.closest('button[data-review]');
+  if (button) openReview(Number(button.dataset.review));
+});
+document.getElementById('reviewApprove').addEventListener('click', () => decideReview('approve'));
+document.getElementById('reviewReject').addEventListener('click', () => decideReview('reject'));
+document.getElementById('closeReview').addEventListener('click', () => reviewDialog.close());
+document.getElementById('reviewCancel').addEventListener('click', () => reviewDialog.close());
+reviewDialog.addEventListener('click', event => { if (event.target === reviewDialog) reviewDialog.close(); });
+reviewReasonInput.addEventListener('input', () => {
+  document.getElementById('reviewReasonCount').textContent = `${reviewReasonInput.value.length}/500`;
+  if (reviewReasonInput.value.trim()) reviewError.textContent = '';
+});
 
 async function loadAuditLogs() {
   const params = new URLSearchParams({page: auditCurrentPage});
@@ -813,15 +1016,6 @@ privilegeForm.addEventListener('submit', async event => {
 document.getElementById('closePrivileges').addEventListener('click', () => privilegeDialog.close());
 document.getElementById('cancelPrivileges').addEventListener('click', () => privilegeDialog.close());
 
-requests.addEventListener('click', async event => {
-  const button = event.target.closest('button[data-request]'); if (!button) return;
-  const decisionLabel = button.dataset.decision === 'approve' ? 'Approve' : 'Reject';
-  const reason = await promptAction('Reason required', `Reason to ${decisionLabel.toLowerCase()} this deletion request:`, { submitLabel: decisionLabel });
-  if (!reason) return;
-  if (!await confirmAction(`${decisionLabel} deletion request`, `${decisionLabel} this deletion request?`)) return;
-  try { showMessage((await request('review-delete', {request_id: Number(button.dataset.request), decision: button.dataset.decision, reason})).message); await loadRequests(); await loadUsers(); }
-  catch (error) { showMessage(error.message, true); }
-});
 
 document.getElementById('filterForm').addEventListener('submit', event => { event.preventDefault(); loadUsers(); });
 document.getElementById('clearFilter').addEventListener('click', () => { document.getElementById('employeeId').value = ''; document.getElementById('roleFilter').value = ''; loadUsers(); });

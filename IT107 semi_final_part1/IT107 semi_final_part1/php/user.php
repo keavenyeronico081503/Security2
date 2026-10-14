@@ -94,11 +94,7 @@ if ($action === 'privileges') {
         $result = $conn->query('SELECT code, label FROM permissions ORDER BY code');
         while ($row = $result->fetch_assoc()) $privileges[] = $row;
     } else {
-        $stmt = $conn->prepare('SELECT DISTINCT p.code, p.label FROM permissions p JOIN role_permissions rp ON rp.permission_id = p.id JOIN user_roles ur ON ur.role_id = rp.role_id WHERE ur.user_id = ? AND NOT EXISTS (SELECT 1 FROM user_permission_overrides deny_override WHERE deny_override.user_id = ? AND deny_override.permission_id = p.id AND deny_override.effect = "deny") UNION SELECT p.code, p.label FROM permissions p JOIN user_permission_overrides allow_override ON allow_override.permission_id = p.id WHERE allow_override.user_id = ? AND allow_override.effect = "allow" ORDER BY code');
-        $stmt->bind_param('iii', $user['id'], $user['id'], $user['id']);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        while ($row = $result->fetch_assoc()) $privileges[] = $row;
+        $privileges = effective_permissions((int)$user['id']);
     }
     echo json_encode(['status' => 'success', 'role' => $user['role_code'], 'privileges' => $privileges]);
     exit;

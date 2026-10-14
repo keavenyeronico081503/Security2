@@ -78,6 +78,39 @@ function can(string $permission, int $userId): bool
     return !$result['denied'] && ($result['allowed'] || $result['role_allowed']);
 }
 
+// An account's permissions split by where they come from: its role, extra ones
+// granted on top ("allow" overrides) and role ones taken away ("deny" overrides).
+// Effective permissions = (role - denied) + extra. Each item is {code, label}.
+function account_permissions(int $userId): array
+{
+    global $conn;
+    $result = ['role' => [], 'extra' => [], 'denied' => []];
+    $stmt = $conn->prepare('SELECT DISTINCT p.code, p.label FROM permissions p JOIN role_permissions rp ON rp.permission_id = p.id JOIN user_roles ur ON ur.role_id = rp.role_id WHERE ur.user_id = ? ORDER BY p.code');
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $result['role'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmt = $conn->prepare('SELECT p.code, p.label, o.effect FROM user_permission_overrides o JOIN permissions p ON p.id = o.permission_id WHERE o.user_id = ? ORDER BY p.code');
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    foreach ($stmt->get_result()->fetch_all(MYSQLI_ASSOC) as $row) {
+        $result[$row['effect'] === 'deny' ? 'denied' : 'extra'][] = ['code' => $row['code'], 'label' => $row['label']];
+    }
+    return $result;
+}
+
+function effective_permissions(int $userId): array
+{
+    $permissions = account_permissions($userId);
+    $denied = array_column($permissions['denied'], 'code');
+    $effective = [];
+    foreach ($permissions['role'] as $item) {
+        if (!in_array($item['code'], $denied, true)) $effective[$item['code']] = $item;
+    }
+    foreach ($permissions['extra'] as $item) $effective[$item['code']] = $item;
+    ksort($effective);
+    return array_values($effective);
+}
+
 function require_permission(string $permission): array
 {
     $user = require_auth();

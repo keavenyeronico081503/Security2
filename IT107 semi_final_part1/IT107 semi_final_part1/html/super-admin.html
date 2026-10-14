@@ -126,6 +126,44 @@
       <div class="dialog-actions"><button type="button" id="cancelEventEdit" class="secondary">Cancel</button><button type="submit">Save changes</button></div>
     </form>
   </dialog>
+  <dialog id="reviewDialog" class="review-dialog" aria-labelledby="reviewName">
+    <div class="review-shell">
+      <div class="review-head">
+        <div class="review-id">
+          <p class="eyebrow">Review account before deletion</p>
+          <h2 id="reviewName">Loading…</h2>
+          <p class="review-meta" id="reviewMeta"></p>
+        </div>
+        <button type="button" class="review-close" id="closeReview" aria-label="Close review"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="review-body" id="reviewBody">
+        <section class="review-request">
+          <p class="review-request-line" id="reviewRequestLine"></p>
+          <blockquote id="reviewReason"></blockquote>
+        </section>
+        <div class="review-flags" id="reviewFlags"></div>
+        <div class="review-stats" id="reviewStats"></div>
+        <div class="review-columns">
+          <section class="review-card"><h3><i class="fas fa-key"></i> Privileges</h3><div id="reviewPrivileges"></div></section>
+          <section class="review-card"><h3><i class="fas fa-th-large"></i> Most used modules</h3><div id="reviewModules"></div></section>
+        </div>
+        <section class="review-card"><h3><i class="fas fa-user-lock"></i> Recent failed logins</h3><div id="reviewFailed"></div></section>
+        <section class="review-card"><h3><i class="fas fa-history"></i> Recent activity</h3><ol class="review-timeline" id="reviewActivity"></ol></section>
+      </div>
+      <div class="review-decision" id="reviewDecision">
+        <label for="reviewDecisionReason">Decision reason <span id="reviewReasonCount">0/500</span></label>
+        <textarea id="reviewDecisionReason" rows="2" maxlength="500" placeholder="Why are you approving or rejecting this deletion?"></textarea>
+        <p class="review-error" id="reviewError" role="alert"></p>
+        <div class="review-buttons">
+          <button type="button" class="secondary" id="reviewCancel">Close</button>
+          <span class="spacer"></span>
+          <button type="button" class="review-reject" id="reviewReject"><i class="fas fa-times-circle"></i> Reject request</button>
+          <button type="button" class="review-approve" id="reviewApprove"><i class="fas fa-trash-alt"></i> Approve &amp; delete</button>
+        </div>
+      </div>
+      <div class="review-outcome" id="reviewOutcome" hidden></div>
+    </div>
+  </dialog>
   <dialog id="privilegeDialog" class="privilege-dialog">
     <form method="dialog" id="privilegeForm">
       <div class="section-heading"><div><p class="eyebrow">Access control</p><h2>Assign privileges</h2><p id="privilegeAccount"></p></div><button type="button" id="closePrivileges" class="secondary">Close</button></div>
